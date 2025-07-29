@@ -1,0 +1,23 @@
+version: "3.9"
+ 
+services:
+  evergreen_client:
+    image: evergreen_client_container:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: http://localhost:8000
+ 
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:8000
+ 
+    restart: always
+    container_name: evergreen-client-container
+    ports:
+      - "3000:3000"
+    networks:
+      - frontend
+ 
+networks:
+  frontend:

@@ -155,7 +155,7 @@ class ApiClient {
   private baseUrl: string
   private token: string | null = null
 
-  constructor(baseUrl: string = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000") {
+  constructor(baseUrl = process.env.NEXT_PUBLIC_API_URL as string) {
     this.baseUrl = baseUrl
     // Try to get token from localStorage on client side
     if (typeof window !== "undefined") {
@@ -165,13 +165,13 @@ class ApiClient {
 
   private async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
     const url = `${this.baseUrl}${endpoint}`
-    const headers: HeadersInit = {
-      "Content-Type": "application/json",
-      ...options.headers,
+    const headers = new Headers(options.headers)
+    if (!headers.has("Content-Type")) {
+      headers.set("Content-Type", "application/json")
     }
 
     if (this.token) {
-      headers.Authorization = `Bearer ${this.token}`
+      headers.set("Authorization", `Bearer ${this.token}`)
     }
 
     const response = await fetch(url, {
