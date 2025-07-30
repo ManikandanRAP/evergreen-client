@@ -568,6 +568,8 @@ export default function CreateShowDialog({
       is_undersized: formData.isUndersized,
     }
 
+    console.log("Show Data:", showData)
+
     try {
       if (isEditMode && editingShow?.id) {
         await updateShow(editingShow.id, showData)

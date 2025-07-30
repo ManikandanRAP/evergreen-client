@@ -46,6 +46,7 @@ export function useShows() {
     try {
       const apiCreateData = {
         title: showData.name || "",
+        created_date: showData.startDate ? new Date(showData.startDate).toISOString() : null,
         minimum_guarantee: showData.minimumGuarantee || 0,
         subnetwork_id: showData.subnetwork_id || null,
         media_type: showData.format === "Video" ? ("video" as const) : ("audio" as const),
@@ -56,9 +57,9 @@ export function useShows() {
         has_sponsorship_revenue: showData.hasSponsorshipRevenue || false,
         has_non_evergreen_revenue: showData.hasNonEvergreenRevenue || false,
         requires_partner_access: showData.requiresPartnerLedgerAccess || false,
-        has_branded_revenue: (showData.brandedRevenueAmount || 0) > 0,
-        has_marketing_revenue: (showData.marketingRevenueAmount || 0) > 0,
-        has_web_mgmt_revenue: (showData.webManagementRevenue || 0) > 0,
+        has_branded_revenue: showData.hasBrandedRevenue || false,
+        has_marketing_revenue: showData.hasMarketingRevenue || false,
+        has_web_mgmt_revenue: showData.hasWebManagementRevenue || false,
         genre_name: showData.genre_name || null,
         is_original: showData.isOriginal || false,
         shows_per_year: showData.showsPerYear || null,
@@ -70,7 +71,32 @@ export function useShows() {
         revenue_2025: showData.revenue2025 || null,
         show_host_contact: showData.primaryContactHost || null,
         show_primary_contact: showData.primaryContactShow || null,
+        ageDemographic: showData.ageDemographic || null,
+        gender: showData.gender || null,
+        region: showData.region || null,
+        is_active: showData.isActive || false,
+        is_undersized: showData.isUndersized || false,
+        primary_education: showData.primaryEducation || null,
+        secondary_education: showData.secondaryEducation || null,
+        evergreen_production_staff_name: showData.evergreenProductionStaffName || null,
+        evergreen_production_staff_primary_contact: showData.evergreenProductionStaffPrimaryContact || null,
+        side_bonus_percent: showData.sideBonusPercent || 0,
+        youtube_ads_percent: showData.youtubeAdsPercent || 0,
+        subscriptions_percent: showData.subscriptionsPercent || 0,
+        standard_ads_percent: showData.standardAdsPercent || 0,
+        sponsorship_ad_fp_lead_percent: showData.sponsorshipAdFpLeadPercent || 0,
+        sponsorship_ad_partner_lead_percent: showData.sponsorshipAdPartnerLeadPercent || 0,
+        sponsorship_ad_partner_sold_percent: showData.sponsorshipAdPartnerSoldPercent || 0,
+        programmatic_ads_span_percent: showData.programmaticAdsSpanPercent || 0,
+        merchandise_percent: showData.merchandisePercent || 0,
+        branded_revenue_percent: showData.brandedRevenuePercent || 0,
+        marketing_services_revenue_percent: showData.marketingServicesRevenuePercent || 0,
+        direct_customer_hands_off_percent: showData.directCustomerHandsOffPercent || 0,
+        youtube_hands_off_percent: showData.youtubeHandsOffPercent || 0,
+        subscription_hands_off_percent: showData.subscriptionHandsOffPercent || 0,
       }
+
+      console.log("API Create Data:", apiCreateData)
 
       const apiShow = await apiClient.createPodcast(apiCreateData)
       const legacyShow = convertApiShowToLegacy(apiShow)

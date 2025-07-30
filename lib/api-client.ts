@@ -62,7 +62,7 @@ interface Show {
   revenue_2025: number | null
   show_host_contact: string | null
   show_primary_contact: string | null
-  ageDemographic: "18-24" | "25-34" | "35-44" | "45-54" | "55+" | null
+  ageDemographic: "18-24" | "25-34" | "35-44" | "45-54" | "55+" | "" | null
   region:string | null
   isUndersized: boolean | null
   gender:string | null
@@ -117,6 +117,7 @@ interface ShowCreate {
   evergreen_production_staff_name?: string | null
   show_host_contact?: string | null
   show_primary_contact?: string | null
+  ageDemographic?: string | null
 }
 
 interface ShowUpdate {
