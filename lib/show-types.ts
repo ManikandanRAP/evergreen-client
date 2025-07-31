@@ -9,7 +9,7 @@ export interface Show {
     evergreen: number
     partner: number
   }
-  createdDate: string
+  
 
   // Basic Info
   showType: string
@@ -46,10 +46,9 @@ export interface Show {
   // Demographics
   ageDemographic: "18-24" | "25-34" | "35-44" | "45-54" | "55+" | "" | null
   gender: string | null
-  isActive: boolean
   isUndersized: boolean | null
-  primaryEducation: string | null
-  secondaryEducation: string | null
+  primary_education: string | null
+  secondary_education: string | null
   evergreenProductionStaffName?: string | null
   evergreenProductionStaffPrimaryContact?: string | null
 
@@ -66,8 +65,8 @@ export interface Show {
   }
   demographics: {
     region: string
-    primaryEducation: string
-    secondaryEducation: string
+    primary_education: string
+    secondary_education: string
   }
   hasBrandedRevenue: boolean
   hasMarketingRevenue: boolean
@@ -75,7 +74,7 @@ export interface Show {
   genderDemographic: string | null
   subnetwork: string | null
   avgShowLengthMins: number
-  startDate: string
+  start_date: string
   sideBonusPercent:number
   youtubeAdsPercent:number
   subscriptionsPercent:number
@@ -91,8 +90,8 @@ export interface Show {
   youtubeHandsOffPercent:number
   subscriptionHandsOffPercent:number
   region:string
-  is_active:boolean
-  is_undersized:boolean
+  isActive:boolean
+
 }
 
 // Utility function to convert API Show to legacy Show format
@@ -128,7 +127,7 @@ export function convertApiShowToLegacy(apiShow: ApiShow): Show {
     name: apiShow.title || "Untitled Show",
     partnerUsers: [],
     revenueSplit: { evergreen: apiShow.evergreen_ownership_pct || 0, partner: 100 - (apiShow.evergreen_ownership_pct || 0) },
-    createdDate: apiShow.start_date || new Date().toISOString(),
+    start_date: apiShow.start_date || new Date().toISOString(),
     showType: apiShow.show_type || "Original",
     selectType: "Podcasts",
     subnetwork_id: apiShow.subnetwork_id || "",
@@ -157,11 +156,11 @@ export function convertApiShowToLegacy(apiShow: ApiShow): Show {
     primaryContactShow: apiShow.show_primary_contact || "",
     ageDemographic: apiShow.ageDemographic || null,
     gender: apiShow.gender || null,
-    isActive: apiShow.is_active || false,
+    isActive: apiShow.isActive || false,
     isUndersized: apiShow.isUndersized || false,
     host: apiShow.show_host_contact ? { name: apiShow.show_host_contact, email: "", phone: "" } : undefined,
     showPrimaryContact: apiShow.show_primary_contact ? { name: apiShow.show_primary_contact, email: "", phone: "" } : undefined,
-    demographics: { region: apiShow.region || "", primaryEducation: "", secondaryEducation: "" },
+    // demographics: { region: apiShow.region || "", primary_education: apiShow.primary_education || "", secondary_education: apiShow.secondary_education || "" },
     hasBrandedRevenue: apiShow.has_branded_revenue || false,
     hasMarketingRevenue: apiShow.has_marketing_revenue || false,
     hasWebManagementRevenue: apiShow.has_web_mgmt_revenue || false,
@@ -183,11 +182,8 @@ export function convertApiShowToLegacy(apiShow: ApiShow): Show {
     youtubeHandsOffPercent: apiShow.youtube_hands_off_percent || 0,
     subscriptionHandsOffPercent: apiShow.subscription_hands_off_percent || 0,
     region: apiShow.region || "",
-    is_active: apiShow.is_active || false,
-    is_undersized: apiShow.is_undersized || false,
-    startDate: apiShow.start_date || "",
-    primaryEducation: apiShow.primary_education || "",
-    secondaryEducation: apiShow.secondary_education || "",
+    primary_education: apiShow.primary_education || "",
+    secondary_education: apiShow.secondary_education || "",
     evergreenProductionStaffName: apiShow.evergreen_production_staff_name || "",
   }
 }
@@ -232,7 +228,7 @@ export function convertLegacyShowToApiCreate(legacyShow: Partial<Show>): any {
     latest_cpm_usd: legacyShow.latestCPM || null,
     ad_slots: legacyShow.adSlots || null,
     avg_show_length_mins: legacyShow.averageLength || null,
-    start_date: legacyShow.createdDate ? new Date(legacyShow.createdDate).toISOString().split("T")[0] : null,
+    start_date: legacyShow.start_date ? new Date(legacyShow.start_date).toISOString().split("T")[0] : null,
     revenue_2023: legacyShow.revenue2023 || null,
     revenue_2024: legacyShow.revenue2024 || null,
     revenue_2025: legacyShow.revenue2025 || null,

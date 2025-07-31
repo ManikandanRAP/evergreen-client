@@ -66,8 +66,7 @@ interface Show {
   region:string | null
   isUndersized: boolean | null
   gender:string | null
-  is_active:boolean | null
-  is_undersized:boolean | null
+  isActive:boolean | null
   primary_education: string | null
   secondary_education: string | null
   evergreen_production_staff_name: string | null
@@ -118,11 +117,61 @@ interface ShowCreate {
   show_host_contact?: string | null
   show_primary_contact?: string | null
   ageDemographic?: string | null
+  isUndersized: boolean | null
+  isActive:boolean | null
+  primary_education?: string | null
+  secondary_education?: string | null
 }
 
 interface ShowUpdate {
-  title?: string | null
+  title: string
   minimum_guarantee?: number | null
+  annual_usd?: Record<string, any> | null
+  subnetwork_id?: string | null
+  media_type?: "video" | "audio" | "both" | null
+  tentpole?: boolean
+  relationship_level?: "strong" | "medium" | "weak" | null
+  show_type?: "Branded" | "Original" | "Partner" | null
+  evergreen_ownership_pct?: number | null
+  has_sponsorship_revenue?: boolean | null
+  has_non_evergreen_revenue?: boolean | null
+  requires_partner_access?: boolean | null
+  has_branded_revenue?: boolean | null
+  has_marketing_revenue?: boolean | null
+  has_web_mgmt_revenue?: boolean | null
+  genre_name?: string | null
+  is_original?: boolean | null
+  shows_per_year?: number | null
+  latest_cpm_usd?: number | null
+  ad_slots?: number | null
+  avg_show_length_mins?: number | null
+  start_date?: string | null
+  show_name_in_qbo?: string | null
+  side_bonus_percent?: number | null
+  youtube_ads_percent?: number | null
+  subscriptions_percent?: number | null
+  standard_ads_percent?: number | null
+  sponsorship_ad_fp_lead_percent?: number | null
+  sponsorship_ad_partner_lead_percent?: number | null
+  sponsorship_ad_partner_sold_percent?: number | null
+  programmatic_ads_span_percent?: number | null
+  merchandise_percent?: number | null
+  branded_revenue_percent?: number | null
+  marketing_services_revenue_percent?: number | null
+  direct_customer_hands_off_percent?: number | null
+  youtube_hands_off_percent?: number | null
+  subscription_hands_off_percent?: number | null
+  revenue_2023?: number | null
+  revenue_2024?: number | null
+  revenue_2025?: number | null
+  evergreen_production_staff_name?: string | null
+  show_host_contact?: string | null
+  show_primary_contact?: string | null
+  ageDemographic?: string | null
+  isUndersized: boolean | null
+  isActive:boolean | null
+  primary_education?: string | null
+  secondary_education?: string | null
 }
 
 interface PartnerCreate {

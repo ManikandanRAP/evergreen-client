@@ -119,41 +119,18 @@ export default function ShowViewDialog({ open, onOpenChange, show }: ShowViewDia
 
                   <div className="space-y-4">
                     <div>
+                      <label className="text-sm font-medium text-muted-foreground">Created Date</label>
+                      <p className="font-medium">{new Date(show.start_date).toLocaleDateString()}</p>
+                    </div>
+                    <div>
                       <label className="text-sm font-medium text-muted-foreground">Subnetwork</label>
                       <p className="font-medium">{show.subnetwork_id || "None"}</p>
                     </div>
-                    <div>
-                      <label className="text-sm font-medium text-muted-foreground">Created Date</label>
-                      <p className="font-medium">{new Date(show.createdDate).toLocaleDateString()}</p>
-                    </div>
                   </div>
 
+                  
                   <div className="space-y-4">
-                    <div>
-                      <label className="text-sm font-medium text-muted-foreground">Status</label>
-                      <div className="flex gap-2">
-                        {show.isTentpole && (
-                          <Badge variant={show.isTentpole ? "default" : "outline"} className="text-xs">
-                            {show.isTentpole ? "Tentpole" : "Not Tentpole"}
-                          </Badge>
-                        )}
-                        {show.isOriginal && (
-                          <Badge variant={show.isOriginal ? "default" : "outline"} className="text-xs">
-                            {show.isOriginal ? "Original" : "Not Original"}
-                          </Badge>
-                        )}
-                        {show.isActive && (
-                          <Badge variant={show.isActive ? "default" : "outline"} className="text-xs">
-                            {show.isActive ? "Active" : "Inactive"}
-                          </Badge>
-                        )}
-                        {show.isUndersized && (
-                          <Badge variant={show.isUndersized ? "default" : "outline"} className="text-xs">
-                            {show.isUndersized ? "Undersized" : "Not Undersized"}
-                          </Badge>
-                        )}
-                      </div>
-                    </div>
+                    
                     <div>
                       <label className="text-sm font-medium text-muted-foreground">Age</label>
                       <div className="flex items-center gap-2">
@@ -161,6 +138,29 @@ export default function ShowViewDialog({ open, onOpenChange, show }: ShowViewDia
                         <span className="font-medium">{show.ageMonths} months</span>
                       </div>
                     </div>
+
+                    <div>
+                      <label className="text-sm font-medium text-muted-foreground">Status</label>
+                      <div className="flex flex-col gap-2">
+                        <div className="flex gap-2">
+                          <Badge variant={show.isTentpole ? "default" : "outline"} className="text-xs px-2 w-auto">
+                            {show.isTentpole ? "Tentpole" : "Not Tentpole"}
+                          </Badge>
+                          <Badge variant={show.isOriginal ? "default" : "outline"} className="text-xs px-2 w-auto">
+                            {show.isOriginal ? "Original" : "Not Original"}
+                          </Badge>
+                        </div>
+                        <div className="flex gap-2">
+                          <Badge variant={show.isActive ? "default" : "outline"} className="text-xs px-2 w-auto">
+                            {show.isActive ? "Active" : "Inactive"}
+                          </Badge>
+                          <Badge variant={show.isUndersized ? "default" : "outline"} className="text-xs px-2 w-auto">
+                            {show.isUndersized ? "Undersized" : "Not Undersized"}
+                          </Badge>
+                        </div>
+                      </div>
+                    </div>
+
                   </div>
                 </div>
               </CardContent>
@@ -542,10 +542,10 @@ export default function ShowViewDialog({ open, onOpenChange, show }: ShowViewDia
                     </h4>
                     <div className="space-y-2">
                       <p className="text-sm font-medium">
-                        Primary: <Badge variant="outline">{show.primaryEducation || "N/A"}</Badge>
+                        Primary: <Badge variant="outline">{show.primary_education || "N/A"}</Badge>
                       </p>
                       <p className="text-sm font-medium">
-                        Secondary: <Badge variant="outline">{show.secondaryEducation || "N/A"}</Badge>
+                        Secondary: <Badge variant="outline">{show.secondary_education || "N/A"}</Badge>
                       </p>
                     </div>
                   </div>

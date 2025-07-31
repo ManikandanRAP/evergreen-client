@@ -35,7 +35,7 @@ export interface ShowFormData {
   subnetwork_id: string
   format: "Video" | "Audio" | "Both" | ""
   relationship: "Strong" | "Medium" | "Weak" | ""
-  startDate: string
+  start_date: string
   isTentpole: boolean
   isOriginal: boolean
 
@@ -101,7 +101,7 @@ const initialFormData: ShowFormData = {
   subnetwork_id: "",
   format: "",
   relationship: "",
-  startDate: "",
+  start_date: "",
   isTentpole: false,
   isOriginal: false,
 
@@ -181,7 +181,7 @@ const genre_names = [
 
 // Define required fields for each tab
 const requiredFields = {
-  basic: ["title", "showType", "format", "relationship", "startDate"],
+  basic: ["title", "showType", "format", "relationship", "start_date"],
   financial: ["minimumGuarantee", "ownershipPercentage"],
   content: ["genre_name", "showsPerYear", "primaryContactShow"],
   demographics: ["ageDemographic"],
@@ -214,7 +214,7 @@ export default function CreateShowDialog({
         subnetwork_id: editingShow.subnetwork_id ?? "",
         format: editingShow.format ?? "",
         relationship: editingShow.relationship ?? "",
-        startDate: editingShow.startDate ?? "",
+        start_date: editingShow.start_date ?? "",
         isTentpole: !!editingShow.isTentpole,
         isOriginal: !!editingShow.isOriginal,
 
@@ -263,10 +263,10 @@ export default function CreateShowDialog({
         ageDemographic: editingShow.ageDemographic ?? "",
         gender: editingShow.gender ?? "",
         region: (editingShow.region || "") as "Both" | "Urban" | "Rural",
-        primaryEducationDemographic: (editingShow.primaryEducation || "") as EducationLevel,
-        secondaryEducationDemographic: (editingShow.secondaryEducation || "") as EducationLevel,
-        isActive: !!editingShow.is_active,
-        isUndersized: !!editingShow.is_undersized,
+        primaryEducationDemographic: (editingShow.primary_education || "") as EducationLevel,
+        secondaryEducationDemographic: (editingShow.secondary_education || "") as EducationLevel,
+        isActive: !!editingShow.isActive,
+        isUndersized: !!editingShow.isUndersized,
       })
     } else {
       setFormData(initialFormData)
@@ -537,7 +537,7 @@ export default function CreateShowDialog({
       latestCPM: parseFloat(formData.latestCPM || "0"),
       adSlots: parseInt(formData.adSlots || "0"),
       averageLength: parseInt(formData.averageLength || "0"),
-      startDate: formData.startDate,
+      start_date: formData.start_date,
       sideBonusPercent: parseFloat(formData.sideBonusPercent || "0"),
       youtubeAdsPercent: parseFloat(formData.youtubeAdsPercent || "0"),
       subscriptionsPercent: parseFloat(formData.subscriptionsPercent || "0"),
@@ -561,11 +561,11 @@ export default function CreateShowDialog({
       ageDemographic: formData.ageDemographic || undefined,
       gender: formData.gender,
       region: formData.region || undefined,
-      primaryEducation: formData.primaryEducationDemographic || undefined,
-      secondaryEducation: formData.secondaryEducationDemographic || undefined,
+      primary_education: formData.primaryEducationDemographic || undefined,
+      secondary_education: formData.secondaryEducationDemographic || undefined,
       subnetwork_id: formData.subnetwork_id,
-      is_active: formData.isActive,
-      is_undersized: formData.isUndersized,
+      isActive: formData.isActive,
+      isUndersized: formData.isUndersized,
     }
 
     console.log("Show Data:", showData)
@@ -847,20 +847,20 @@ export default function CreateShowDialog({
                       )}
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="startDate" className="flex items-center gap-1">
+                      <Label htmlFor="start_date" className="flex items-center gap-1">
                         Start Date <span className="text-red-500">*</span>
                       </Label>
                       <Input
-                        id="startDate"
-                        type="date"
-                        value={formData.startDate}
-                        onChange={(e) => handleInputChange("startDate", e.target.value)}
-                        className={cn(getFieldError("startDate") && "border-red-500")}
+                        id="start_date"
+                        type="date"                        
+                        value={formData.start_date}
+                        onChange={(e) => handleInputChange("start_date", e.target.value)}
+                        className={cn(getFieldError("start_date") && "border-red-500")}
                       />
-                      {getFieldError("startDate") && (
+                      {getFieldError("start_date") && (
                         <p className="text-sm text-red-500 flex items-center gap-1">
                           <AlertCircle className="h-3 w-3" />
-                          {getFieldError("startDate")}
+                          {getFieldError("start_date")}
                         </p>
                       )}
                     </div>
