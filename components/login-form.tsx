@@ -9,12 +9,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Loader2 } from "lucide-react"
+import { Loader2, Eye, EyeOff } from "lucide-react" // Import Eye and EyeOff icons
 import Image from "next/image"
 
 export default function LoginForm() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
+  const [showPassword, setShowPassword] = useState(false) // State to manage password visibility
   const [error, setError] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const { login } = useAuth()
@@ -29,6 +30,11 @@ export default function LoginForm() {
       setError("Invalid email or password")
     }
     setIsLoading(false)
+  }
+
+  // Function to toggle password visibility
+  const togglePasswordVisibility = () => {
+    setShowPassword(!showPassword)
   }
 
   return (
@@ -57,18 +63,37 @@ export default function LoginForm() {
                 className="transition-all duration-200 focus:ring-2 focus:ring-emerald-500"
               />
             </div>
+            {/* --- Start of Password Field with Show/Hide Button --- */}
             <div className="space-y-2">
               <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
-                type="password"
-                placeholder="Enter your password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                className="transition-all duration-200 focus:ring-2 focus:ring-emerald-500"
-              />
+              <div className="relative">
+                <Input
+                  id="password"
+                  type={showPassword ? "text" : "password"} // Dynamically set type
+                  placeholder="Enter your password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  // Add padding to the right to make space for the icon button
+                  className="pr-10 transition-all duration-200 focus:ring-2 focus:ring-emerald-500"
+                />
+                <Button
+                  type="button" // Important to prevent form submission
+                  variant="ghost"
+                  size="sm"
+                  className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                  onClick={togglePasswordVisibility}
+                >
+                  {showPassword ? (
+                    <EyeOff className="h-4 w-4" aria-hidden="true" />
+                  ) : (
+                    <Eye className="h-4 w-4" aria-hidden="true" />
+                  )}
+                  <span className="sr-only">{showPassword ? "Hide password" : "Show password"}</span>
+                </Button>
+              </div>
             </div>
+            {/* --- End of Password Field --- */}
             {error && (
               <Alert variant="destructive">
                 <AlertDescription>{error}</AlertDescription>
