@@ -110,11 +110,11 @@ export default function DashboardNav({ activeTab, onTabChange, onSidebarToggle }
         )}
       >
         {(!isDesktopCollapsed || isMobile) && (
-          <Image src="/evergreen-logo.svg" alt="Evergreen Podcasts" width={150} height={40} className="h-8 w-auto" />
+          <Image src="/myro-logo.png" alt="Myro" width={150} height={40} className="h-8 w-auto" />
         )}
         {isDesktopCollapsed && !isMobile && (
           <div className="w-8 h-8 bg-gradient-to-r from-emerald-500 to-cyan-500 rounded-lg flex items-center justify-center">
-            <span className="text-white font-bold text-sm">E</span>
+            <span className="text-white font-bold text-sm">M</span>
           </div>
         )}
       </div>
@@ -201,7 +201,7 @@ export default function DashboardNav({ activeTab, onTabChange, onSidebarToggle }
 
       {/* Mobile Header */}
       <div className="lg:hidden flex items-center justify-between p-4 bg-card border-b border-border/50 sticky top-0 z-40">
-        <Image src="/evergreen-logo.svg" alt="Evergreen Podcasts" width={120} height={30} className="h-6 w-auto" />
+        <Image src="/myro-logo.png" alt="Myro" width={120} height={30} className="h-6 w-auto" />
         <div className="flex items-center gap-2">
           <ThemeToggle />
           <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
