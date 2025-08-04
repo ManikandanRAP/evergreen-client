@@ -16,7 +16,7 @@ interface CreateUserDialogProps {
   onOpenChange: (open: boolean) => void
 }
 
-export function CreateUserDialog({ open, onOpenChange }: CreateUserDialogProps) {
+export default function CreateUserDialog({ open, onOpenChange }: CreateUserDialogProps) {
   const [formData, setFormData] = useState({
     userType: "",
     username: "",
@@ -28,6 +28,18 @@ export function CreateUserDialog({ open, onOpenChange }: CreateUserDialogProps) 
   const [isLoading, setIsLoading] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
   const { toast } = useToast()
+
+  const handleUserTypeChange = (value: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      userType: value,
+      vendorId: value === "admin" ? "" : prev.vendorId, // Clear vendor ID when switching to admin
+    }))
+    // Clear vendor ID error when switching to admin
+    if (value === "admin" && errors.vendorId) {
+      setErrors((prev) => ({ ...prev, vendorId: "" }))
+    }
+  }
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {}
@@ -45,11 +57,16 @@ export function CreateUserDialog({ open, onOpenChange }: CreateUserDialogProps) 
     if (!formData.password) {
       newErrors.password = "Password is required"
     } else if (formData.password.length < 8) {
-      newErrors.password = "Password must be at least 8 characters long"
+      newErrors.password = "Password must be at least 8 characters"
     }
 
     if (!formData.fullName) {
       newErrors.fullName = "Full name is required"
+    }
+
+    // Only validate vendor ID if user type is partner
+    if (formData.userType === "partner" && !formData.vendorId) {
+      newErrors.vendorId = "Vendor ID is required for partner users"
     }
 
     setErrors(newErrors)
@@ -70,8 +87,8 @@ export function CreateUserDialog({ open, onOpenChange }: CreateUserDialogProps) 
       await new Promise((resolve) => setTimeout(resolve, 2000))
 
       toast({
-        title: "User Created Successfully",
-        description: `${formData.fullName} has been added as a ${formData.userType.toLowerCase()}.`,
+        title: "User created successfully",
+        description: `${formData.fullName} has been added as a ${formData.userType}.`,
       })
 
       // Reset form
@@ -86,8 +103,8 @@ export function CreateUserDialog({ open, onOpenChange }: CreateUserDialogProps) 
       onOpenChange(false)
     } catch (error) {
       toast({
-        title: "Error",
-        description: "Failed to create user. Please try again.",
+        title: "Error creating user",
+        description: "There was a problem creating the user. Please try again.",
         variant: "destructive",
       })
     } finally {
@@ -97,6 +114,7 @@ export function CreateUserDialog({ open, onOpenChange }: CreateUserDialogProps) 
 
   const handleInputChange = (field: string, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }))
+    // Clear error when user starts typing
     if (errors[field]) {
       setErrors((prev) => ({ ...prev, [field]: "" }))
     }
@@ -111,20 +129,22 @@ export function CreateUserDialog({ open, onOpenChange }: CreateUserDialogProps) 
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
+          {/* User Type */}
           <div className="space-y-2">
             <Label htmlFor="userType">User Type</Label>
-            <Select value={formData.userType} onValueChange={(value) => handleInputChange("userType", value)}>
+            <Select value={formData.userType} onValueChange={handleUserTypeChange}>
               <SelectTrigger>
                 <SelectValue placeholder="Select user type" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="Admin">Admin</SelectItem>
-                <SelectItem value="Partner">Partner</SelectItem>
+                <SelectItem value="admin">Admin</SelectItem>
+                <SelectItem value="partner">Partner</SelectItem>
               </SelectContent>
             </Select>
             {errors.userType && <p className="text-sm text-red-500">{errors.userType}</p>}
           </div>
 
+          {/* Username (Email) */}
           <div className="space-y-2">
             <Label htmlFor="username">Username (Email ID)</Label>
             <Input
@@ -137,6 +157,7 @@ export function CreateUserDialog({ open, onOpenChange }: CreateUserDialogProps) 
             {errors.username && <p className="text-sm text-red-500">{errors.username}</p>}
           </div>
 
+          {/* Password */}
           <div className="space-y-2">
             <Label htmlFor="password">Password</Label>
             <div className="relative">
@@ -160,11 +181,11 @@ export function CreateUserDialog({ open, onOpenChange }: CreateUserDialogProps) 
             {errors.password && <p className="text-sm text-red-500">{errors.password}</p>}
           </div>
 
+          {/* Full Name */}
           <div className="space-y-2">
             <Label htmlFor="fullName">Full Name</Label>
             <Input
               id="fullName"
-              type="text"
               placeholder="Enter full name"
               value={formData.fullName}
               onChange={(e) => handleInputChange("fullName", e.target.value)}
@@ -172,19 +193,22 @@ export function CreateUserDialog({ open, onOpenChange }: CreateUserDialogProps) 
             {errors.fullName && <p className="text-sm text-red-500">{errors.fullName}</p>}
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="vendorId">Vendor ID in QBO (Optional)</Label>
-            <Input
-              id="vendorId"
-              type="text"
-              placeholder="Enter vendor ID"
-              value={formData.vendorId}
-              onChange={(e) => handleInputChange("vendorId", e.target.value)}
-            />
-          </div>
+          {/* Vendor Name in QBO - Only show for Partner */}
+          {formData.userType === "partner" && (
+            <div className="space-y-2">
+              <Label htmlFor="vendorId">Vendor Name in as QBO</Label>
+              <Input
+                id="vendorId"
+                placeholder="Enter vendor name"
+                value={formData.vendorId}
+                onChange={(e) => handleInputChange("vendorId", e.target.value)}
+              />
+              {errors.vendorId && <p className="text-sm text-red-500">{errors.vendorId}</p>}
+            </div>
+          )}
 
           <div className="flex justify-end space-x-2 pt-4">
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={isLoading}>
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
             <Button type="submit" disabled={isLoading}>
