@@ -6,6 +6,7 @@ import { useShows } from "@/hooks/use-shows"
 import LoginForm from "@/components/login-form"
 import DashboardNav from "@/components/dashboard-nav"
 import ShowsManagement from "@/components/shows-management"
+import AdministratorPage from "@/components/administrator-page"
 import RevenueLedger from "@/components/revenue-ledger"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -310,6 +311,8 @@ export default function Dashboard() {
         return <UserManagement />
       case "ledger":
         return <RevenueLedger />
+      case "administrator":
+        return user.role === "admin" ? <AdministratorPage /> : <DashboardContent />
       case "settings":
         return <Settings />
       default:

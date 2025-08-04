@@ -17,6 +17,7 @@ import {
   Monitor,
   ChevronLeft,
   ChevronRight,
+  Shield,
 } from "lucide-react"
 import { useTheme } from "next-themes"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
@@ -50,6 +51,7 @@ export default function DashboardNav({ activeTab, onTabChange, onSidebarToggle }
     { id: "shows", label: "Shows", icon: Radio },
     // ...(user?.role === "admin" ? [{ id: "users", label: "Users", icon: Users }] : []),
     { id: "ledger", label: "Revenue Ledger", icon: DollarSign },
+    ...(user?.role === "admin" ? [{ id: "administrator", label: "Administrator", icon: Shield }] : []),
     // { id: "settings", label: "Settings", icon: Settings },
   ]
 
