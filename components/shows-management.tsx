@@ -29,6 +29,8 @@ import {
   CheckCircle,
   X,
   Loader2,
+  ChevronDown,
+  RotateCcw,
 } from "lucide-react"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
 import CreateShowDialog from "./create-show-dialog"
@@ -55,7 +57,6 @@ interface ShowFilters {
   ageDemographic: string
   genderDemographic: string
   ownershipPercentage: string
-  // New Filters
   region: string
   isUndersized: string
   showsPerYear: string
@@ -69,6 +70,36 @@ interface ShowFilters {
   hasWebManagementRevenue: string
 }
 
+const initialFilters: ShowFilters = {
+  search: "",
+  minimumGuarantee: "",
+  subnetwork: "",
+  format: "",
+  tentpole: "",
+  relationship: "",
+  showType: "",
+  genre_name: "",
+  hasSponsorshipRevenue: "",
+  hasNonEvergreenRevenue: "",
+  requiresPartnerLedgerAccess: "",
+  isOriginal: "",
+  isActive: "",
+  ageDemographic: "",
+  genderDemographic: "",
+  ownershipPercentage: "",
+  region: "",
+  isUndersized: "",
+  showsPerYear: "",
+  averageLength: "",
+  adSlots: "",
+  revenue2023: "",
+  revenue2024: "",
+  revenue2025: "",
+  hasBrandedRevenue: "",
+  hasMarketingRevenue: "",
+  hasWebManagementRevenue: "",
+}
+
 interface ImportResult {
   success: boolean
   message: string
@@ -80,36 +111,7 @@ export default function ShowsManagement() {
   const { user } = useAuth()
   const { shows, loading, error, createShow, updateShow, deleteShow, fetchShows } = useShows()
 
-  const [filters, setFilters] = useState<ShowFilters>({
-    search: "",
-    minimumGuarantee: "",
-    subnetwork: "",
-    format: "",
-    tentpole: "",
-    relationship: "",
-    showType: "",
-    genre_name: "",
-    hasSponsorshipRevenue: "",
-    hasNonEvergreenRevenue: "",
-    requiresPartnerLedgerAccess: "",
-    isOriginal: "",
-    isActive: "",
-    ageDemographic: "",
-    genderDemographic: "",
-    ownershipPercentage: "",
-    // New Filters Initial State
-    region: "",
-    isUndersized: "",
-    showsPerYear: "",
-    averageLength: "",
-    adSlots: "",
-    revenue2023: "",
-    revenue2024: "",
-    revenue2025: "",
-    hasBrandedRevenue: "",
-    hasMarketingRevenue: "",
-    hasWebManagementRevenue: "",
-  })
+  const [filters, setFilters] = useState<ShowFilters>(initialFilters)
   const [isFiltersOpen, setIsFiltersOpen] = useState(false)
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
   const [isImportDialogOpen, setIsImportDialogOpen] = useState(false)
@@ -119,6 +121,10 @@ export default function ShowsManagement() {
   const [viewMode, setViewMode] = useState<"cards" | "list">("cards")
   const [selectedShows, setSelectedShows] = useState<Set<string>>(new Set())
   const [importResult, setImportResult] = useState<ImportResult | null>(null)
+
+  const handleClearFilters = () => {
+    setFilters(initialFilters)
+  }
 
   const handleViewShow = (show: Show) => {
     setViewingShow(show)
@@ -367,9 +373,10 @@ export default function ShowsManagement() {
   }
 
   const getUniqueValues = (key: keyof Show) => {
-    const values = shows.map((show) => show[key]) as string[]
-    return [...new Set(values)].filter(Boolean).sort()
+    const values = shows.map((show) => show[key]) as (string | number)[]
+    return [...new Set(values)].filter(Boolean).sort((a,b) => String(a).localeCompare(String(b)))
   }
+
 
   if (loading) {
     return (
@@ -520,15 +527,18 @@ export default function ShowsManagement() {
       <Card className="evergreen-card">
         <Collapsible open={isFiltersOpen} onOpenChange={setIsFiltersOpen}>
           <CollapsibleTrigger asChild>
-            <CardHeader className="cursor-pointer hover:bg-accent/50 transition-colors">
+            <CardHeader className="cursor-pointer hover:bg-accent/50 transition-colors group">
               <div className="flex items-center justify-between">
-                <CardTitle className="flex items-center gap-2">
-                  <Filter className="h-5 w-5" />
-                  Filters
-                </CardTitle>
-                <Badge variant="secondary">
-                  {filteredShows.length} show{filteredShows.length !== 1 ? "s" : ""}
-                </Badge>
+                <div className="flex items-center gap-2">
+                  <CardTitle className="flex items-center gap-2">
+                    <Filter className="h-5 w-5" />
+                    Filters
+                  </CardTitle>
+                  <Badge variant="secondary">
+                    {filteredShows.length} show{filteredShows.length !== 1 ? "s" : ""}
+                  </Badge>
+                </div>
+                <ChevronDown className="h-5 w-5 transition-transform duration-200 group-data-[state=open]:rotate-180" />
               </div>
             </CardHeader>
           </CollapsibleTrigger>
@@ -567,7 +577,7 @@ export default function ShowsManagement() {
                     <SelectContent>
                       <SelectItem value="all">All Subnetworks</SelectItem>
                       {getUniqueValues("subnetwork_id").map((sub) => (
-                        <SelectItem key={sub} value={sub}>{sub}</SelectItem>
+                        <SelectItem key={String(sub)} value={String(sub)}>{sub}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
@@ -580,7 +590,7 @@ export default function ShowsManagement() {
                     <SelectContent>
                       <SelectItem value="all">All Genres</SelectItem>
                       {getUniqueValues("genre_name").map((genre) => (
-                        <SelectItem key={genre} value={genre}>{genre}</SelectItem>
+                        <SelectItem key={String(genre)} value={String(genre)}>{genre}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
@@ -612,27 +622,21 @@ export default function ShowsManagement() {
                   </Select>
                 </div>
 
-                {/* Ownership % */}
                 <div className="space-y-2">
                   <Label>Ownership %</Label>
-                  <Select
-                    value={filters.ownershipPercentage}
-                    onValueChange={(value) => setFilters((prev) => ({ ...prev, ownershipPercentage: value }))}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="All ownership" />
-                    </SelectTrigger>
+                  <Select value={filters.ownershipPercentage} onValueChange={(value) => setFilters((prev) => ({ ...prev, ownershipPercentage: value }))}>
+                    <SelectTrigger><SelectValue placeholder="All ownership" /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="all">All Ownership</SelectItem>
-                      {getUniqueValues("ownershipPercentage").map((percentage) => (
-                        <SelectItem key={percentage} value={String(percentage)}>
-                          {percentage}%
-                        </SelectItem>
-                      ))}
+                        <SelectItem value="all">All Ownership</SelectItem>
+                        {getUniqueValues("ownershipPercentage").map((percentage) => (
+                            <SelectItem key={String(percentage)} value={String(percentage)}>
+                            {percentage}%
+                            </SelectItem>
+                        ))}
                     </SelectContent>
                   </Select>
                 </div>
-
+                
                 {/* --- Demographics --- */}
                 <div className="space-y-2">
                   <Label>Age Demographic</Label>
@@ -649,20 +653,14 @@ export default function ShowsManagement() {
                   </Select>
                 </div>
 
-                {/* Gender Demographic */}
                 <div className="space-y-2">
                   <Label>Gender Demographic</Label>
-                  <Select
-                    value={filters.genderDemographic}
-                    onValueChange={(value) => setFilters((prev) => ({ ...prev, genderDemographic: value }))}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="All genders" />
-                    </SelectTrigger>
+                  <Select value={filters.genderDemographic} onValueChange={(value) => setFilters((prev) => ({ ...prev, genderDemographic: value }))}>
+                    <SelectTrigger><SelectValue placeholder="All genders" /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">All Genders</SelectItem>
                       {getUniqueValues("genderDemographic").map((gender) => (
-                        <SelectItem key={gender} value={gender}>
+                        <SelectItem key={String(gender)} value={String(gender)}>
                           {gender}
                         </SelectItem>
                       ))}
@@ -677,7 +675,7 @@ export default function ShowsManagement() {
                     <SelectContent>
                       <SelectItem value="all">All Regions</SelectItem>
                       {getUniqueValues("region").map((region) => (
-                        <SelectItem key={region} value={region} className="capitalize">{region}</SelectItem>
+                        <SelectItem key={String(region)} value={String(region)} className="capitalize">{region}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
@@ -816,7 +814,12 @@ export default function ShowsManagement() {
                   <Label>Min. Revenue 2025 ($)</Label>
                   <Input type="number" placeholder="e.g. 20000" value={filters.revenue2025} onChange={(e) => setFilters((prev) => ({ ...prev, revenue2025: e.target.value }))} />
                 </div>
-
+              </div>
+              <div className="flex justify-end pt-4">
+                <Button variant="ghost" onClick={handleClearFilters}>
+                  <RotateCcw className="mr-2 h-4 w-4" />
+                  Clear All Filters
+                </Button>
               </div>
             </CardContent>
           </CollapsibleContent>
