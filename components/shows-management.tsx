@@ -918,7 +918,7 @@ export default function ShowsManagement() {
                             ? "secondary"
                             : "outline"
                       }
-                      className="text-xs"
+                      className="text-xs justify-self-start"
                     >
                       {show.relationship}
                     </Badge>
