@@ -55,6 +55,18 @@ interface ShowFilters {
   ageDemographic: string
   genderDemographic: string
   ownershipPercentage: string
+  // New Filters
+  region: string
+  isUndersized: string
+  showsPerYear: string
+  averageLength: string
+  adSlots: string
+  revenue2023: string
+  revenue2024: string
+  revenue2025: string
+  hasBrandedRevenue: string
+  hasMarketingRevenue: string
+  hasWebManagementRevenue: string
 }
 
 interface ImportResult {
@@ -85,6 +97,18 @@ export default function ShowsManagement() {
     ageDemographic: "",
     genderDemographic: "",
     ownershipPercentage: "",
+    // New Filters Initial State
+    region: "",
+    isUndersized: "",
+    showsPerYear: "",
+    averageLength: "",
+    adSlots: "",
+    revenue2023: "",
+    revenue2024: "",
+    revenue2025: "",
+    hasBrandedRevenue: "",
+    hasMarketingRevenue: "",
+    hasWebManagementRevenue: "",
   })
   const [isFiltersOpen, setIsFiltersOpen] = useState(false)
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
@@ -270,69 +294,67 @@ export default function ShowsManagement() {
         if (!matchesSearch) return false
       }
 
-      // Keep all other existing filter logic unchanged
-      if (filters.minimumGuarantee && show.minimumGuarantee < Number.parseInt(filters.minimumGuarantee)) {
-        return false
+      // --- Text & Dropdown Filters ---
+      if (filters.subnetwork && filters.subnetwork !== "all" && show.subnetwork_id !== filters.subnetwork) return false
+      if (filters.format && filters.format !== "all" && show.format !== filters.format) return false
+      if (filters.relationship && filters.relationship !== "all" && show.relationship !== filters.relationship) return false
+      if (filters.showType && filters.showType !== "all" && show.showType.toLowerCase() !== filters.showType) return false
+      if (filters.genre_name && filters.genre_name !== "all" && show.genre_name !== filters.genre_name) return false
+      if (filters.ageDemographic && filters.ageDemographic !== "all" && show.ageDemographic !== filters.ageDemographic) return false
+      if (filters.genderDemographic && filters.genderDemographic !== "all" && show.genderDemographic !== filters.genderDemographic) return false
+      if (filters.region && filters.region !== "all" && show.region !== filters.region) return false
+
+      // --- Boolean (Yes/No) Filters ---
+      const booleanFilters: (keyof ShowFilters)[] = [
+        "tentpole",
+        "isOriginal",
+        "isActive",
+        "isUndersized",
+        "hasSponsorshipRevenue",
+        "hasNonEvergreenRevenue",
+        "requiresPartnerLedgerAccess",
+        "hasBrandedRevenue",
+        "hasMarketingRevenue",
+        "hasWebManagementRevenue",
+      ]
+      const showToFilterKeyMap: Record<string, keyof Show> = {
+        tentpole: "isTentpole",
+        isUndersized: "isUndersized",
       }
-      if (filters.subnetwork && filters.subnetwork !== "all" && show.subnetwork !== filters.subnetwork) {
-        return false
+
+      for (const key of booleanFilters) {
+        if (filters[key] && filters[key] !== "all") {
+          const filterValue = filters[key] === "yes"
+          const showKey = (showToFilterKeyMap[key] || key) as keyof Show
+          if (show[showKey] !== filterValue) return false
+        }
       }
-      if (filters.format && filters.format !== "all" && show.format !== filters.format) {
-        return false
+
+      // --- Numeric Filters ---
+      const numericFilters: { filterKey: keyof ShowFilters; showKey: keyof Show }[] = [
+        { filterKey: "minimumGuarantee", showKey: "minimumGuarantee" },
+        { filterKey: "showsPerYear", showKey: "showsPerYear" },
+        { filterKey: "adSlots", showKey: "adSlots" },
+        { filterKey: "averageLength", showKey: "averageLength" },
+        { filterKey: "revenue2023", showKey: "revenue2023" },
+        { filterKey: "revenue2024", showKey: "revenue2024" },
+        { filterKey: "revenue2025", showKey: "revenue2025" },
+      ]
+
+      for (const { filterKey, showKey } of numericFilters) {
+        if (filters[filterKey]) {
+          const filterValue = Number.parseInt(filters[filterKey] as string, 10)
+          const showValue = show[showKey] as number
+          if (!isNaN(filterValue) && showValue < filterValue) return false
+        }
       }
-      if (filters.tentpole && filters.tentpole !== "all") {
-        const isTentpole = filters.tentpole === "yes"
-        if (show.isTentpole !== isTentpole) return false
-      }
-      if (filters.relationship && filters.relationship !== "all" && show.relationship !== filters.relationship) {
-        return false
-      }
-      if (filters.showType && filters.showType !== "all" && show.showType !== filters.showType) {
-        return false
-      }
-      if (filters.genre_name && filters.genre_name !== "all" && show.genre_name !== filters.genre_name) {
-        return false
-      }
-      if (filters.hasSponsorshipRevenue && filters.hasSponsorshipRevenue !== "all") {
-        const hasSponsorship = filters.hasSponsorshipRevenue === "yes"
-        if (show.hasSponsorshipRevenue !== hasSponsorship) return false
-      }
-      if (filters.hasNonEvergreenRevenue && filters.hasNonEvergreenRevenue !== "all") {
-        const hasNonEvergreen = filters.hasNonEvergreenRevenue === "yes"
-        if (show.hasNonEvergreenRevenue !== hasNonEvergreen) return false
-      }
-      if (filters.requiresPartnerLedgerAccess && filters.requiresPartnerLedgerAccess !== "all") {
-        const requiresAccess = filters.requiresPartnerLedgerAccess === "yes"
-        if (show.requiresPartnerLedgerAccess !== requiresAccess) return false
-      }
-      if (filters.isOriginal && filters.isOriginal !== "all") {
-        const isOriginal = filters.isOriginal === "yes"
-        if (show.isOriginal !== isOriginal) return false
-      }
-      if (filters.isActive && filters.isActive !== "all") {
-        const isActive = filters.isActive === "yes"
-        if (show.isActive !== isActive) return false
-      }
-      if (
-        filters.ageDemographic &&
-        filters.ageDemographic !== "all" &&
-        show.ageDemographic !== filters.ageDemographic
-      ) {
-        return false
-      }
-      if (
-        filters.genderDemographic &&
-        filters.genderDemographic !== "all" &&
-        show.genderDemographic !== filters.genderDemographic
-      ) {
-        return false
-      }
+
+      // --- Ownership Percentage Filter ---
       if (filters.ownershipPercentage && filters.ownershipPercentage !== "all") {
         const ownership = Number.parseInt(filters.ownershipPercentage)
-        if (filters.ownershipPercentage === "0" && show.ownershipPercentage !== 0) return false
-        if (filters.ownershipPercentage === "30" && show.ownershipPercentage !== 30) return false
-        if (filters.ownershipPercentage === "100" && show.ownershipPercentage !== 100) return false
+        if (show.ownershipPercentage !== ownership) return false
       }
+
       return true
     })
   }, [shows, filters])
@@ -344,19 +366,9 @@ export default function ShowsManagement() {
     }).format(amount)
   }
 
-  const getUniqueSubnetworks = () => {
-    const subnetworks = [...new Set(shows.map((show) => show.subnetwork_id))]
-    return subnetworks.filter(Boolean).sort()
-  }
-
-  const getUniquegenre_names = () => {
-    const genre_names = [...new Set(shows.map((show) => show.genre_name))]
-    return genre_names.filter(Boolean).sort()
-  }
-
-  const getUniqueGender = () => {
-    const gender = [...new Set(shows.map((show) => show.genderDemographic))]
-    return gender.filter(Boolean).sort()
+  const getUniqueValues = (key: keyof Show) => {
+    const values = shows.map((show) => show[key]) as string[]
+    return [...new Set(values)].filter(Boolean).sort()
   }
 
   if (loading) {
@@ -418,7 +430,6 @@ export default function ShowsManagement() {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          {/* View Mode Toggle */}
           <div className="flex items-center border rounded-lg p-1">
             <Button
               variant={viewMode === "cards" ? "default" : "ghost"}
@@ -438,7 +449,6 @@ export default function ShowsManagement() {
             </Button>
           </div>
 
-          {/* Import/Export Buttons */}
           {user?.role === "admin" && (
             <Button
               variant="outline"
@@ -464,7 +474,6 @@ export default function ShowsManagement() {
         </div>
       </div>
 
-      {/* Import Result Alert */}
       {importResult && (
         <Alert variant={importResult.success ? "default" : "destructive"} className="relative">
           <div className="flex items-start gap-2">
@@ -524,89 +533,63 @@ export default function ShowsManagement() {
             </CardHeader>
           </CollapsibleTrigger>
           <CollapsibleContent>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-4 pt-4">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                 {/* Search */}
-                <div className="space-y-2">
+                <div className="space-y-2 col-span-1 xl:col-span-4">
                   <Label htmlFor="search">Search Shows</Label>
                   <Input
                     id="search"
-                    placeholder="Search shows..."
+                    placeholder="Search by name, type, genre, contact, etc..."
                     value={filters.search}
                     onChange={(e) => setFilters((prev) => ({ ...prev, search: e.target.value }))}
                   />
                 </div>
 
-                {/* Format */}
+                {/* --- Main Dropdowns --- */}
                 <div className="space-y-2">
                   <Label>Format</Label>
-                  <Select
-                    value={filters.format}
-                    onValueChange={(value) => setFilters((prev) => ({ ...prev, format: value }))}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="All formats" />
-                    </SelectTrigger>
+                  <Select value={filters.format} onValueChange={(value) => setFilters((prev) => ({ ...prev, format: value }))}>
+                    <SelectTrigger><SelectValue placeholder="All formats" /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">All Formats</SelectItem>
                       <SelectItem value="Audio">Audio</SelectItem>
                       <SelectItem value="Video">Video</SelectItem>
+                      <SelectItem value="Both">Both</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
 
-                {/* Subnetwork */}
                 <div className="space-y-2">
                   <Label>Subnetwork</Label>
-                  <Select
-                    value={filters.subnetwork}
-                    onValueChange={(value) => setFilters((prev) => ({ ...prev, subnetwork: value }))}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="All subnetworks" />
-                    </SelectTrigger>
+                  <Select value={filters.subnetwork} onValueChange={(value) => setFilters((prev) => ({ ...prev, subnetwork: value }))}>
+                    <SelectTrigger><SelectValue placeholder="All subnetworks" /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">All Subnetworks</SelectItem>
-                      {getUniqueSubnetworks().map((subnetwork) => (
-                        <SelectItem key={subnetwork} value={subnetwork}>
-                          {subnetwork}
-                        </SelectItem>
+                      {getUniqueValues("subnetwork_id").map((sub) => (
+                        <SelectItem key={sub} value={sub}>{sub}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                 </div>
 
-                {/* genre_name */}
                 <div className="space-y-2">
                   <Label>Genre</Label>
-                  <Select
-                    value={filters.genre_name}
-                    onValueChange={(value) => setFilters((prev) => ({ ...prev, genre_name: value }))}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="All Genre" />
-                    </SelectTrigger>
+                  <Select value={filters.genre_name} onValueChange={(value) => setFilters((prev) => ({ ...prev, genre_name: value }))}>
+                    <SelectTrigger><SelectValue placeholder="All Genres" /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="all">All Genre</SelectItem>
-                      {getUniquegenre_names().map((genre_name) => (
-                        <SelectItem key={genre_name} value={genre_name}>
-                          {genre_name}
-                        </SelectItem>
+                      <SelectItem value="all">All Genres</SelectItem>
+                      {getUniqueValues("genre_name").map((genre) => (
+                        <SelectItem key={genre} value={genre}>{genre}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                 </div>
 
-                {/* Relationship */}
                 <div className="space-y-2">
                   <Label>Relationship</Label>
-                  <Select
-                    value={filters.relationship}
-                    onValueChange={(value) => setFilters((prev) => ({ ...prev, relationship: value }))}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="All relationships" />
-                    </SelectTrigger>
+                  <Select value={filters.relationship} onValueChange={(value) => setFilters((prev) => ({ ...prev, relationship: value }))}>
+                    <SelectTrigger><SelectValue placeholder="All relationships" /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">All Relationships</SelectItem>
                       <SelectItem value="Strong">Strong</SelectItem>
@@ -616,16 +599,10 @@ export default function ShowsManagement() {
                   </Select>
                 </div>
 
-                {/* Show Type */}
                 <div className="space-y-2">
                   <Label>Show Type</Label>
-                  <Select
-                    value={filters.showType}
-                    onValueChange={(value) => setFilters((prev) => ({ ...prev, showType: value }))}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="All show types" />
-                    </SelectTrigger>
+                  <Select value={filters.showType} onValueChange={(value) => setFilters((prev) => ({ ...prev, showType: value }))}>
+                    <SelectTrigger><SelectValue placeholder="All show types" /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">All Show Types</SelectItem>
                       <SelectItem value="original">Original</SelectItem>
@@ -635,9 +612,9 @@ export default function ShowsManagement() {
                   </Select>
                 </div>
 
-                {/* Ownership Percentage */}
+                {/* Ownership % */}
                 <div className="space-y-2">
-                  <Label>Ownership Percentage</Label>
+                  <Label>Ownership %</Label>
                   <Select
                     value={filters.ownershipPercentage}
                     onValueChange={(value) => setFilters((prev) => ({ ...prev, ownershipPercentage: value }))}
@@ -647,23 +624,20 @@ export default function ShowsManagement() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">All Ownership</SelectItem>
-                      <SelectItem value="0">0% (Evergreen Owned)</SelectItem>
-                      <SelectItem value="30">30% (Partnership)</SelectItem>
-                      <SelectItem value="100">100% (Partner Owned)</SelectItem>
+                      {getUniqueValues("ownershipPercentage").map((percentage) => (
+                        <SelectItem key={percentage} value={String(percentage)}>
+                          {percentage}%
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>
 
-                {/* Age Demographic */}
+                {/* --- Demographics --- */}
                 <div className="space-y-2">
                   <Label>Age Demographic</Label>
-                  <Select
-                    value={filters.ageDemographic}
-                    onValueChange={(value) => setFilters((prev) => ({ ...prev, ageDemographic: value }))}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="All ages" />
-                    </SelectTrigger>
+                  <Select value={filters.ageDemographic} onValueChange={(value) => setFilters((prev) => ({ ...prev, ageDemographic: value }))}>
+                    <SelectTrigger><SelectValue placeholder="All ages" /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">All Ages</SelectItem>
                       <SelectItem value="18-24">18-24</SelectItem>
@@ -687,131 +661,162 @@ export default function ShowsManagement() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">All Genders</SelectItem>
-                      <SelectItem value="Male">Male</SelectItem>
-                      <SelectItem value="Female">Female</SelectItem>
-                      <SelectItem value="Others">Others</SelectItem>
+                      {getUniqueValues("genderDemographic").map((gender) => (
+                        <SelectItem key={gender} value={gender}>
+                          {gender}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>
 
-                {/* Tentpole */}
+                <div className="space-y-2">
+                  <Label>Region</Label>
+                  <Select value={filters.region} onValueChange={(value) => setFilters((prev) => ({ ...prev, region: value }))}>
+                    <SelectTrigger><SelectValue placeholder="All Regions" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Regions</SelectItem>
+                      {getUniqueValues("region").map((region) => (
+                        <SelectItem key={region} value={region} className="capitalize">{region}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* --- Boolean Statuses --- */}
                 <div className="space-y-2">
                   <Label>Tentpole Show</Label>
-                  <Select
-                    value={filters.tentpole}
-                    onValueChange={(value) => setFilters((prev) => ({ ...prev, tentpole: value }))}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="All shows" />
-                    </SelectTrigger>
+                  <Select value={filters.tentpole} onValueChange={(value) => setFilters((prev) => ({ ...prev, tentpole: value }))}>
+                    <SelectTrigger><SelectValue placeholder="All shows" /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">All Shows</SelectItem>
-                      <SelectItem value="yes">Tentpole Shows</SelectItem>
-                      <SelectItem value="no">Non-Tentpole Shows</SelectItem>
+                      <SelectItem value="yes">Yes</SelectItem>
+                      <SelectItem value="no">No</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div className="space-y-2">
+                  <Label>Undersized Show</Label>
+                  <Select value={filters.isUndersized} onValueChange={(value) => setFilters((prev) => ({ ...prev, isUndersized: value }))}>
+                    <SelectTrigger><SelectValue placeholder="All sizes" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Sizes</SelectItem>
+                      <SelectItem value="yes">Undersized</SelectItem>
+                      <SelectItem value="no">Not Undersized</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
 
-                {/* Is Original */}
                 <div className="space-y-2">
                   <Label>Original Content</Label>
-                  <Select
-                    value={filters.isOriginal}
-                    onValueChange={(value) => setFilters((prev) => ({ ...prev, isOriginal: value }))}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="All content" />
-                    </SelectTrigger>
+                  <Select value={filters.isOriginal} onValueChange={(value) => setFilters((prev) => ({ ...prev, isOriginal: value }))}>
+                    <SelectTrigger><SelectValue placeholder="All content" /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">All Content</SelectItem>
-                      <SelectItem value="yes">Original Content</SelectItem>
-                      <SelectItem value="no">Licensed Content</SelectItem>
+                      <SelectItem value="yes">Original</SelectItem>
+                      <SelectItem value="no">Not Original</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
 
-                {/* Is Active */}
                 <div className="space-y-2">
                   <Label>Show Status</Label>
-                  <Select
-                    value={filters.isActive}
-                    onValueChange={(value) => setFilters((prev) => ({ ...prev, isActive: value }))}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="All statuses" />
-                    </SelectTrigger>
+                  <Select value={filters.isActive} onValueChange={(value) => setFilters((prev) => ({ ...prev, isActive: value }))}>
+                    <SelectTrigger><SelectValue placeholder="All statuses" /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">All Statuses</SelectItem>
-                      <SelectItem value="yes">Active Shows</SelectItem>
-                      <SelectItem value="no">Inactive Shows</SelectItem>
+                      <SelectItem value="yes">Active</SelectItem>
+                      <SelectItem value="no">Inactive</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
 
-                {/* Has Sponsorship Revenue */}
+                {/* --- Revenue Flags --- */}
+                <div className="space-y-2">
+                  <Label>Has Branded Revenue</Label>
+                  <Select value={filters.hasBrandedRevenue} onValueChange={(value) => setFilters((prev) => ({ ...prev, hasBrandedRevenue: value }))}>
+                    <SelectTrigger><SelectValue placeholder="Any" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Any</SelectItem>
+                      <SelectItem value="yes">Yes</SelectItem>
+                      <SelectItem value="no">No</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Has Marketing Revenue</Label>
+                  <Select value={filters.hasMarketingRevenue} onValueChange={(value) => setFilters((prev) => ({ ...prev, hasMarketingRevenue: value }))}>
+                    <SelectTrigger><SelectValue placeholder="Any" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Any</SelectItem>
+                      <SelectItem value="yes">Yes</SelectItem>
+                      <SelectItem value="no">No</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div className="space-y-2">
+                  <Label>Has Web Mngmt Revenue</Label>
+                  <Select value={filters.hasWebManagementRevenue} onValueChange={(value) => setFilters((prev) => ({ ...prev, hasWebManagementRevenue: value }))}>
+                    <SelectTrigger><SelectValue placeholder="Any" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Any</SelectItem>
+                      <SelectItem value="yes">Yes</SelectItem>
+                      <SelectItem value="no">No</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
                 <div className="space-y-2">
                   <Label>Sponsorship Revenue</Label>
-                  <Select
-                    value={filters.hasSponsorshipRevenue}
-                    onValueChange={(value) => setFilters((prev) => ({ ...prev, hasSponsorshipRevenue: value }))}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="All shows" />
-                    </SelectTrigger>
+                  <Select value={filters.hasSponsorshipRevenue} onValueChange={(value) => setFilters((prev) => ({ ...prev, hasSponsorshipRevenue: value }))}>
+                    <SelectTrigger><SelectValue placeholder="Any" /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="all">All Shows</SelectItem>
-                      <SelectItem value="yes">Has Sponsorship Revenue</SelectItem>
-                      <SelectItem value="no">No Sponsorship Revenue</SelectItem>
+                      <SelectItem value="all">Any</SelectItem>
+                      <SelectItem value="yes">Yes</SelectItem>
+                      <SelectItem value="no">No</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
 
-                {/* Has Non-Evergreen Revenue */}
+                {/* --- Numeric Inputs --- */}
                 <div className="space-y-2">
-                  <Label>Non-Evergreen Revenue</Label>
-                  <Select
-                    value={filters.hasNonEvergreenRevenue}
-                    onValueChange={(value) => setFilters((prev) => ({ ...prev, hasNonEvergreenRevenue: value }))}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="All shows" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Shows</SelectItem>
-                      <SelectItem value="yes">Has Non-Evergreen Revenue</SelectItem>
-                      <SelectItem value="no">No Non-Evergreen Revenue</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <Label>Min. Guarantee ($)</Label>
+                  <Input type="number" placeholder="e.g. 5000" value={filters.minimumGuarantee} onChange={(e) => setFilters((prev) => ({ ...prev, minimumGuarantee: e.target.value }))} />
                 </div>
 
-                {/* Requires Partner Ledger Access */}
                 <div className="space-y-2">
-                  <Label>Partner Ledger Access</Label>
-                  <Select
-                    value={filters.requiresPartnerLedgerAccess}
-                    onValueChange={(value) => setFilters((prev) => ({ ...prev, requiresPartnerLedgerAccess: value }))}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="All shows" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Shows</SelectItem>
-                      <SelectItem value="yes">Requires Partner Access</SelectItem>
-                      <SelectItem value="no">No Partner Access Required</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <Label>Min. Shows/Year</Label>
+                  <Input type="number" placeholder="e.g. 52" value={filters.showsPerYear} onChange={(e) => setFilters((prev) => ({ ...prev, showsPerYear: e.target.value }))} />
                 </div>
 
-                {/* Minimum Guarantee */}
                 <div className="space-y-2">
-                  <Label>Minimum Guarantee</Label>
-                  <Input
-                    type="number"
-                    placeholder="Min amount..."
-                    value={filters.minimumGuarantee}
-                    onChange={(e) => setFilters((prev) => ({ ...prev, minimumGuarantee: e.target.value }))}
-                  />
+                  <Label>Min. Ad Slots</Label>
+                  <Input type="number" placeholder="e.g. 3" value={filters.adSlots} onChange={(e) => setFilters((prev) => ({ ...prev, adSlots: e.target.value }))} />
                 </div>
+
+                <div className="space-y-2">
+                  <Label>Min. Avg Length (min)</Label>
+                  <Input type="number" placeholder="e.g. 60" value={filters.averageLength} onChange={(e) => setFilters((prev) => ({ ...prev, averageLength: e.target.value }))} />
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Min. Revenue 2023 ($)</Label>
+                  <Input type="number" placeholder="e.g. 10000" value={filters.revenue2023} onChange={(e) => setFilters((prev) => ({ ...prev, revenue2023: e.target.value }))} />
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Min. Revenue 2024 ($)</Label>
+                  <Input type="number" placeholder="e.g. 15000" value={filters.revenue2024} onChange={(e) => setFilters((prev) => ({ ...prev, revenue2024: e.target.value }))} />
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Min. Revenue 2025 ($)</Label>
+                  <Input type="number" placeholder="e.g. 20000" value={filters.revenue2025} onChange={(e) => setFilters((prev) => ({ ...prev, revenue2025: e.target.value }))} />
+                </div>
+
               </div>
             </CardContent>
           </CollapsibleContent>

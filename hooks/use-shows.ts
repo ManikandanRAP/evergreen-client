@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { apiClient, type Show as ApiShow, type FilterParams } from "@/lib/api-client"
+import { apiClient, ShowUpdate, type Show as ApiShow, type FilterParams } from "@/lib/api-client"
 import { convertApiShowToLegacy, type Show } from "@/lib/show-types"
 import { useAuth } from "@/lib/auth-context"
 
@@ -44,12 +44,12 @@ export function useShows() {
 
   const createShow = async (showData: Partial<Show>): Promise<Show | null> => {
     try {
-      const apiCreateData = {
+      const apiCreateData: ShowUpdate = {
         title: showData.name || "",
         start_date: showData.start_date ? new Date(showData.start_date).toISOString() : null,
         minimum_guarantee: showData.minimumGuarantee || 0,
         subnetwork_id: showData.subnetwork_id || null,
-        media_type: showData.format === "Video" ? ("video" as const) : ("audio" as const),
+        media_type: showData.format === "Video" ? "video" : showData.format === "Audio" ? "audio" : "both",
         tentpole: showData.isTentpole || false,
         relationship_level: (showData.relationship?.toLowerCase() as "strong" | "medium" | "weak") || "medium",
         show_type: (showData.showType as "Branded" | "Original" | "Partner") || "Original",
@@ -114,12 +114,12 @@ export function useShows() {
 
   const updateShow = async (showId: string, showData: Partial<Show>): Promise<Show | null> => {
     try {
-      const apiUpdateData = {
+      const apiUpdateData: ShowUpdate = {
         title: showData.name || "",
         start_date: showData.start_date ? new Date(showData.start_date).toISOString() : null,
         minimum_guarantee: showData.minimumGuarantee || 0,
         subnetwork_id: showData.subnetwork_id || null,
-        media_type: showData.format === "Video" ? ("video" as const) : ("audio" as const),
+        media_type: showData.format === "Video" ? "video" : showData.format === "Audio" ? "audio" : "both",
         tentpole: showData.isTentpole || false,
         relationship_level: (showData.relationship?.toLowerCase() as "strong" | "medium" | "weak") || "medium",
         show_type: (showData.showType as "Branded" | "Original" | "Partner") || "Original",
@@ -142,7 +142,6 @@ export function useShows() {
         show_host_contact: showData.primaryContactHost || null,
         show_primary_contact: showData.primaryContactShow || null,
         ageDemographic: showData.ageDemographic || null,
-        gender: showData.gender || null,
         region: showData.region || null,
         isActive: showData.isActive || false,
         isUndersized: showData.isUndersized || false,
