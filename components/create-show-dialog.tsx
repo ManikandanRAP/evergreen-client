@@ -179,12 +179,12 @@ const genre_names = [
   "Philosophy",
 ]
 
-// Define required fields for each tab
+// **CHANGE**: Only 'title' is now required.
 const requiredFields = {
-  basic: ["title", "showType", "format", "relationship", "start_date"],
-  financial: ["minimumGuarantee", "ownershipPercentage"],
-  content: ["genre_name", "showsPerYear", "primaryContactShow"],
-  demographics: ["ageDemographic"],
+  basic: ["title"],
+  financial: [],
+  content: [],
+  demographics: [],
 }
 
 export default function CreateShowDialog({
@@ -203,22 +203,18 @@ export default function CreateShowDialog({
 
   const isEditMode = !!editingShow
 
-  // Load editing data when editingShow changes
   useEffect(() => {
     if (editingShow) {
       const showType = editingShow.showType || ""
       setFormData({
-        // Basic Info
         title: editingShow.name ?? "",
         showType: showType as "" | "Branded" | "Original" | "Partner",
         subnetwork_id: editingShow.subnetwork_id ?? "",
         format: editingShow.format ?? "",
         relationship: editingShow.relationship ?? "",
-        start_date: editingShow.start_date ?? "",
+        start_date: editingShow.start_date ? new Date(editingShow.start_date).toISOString().split('T')[0] : "",
         isTentpole: !!editingShow.isTentpole,
         isOriginal: !!editingShow.isOriginal,
-
-        // Financial
         minimumGuarantee: editingShow.minimumGuarantee?.toString() ?? "",
         ownershipPercentage: editingShow.ownershipPercentage?.toString() ?? "",
         hasBrandedRevenue: !!editingShow.hasBrandedRevenue,
@@ -231,8 +227,6 @@ export default function CreateShowDialog({
         hasSponsorshipRevenue: !!editingShow.hasSponsorshipRevenue,
         hasNonEvergreenRevenue: !!editingShow.hasNonEvergreenRevenue,
         requiresPartnerLedgerAccess: !!editingShow.requiresPartnerLedgerAccess,
-
-        // Contract Splits in Percentage
         sideBonusPercent: editingShow.sideBonusPercent?.toString() ?? "",
         youtubeAdsPercent: editingShow.youtubeAdsPercent?.toString() ?? "",
         subscriptionsPercent: editingShow.subscriptionsPercent?.toString() ?? "",
@@ -244,13 +238,9 @@ export default function CreateShowDialog({
         merchandisePercent: editingShow.merchandisePercent?.toString() ?? "",
         brandedRevenuePercent: editingShow.brandedRevenuePercent?.toString() ?? "",
         marketingServicesRevenuePercent: editingShow.marketingServicesRevenuePercent?.toString() ?? "",
-
-        // Hands Off Splits in Percentage
         directCustomerHandsOffPercent: editingShow.directCustomerHandsOffPercent?.toString() ?? "",
         youtubeHandsOffPercent: editingShow.youtubeHandsOffPercent?.toString() ?? "",
         subscriptionHandsOffPercent: editingShow.subscriptionHandsOffPercent?.toString() ?? "",
-
-        // Content Details
         genre_name: editingShow.genre_name ?? "",
         showsPerYear: editingShow.showsPerYear?.toString() ?? "",
         adSlots: editingShow.adSlots?.toString() ?? "",
@@ -258,8 +248,6 @@ export default function CreateShowDialog({
         primaryContactHost: editingShow.primaryContactHost ?? "",
         primaryContactShow: editingShow.primaryContactShow ?? "",
         evergreenProductionStaffContact: editingShow.evergreenProductionStaffName ?? "",
-
-        // Demographics
         ageDemographic: editingShow.ageDemographic ?? "",
         gender: editingShow.gender ?? "",
         region: (editingShow.region || "") as "Both" | "Urban" | "Rural",
@@ -283,64 +271,25 @@ export default function CreateShowDialog({
   const currentTabIndex = tabs.findIndex((tab) => tab.id === currentTab)
 
   const validateField = (field: keyof ShowFormData, value: any): string => {
-    const currentTabFields = requiredFields[currentTab as keyof typeof requiredFields] || []
-
-    if (currentTabFields.includes(field as string)) {
-      if (!value || value === "" || (typeof value === "string" && value.trim() === "")) {
-        return "This field is required"
-      }
+    if (field === 'title' && (!value || (typeof value === "string" && value.trim() === ""))) {
+      return "This field is required"
     }
 
-    // Specific validations for number/percentage fields
     const numberFields = [
-      "ownershipPercentage",
-      "minimumGuarantee",
-      "latestCPM",
-      "revenue2023",
-      "revenue2024",
-      "revenue2025",
-      "showsPerYear",
-      "adSlots",
-      "averageLength",
-      "sideBonusPercent",
-      "youtubeAdsPercent",
-      "subscriptionsPercent",
-      "standardAdsPercent",
-      "sponsorshipAdFpLeadPercent",
-      "sponsorshipAdPartnerLeadPercent",
-      "sponsorshipAdPartnerSoldPercent",
-      "programmaticAdsSpanPercent",
-      "merchandisePercent",
-      "brandedRevenuePercent",
-      "marketingServicesRevenuePercent",
-      "directCustomerHandsOffPercent",
-      "youtubeHandsOffPercent",
-      "subscriptionHandsOffPercent",
+      "ownershipPercentage", "minimumGuarantee", "latestCPM", "revenue2023",
+      "revenue2024", "revenue2025", "showsPerYear", "adSlots", "averageLength",
+      "sideBonusPercent", "youtubeAdsPercent", "subscriptionsPercent", "standardAdsPercent",
+      "sponsorshipAdFpLeadPercent", "sponsorshipAdPartnerLeadPercent", "sponsorshipAdPartnerSoldPercent",
+      "programmaticAdsSpanPercent", "merchandisePercent", "brandedRevenuePercent",
+      "marketingServicesRevenuePercent", "directCustomerHandsOffPercent",
+      "youtubeHandsOffPercent", "subscriptionHandsOffPercent",
     ]
 
     if (numberFields.includes(field as string)) {
       if (value !== "" && (isNaN(Number(value)) || Number(value) < 0)) {
         return "Must be a valid positive number"
       }
-      if (
-        [
-          "ownershipPercentage",
-          "sideBonusPercent",
-          "youtubeAdsPercent",
-          "subscriptionsPercent",
-          "standardAdsPercent",
-          "sponsorshipAdFpLeadPercent",
-          "sponsorshipAdPartnerLeadPercent",
-          "sponsorshipAdPartnerSoldPercent",
-          "programmaticAdsSpanPercent",
-          "merchandisePercent",
-          "brandedRevenuePercent",
-          "marketingServicesRevenuePercent",
-          "directCustomerHandsOffPercent",
-          "youtubeHandsOffPercent",
-          "subscriptionHandsOffPercent",
-        ].includes(field as string)
-      ) {
+      if (field.toLowerCase().includes('percent') || field === 'ownershipPercentage') {
         if (value !== "" && (Number(value) < 0 || Number(value) > 100)) {
           return "Percentage must be between 0 and 100"
         }
@@ -351,128 +300,43 @@ export default function CreateShowDialog({
       return "Shows per year must be at least 1"
     }
 
-    // Validation for Gender Demographic (M/F) format
     if (field === "gender" && value && !/^\d{1,3}\/\d{1,3}$/.test(value)) {
       return "Format must be MM/FF (e.g., 60/40)"
     }
 
     return ""
   }
-
+  
   const validateCurrentTab = (): boolean => {
-    const currentTabFields = requiredFields[currentTab as keyof typeof requiredFields] || []
-    const newErrors: FormErrors = {}
-    let isValid = true
-
-    currentTabFields.forEach((field) => {
-      const error = validateField(field as keyof ShowFormData, formData[field as keyof ShowFormData])
-      if (error) {
-        newErrors[field] = error
-        isValid = false
-      }
-    })
-
-    // Also validate optional fields that have specific format rules
-    const optionalFieldsWithValidation: (keyof ShowFormData)[] = [
-      "latestCPM",
-      "revenue2023",
-      "revenue2024",
-      "revenue2025",
-      "sideBonusPercent",
-      "youtubeAdsPercent",
-      "subscriptionsPercent",
-      "standardAdsPercent",
-      "sponsorshipAdFpLeadPercent",
-      "sponsorshipAdPartnerLeadPercent",
-      "sponsorshipAdPartnerSoldPercent",
-      "programmaticAdsSpanPercent",
-      "merchandisePercent",
-      "brandedRevenuePercent",
-      "marketingServicesRevenuePercent",
-      "directCustomerHandsOffPercent",
-      "youtubeHandsOffPercent",
-      "subscriptionHandsOffPercent",
-    ]
-
-    if (currentTab === "content") {
-      optionalFieldsWithValidation.push("adSlots", "averageLength")
-    } else if (currentTab === "demographics") {
-      optionalFieldsWithValidation.push("gender", "region") // Corrected variable name here
-    }
-
-    optionalFieldsWithValidation.forEach((field) => {
-      // Only validate if the field is part of the current tab or always validated (like gender)
-      // and if it has a non-empty value.
-      if (formData[field] !== "") {
-        const error = validateField(field, formData[field])
+    // Since only title is required, we only need to validate it when moving from the first tab.
+    // All other fields are optional, so we don't need to block tab navigation for them.
+    if (currentTab === 'basic') {
+        const error = validateField('title', formData.title);
         if (error) {
-          newErrors[field as string] = error
-          isValid = false
+            setErrors({ title: error });
+            return false;
         }
-      }
-    })
-
-    setErrors(newErrors)
-    return isValid
+    }
+    setErrors({}); // Clear errors if validation passes
+    return true;
   }
 
   const validateAllTabs = (): boolean => {
     const allErrors: FormErrors = {}
     let isValid = true
 
-    Object.entries(requiredFields).forEach(([tabId, fields]) => {
-      fields.forEach((field) => {
-        const error = validateField(field as keyof ShowFormData, formData[field as keyof ShowFormData])
-        if (error) {
-          allErrors[field] = error
-          isValid = false
-        }
-      })
-    })
-
-    // Validate all optional number/percentage fields and gender demographic
-    const allOptionalFieldsWithValidation: (keyof ShowFormData)[] = [
-      "latestCPM",
-      "revenue2023",
-      "revenue2024",
-      "revenue2025",
-      "adSlots",
-      "averageLength",
-      "sideBonusPercent",
-      "youtubeAdsPercent",
-      "subscriptionsPercent",
-      "standardAdsPercent",
-      "sponsorshipAdFpLeadPercent",
-      "sponsorshipAdPartnerLeadPercent",
-      "sponsorshipAdPartnerSoldPercent",
-      "programmaticAdsSpanPercent",
-      "merchandisePercent",
-      "brandedRevenuePercent",
-      "marketingServicesRevenuePercent",
-      "directCustomerHandsOffPercent",
-      "youtubeHandsOffPercent",
-      "subscriptionHandsOffPercent",
-      "gender",
-      "region",
-    ]
-    allOptionalFieldsWithValidation.forEach((field) => {
-      if (formData[field] !== "") {
-        const error = validateField(field, formData[field])
-        if (error) {
-          allErrors[field as string] = error
-          isValid = false
-        }
-      }
-    })
-
+    const error = validateField('title', formData.title)
+    if (error) {
+        allErrors['title'] = error
+        isValid = false
+    }
+    
     setErrors(allErrors)
     return isValid
   }
 
   const handleInputChange = (field: keyof ShowFormData, value: any) => {
     setFormData((prev) => ({ ...prev, [field]: value }))
-
-    // Clear error for this field when user starts typing
     if (errors[field]) {
       setErrors((prev) => {
         const newErrors = { ...prev }
@@ -484,9 +348,9 @@ export default function CreateShowDialog({
 
   const handleNext = () => {
     if (validateCurrentTab()) {
-      if (currentTabIndex < tabs.length - 1) {
-        setCurrentTab(tabs[currentTabIndex + 1].id)
-      }
+        if (currentTabIndex < tabs.length - 1) {
+            setCurrentTab(tabs[currentTabIndex + 1].id)
+        }
     }
   }
 
@@ -498,20 +362,8 @@ export default function CreateShowDialog({
 
   const handleSave = async () => {
     setAttemptedSubmit(true)
-
     if (!validateAllTabs()) {
-      // Find first tab with errors and switch to it
-      const tabsWithErrors = Object.entries(requiredFields).find(([tabId, fields]) =>
-        fields.some((field) => errors[field]),
-      )
-
-      if (tabsWithErrors) {
-        setCurrentTab(tabsWithErrors[0])
-      } else if (errors["gender"] && currentTab !== "demographics") {
-        setCurrentTab("demographics")
-      } else if (errors["region"] && currentTab !== "demographics") {
-        setCurrentTab("demographics")
-      }
+      setCurrentTab('basic')
       return
     }
 
@@ -519,25 +371,25 @@ export default function CreateShowDialog({
 
     const showData: Partial<Show> = {
       name: formData.title,
-      minimumGuarantee: parseFloat(formData.minimumGuarantee),
+      minimumGuarantee: parseFloat(formData.minimumGuarantee || "0"),
       format: formData.format || undefined,
       isTentpole: formData.isTentpole,
       relationship: formData.relationship || undefined,
-      showType: formData.showType,
-      ownershipPercentage: parseFloat(formData.ownershipPercentage),
+      showType: formData.showType || undefined,
+      ownershipPercentage: parseFloat(formData.ownershipPercentage || "0"),
       hasSponsorshipRevenue: formData.hasSponsorshipRevenue,
       hasNonEvergreenRevenue: formData.hasNonEvergreenRevenue,
       requiresPartnerLedgerAccess: formData.requiresPartnerLedgerAccess,
       hasBrandedRevenue: formData.hasBrandedRevenue,
       hasMarketingRevenue: formData.hasMarketingRevenue,
       hasWebManagementRevenue: formData.hasWebManagementRevenue,
-      genre_name: formData.genre_name,
+      genre_name: formData.genre_name || undefined,
       isOriginal: formData.isOriginal,
-      showsPerYear: parseInt(formData.showsPerYear),
+      showsPerYear: parseInt(formData.showsPerYear || "0"),
       latestCPM: parseFloat(formData.latestCPM || "0"),
       adSlots: parseInt(formData.adSlots || "0"),
       averageLength: parseInt(formData.averageLength || "0"),
-      start_date: formData.start_date,
+      start_date: formData.start_date || undefined,
       sideBonusPercent: parseFloat(formData.sideBonusPercent || "0"),
       youtubeAdsPercent: parseFloat(formData.youtubeAdsPercent || "0"),
       subscriptionsPercent: parseFloat(formData.subscriptionsPercent || "0"),
@@ -555,20 +407,18 @@ export default function CreateShowDialog({
       revenue2023: parseFloat(formData.revenue2023 || "0"),
       revenue2024: parseFloat(formData.revenue2024 || "0"),
       revenue2025: parseFloat(formData.revenue2025 || "0"),
-      evergreenProductionStaffName: formData.evergreenProductionStaffContact,
-      primaryContactHost: formData.primaryContactHost,
-      primaryContactShow: formData.primaryContactShow,
+      evergreenProductionStaffName: formData.evergreenProductionStaffContact || undefined,
+      primaryContactHost: formData.primaryContactHost || undefined,
+      primaryContactShow: formData.primaryContactShow || undefined,
       ageDemographic: formData.ageDemographic || undefined,
-      gender: formData.gender,
+      gender: formData.gender || undefined,
       region: formData.region || undefined,
       primary_education: formData.primaryEducationDemographic || undefined,
       secondary_education: formData.secondaryEducationDemographic || undefined,
-      subnetwork_id: formData.subnetwork_id,
+      subnetwork_id: formData.subnetwork_id || undefined,
       isActive: formData.isActive,
       isUndersized: formData.isUndersized,
     }
-
-    console.log("Show Data:", showData)
 
     try {
       if (isEditMode && editingShow?.id) {
@@ -579,7 +429,6 @@ export default function CreateShowDialog({
       onShowUpdated?.()
       onOpenChange(false)
     } catch (error) {
-      // Error is handled by the hook and api-client, which shows a toast
       console.error("Failed to save show:", error)
     } finally {
       setIsSubmitting(false)
@@ -593,87 +442,20 @@ export default function CreateShowDialog({
     setAttemptedSubmit(false)
     onOpenChange(false)
   }
-
+  
   const isTabComplete = (tabId: string) => {
-    const tabFields = requiredFields[tabId as keyof typeof requiredFields] || []
-    const allRequiredFieldsComplete = tabFields.every((field) => {
-      const value = formData[field as keyof ShowFormData]
-      return value && value !== "" && (typeof value !== "string" || value.trim() !== "")
-    })
-
-    // Also check for validity of optional fields with specific formats/ranges if they are filled
-    const optionalFieldsWithValidation: (keyof ShowFormData)[] = []
-    if (tabId === "financial") {
-      optionalFieldsWithValidation.push(
-        "latestCPM",
-        "revenue2023",
-        "revenue2024",
-        "revenue2025",
-        "sideBonusPercent",
-        "youtubeAdsPercent",
-        "subscriptionsPercent",
-        "standardAdsPercent",
-        "sponsorshipAdFpLeadPercent",
-        "sponsorshipAdPartnerLeadPercent",
-        "sponsorshipAdPartnerSoldPercent",
-        "programmaticAdsSpanPercent",
-        "merchandisePercent",
-        "brandedRevenuePercent",
-        "marketingServicesRevenuePercent",
-        "directCustomerHandsOffPercent",
-        "youtubeHandsOffPercent",
-        "subscriptionHandsOffPercent",
-      )
-    } else if (tabId === "content") {
-      optionalFieldsWithValidation.push("adSlots", "averageLength")
-    } else if (tabId === "demographics") {
-      optionalFieldsWithValidation.push("gender", "region")
+    if (tabId === 'basic') {
+        return !validateField('title', formData.title);
     }
-
-    const allOptionalFieldsValid = optionalFieldsWithValidation.every((field) => {
-      const value = formData[field]
-      if (value === "") return true // Empty optional fields are valid
-      return !validateField(field, value) // No error means valid
-    })
-
-    return allRequiredFieldsComplete && allOptionalFieldsValid
+    // All other tabs are always "complete" since their fields are optional.
+    return true;
   }
 
   const hasTabErrors = (tabId: string) => {
-    const tabFields = requiredFields[tabId as keyof typeof requiredFields] || []
-    const hasRequiredErrors = tabFields.some((field) => errors[field])
-
-    const optionalFieldsWithValidation: (keyof ShowFormData)[] = []
-    if (tabId === "financial") {
-      optionalFieldsWithValidation.push(
-        "latestCPM",
-        "revenue2023",
-        "revenue2024",
-        "revenue2025",
-        "sideBonusPercent",
-        "youtubeAdsPercent",
-        "subscriptionsPercent",
-        "standardAdsPercent",
-        "sponsorshipAdFpLeadPercent",
-        "sponsorshipAdPartnerLeadPercent",
-        "sponsorshipAdPartnerSoldPercent",
-        "programmaticAdsSpanPercent",
-        "merchandisePercent",
-        "brandedRevenuePercent",
-        "marketingServicesRevenuePercent",
-        "directCustomerHandsOffPercent",
-        "youtubeHandsOffPercent",
-        "subscriptionHandsOffPercent",
-      )
-    } else if (tabId === "content") {
-      optionalFieldsWithValidation.push("adSlots", "averageLength")
-    } else if (tabId === "demographics") {
-      optionalFieldsWithValidation.push("gender", "region") // Corrected variable name here
+    if (tabId === 'basic' && attemptedSubmit) {
+        return !!errors['title'];
     }
-
-    const hasOptionalErrors = optionalFieldsWithValidation.some((field) => errors[field])
-
-    return hasRequiredErrors || hasOptionalErrors
+    return false;
   }
 
   const getFieldError = (field: string) => errors[field]
@@ -749,16 +531,14 @@ export default function CreateShowDialog({
                       )}
                     </div>
                     <div className="space-y-2">
-                      <Label className="flex items-center gap-1">
-                        Show Type <span className="text-red-500">*</span>
-                      </Label>
+                      <Label>Show Type</Label>
                       <Select
                         value={formData.showType}
                         onValueChange={(value: "Branded" | "Original" | "Partner" | "") =>
                           handleInputChange("showType", value)
                         }
                       >
-                        <SelectTrigger className={cn(getFieldError("showType") && "border-red-500")}>
+                        <SelectTrigger>
                           <SelectValue placeholder="Choose show type" />
                         </SelectTrigger>
                         <SelectContent>
@@ -767,12 +547,6 @@ export default function CreateShowDialog({
                           <SelectItem value="Partner">Partner</SelectItem>
                         </SelectContent>
                       </Select>
-                      {getFieldError("showType") && (
-                        <p className="text-sm text-red-500 flex items-center gap-1">
-                          <AlertCircle className="h-3 w-3" />
-                          {getFieldError("showType")}
-                        </p>
-                      )}
                     </div>
                   </div>
 
@@ -784,24 +558,15 @@ export default function CreateShowDialog({
                         placeholder="Enter Subnetwork Name or None"
                         value={formData.subnetwork_id}
                         onChange={(e) => handleInputChange("subnetwork_id", e.target.value)}
-                        className={cn(getFieldError("subnetwork_id") && "border-red-500")}
                       />
-                      {getFieldError("subnetwork_id") && (
-                        <p className="text-sm text-red-500 flex items-center gap-1">
-                          <AlertCircle className="h-3 w-3" />
-                          {getFieldError("subnetwork_id")}
-                        </p>
-                      )}
                     </div>
                     <div className="space-y-2">
-                      <Label className="flex items-center gap-1">
-                        Format <span className="text-red-500">*</span>
-                      </Label>
+                      <Label>Format</Label>
                       <Select
                         value={formData.format}
                         onValueChange={(value: "Video" | "Audio" | "Both" | "") => handleInputChange("format", value)}
                       >
-                        <SelectTrigger className={cn(getFieldError("format") && "border-red-500")}>
+                        <SelectTrigger>
                           <SelectValue placeholder="Choose format" />
                         </SelectTrigger>
                         <SelectContent>
@@ -810,27 +575,19 @@ export default function CreateShowDialog({
                           <SelectItem value="Both">Both</SelectItem>
                         </SelectContent>
                       </Select>
-                      {getFieldError("format") && (
-                        <p className="text-sm text-red-500 flex items-center gap-1">
-                          <AlertCircle className="h-3 w-3" />
-                          {getFieldError("format")}
-                        </p>
-                      )}
                     </div>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label className="flex items-center gap-1">
-                        Relationship <span className="text-red-500">*</span>
-                      </Label>
+                      <Label>Relationship</Label>
                       <Select
                         value={formData.relationship}
                         onValueChange={(value: "Strong" | "Medium" | "Weak" | "") =>
                           handleInputChange("relationship", value)
                         }
                       >
-                        <SelectTrigger className={cn(getFieldError("relationship") && "border-red-500")}>
+                        <SelectTrigger>
                           <SelectValue placeholder="Choose relationship" />
                         </SelectTrigger>
                         <SelectContent>
@@ -839,30 +596,15 @@ export default function CreateShowDialog({
                           <SelectItem value="Weak">Weak</SelectItem>
                         </SelectContent>
                       </Select>
-                      {getFieldError("relationship") && (
-                        <p className="text-sm text-red-500 flex items-center gap-1">
-                          <AlertCircle className="h-3 w-3" />
-                          {getFieldError("relationship")}
-                        </p>
-                      )}
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="start_date" className="flex items-center gap-1">
-                        Start Date <span className="text-red-500">*</span>
-                      </Label>
+                      <Label htmlFor="start_date">Start Date</Label>
                       <Input
                         id="start_date"
                         type="date"                        
                         value={formData.start_date}
                         onChange={(e) => handleInputChange("start_date", e.target.value)}
-                        className={cn(getFieldError("start_date") && "border-red-500")}
                       />
-                      {getFieldError("start_date") && (
-                        <p className="text-sm text-red-500 flex items-center gap-1">
-                          <AlertCircle className="h-3 w-3" />
-                          {getFieldError("start_date")}
-                        </p>
-                      )}
                     </div>
                   </div>
 
@@ -890,8 +632,6 @@ export default function CreateShowDialog({
 
             {/* Financial Tab */}
             <TabsContent value="financial" className="mt-0 space-y-8">
-              {" "}
-              {/* Added space-y-8 here */}
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">💰 Financial Information</CardTitle>
@@ -900,9 +640,7 @@ export default function CreateShowDialog({
                 <CardContent className="space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="minimumGuarantee" className="flex items-center gap-1">
-                        Minimum Guarantee (Annual) <span className="text-red-500">*</span>
-                      </Label>
+                      <Label htmlFor="minimumGuarantee">Minimum Guarantee (Annual)</Label>
                       <Input
                         id="minimumGuarantee"
                         type="number"
@@ -910,19 +648,10 @@ export default function CreateShowDialog({
                         min="0"
                         value={formData.minimumGuarantee}
                         onChange={(e) => handleInputChange("minimumGuarantee", e.target.value)}
-                        className={cn(getFieldError("minimumGuarantee") && "border-red-500")}
                       />
-                      {getFieldError("minimumGuarantee") && (
-                        <p className="text-sm text-red-500 flex items-center gap-1">
-                          <AlertCircle className="h-3 w-3" />
-                          {getFieldError("minimumGuarantee")}
-                        </p>
-                      )}
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="ownershipPercentage" className="flex items-center gap-1">
-                        Ownership by Evergreen (%) <span className="text-red-500">*</span>
-                      </Label>
+                      <Label htmlFor="ownershipPercentage">Ownership by Evergreen (%)</Label>
                       <Input
                         id="ownershipPercentage"
                         type="number"
@@ -931,14 +660,7 @@ export default function CreateShowDialog({
                         max="100"
                         value={formData.ownershipPercentage}
                         onChange={(e) => handleInputChange("ownershipPercentage", e.target.value)}
-                        className={cn(getFieldError("ownershipPercentage") && "border-red-500")}
                       />
-                      {getFieldError("ownershipPercentage") && (
-                        <p className="text-sm text-red-500 flex items-center gap-1">
-                          <AlertCircle className="h-3 w-3" />
-                          {getFieldError("ownershipPercentage")}
-                        </p>
-                      )}
                     </div>
                   </div>
 
@@ -953,14 +675,7 @@ export default function CreateShowDialog({
                         min="0"
                         value={formData.latestCPM}
                         onChange={(e) => handleInputChange("latestCPM", e.target.value)}
-                        className={cn(getFieldError("latestCPM") && "border-red-500")}
                       />
-                      {getFieldError("latestCPM") && (
-                        <p className="text-sm text-red-500 flex items-center gap-1">
-                          <AlertCircle className="h-3 w-3" />
-                          {getFieldError("latestCPM")}
-                        </p>
-                      )}
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="revenue2023">Revenue 2023</Label>
@@ -971,14 +686,7 @@ export default function CreateShowDialog({
                         min="0"
                         value={formData.revenue2023}
                         onChange={(e) => handleInputChange("revenue2023", e.target.value)}
-                        className={cn(getFieldError("revenue2023") && "border-red-500")}
                       />
-                      {getFieldError("revenue2023") && (
-                        <p className="text-sm text-red-500 flex items-center gap-1">
-                          <AlertCircle className="h-3 w-3" />
-                          {getFieldError("revenue2023")}
-                        </p>
-                      )}
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="revenue2024">Revenue 2024</Label>
@@ -989,14 +697,7 @@ export default function CreateShowDialog({
                         min="0"
                         value={formData.revenue2024}
                         onChange={(e) => handleInputChange("revenue2024", e.target.value)}
-                        className={cn(getFieldError("revenue2024") && "border-red-500")}
                       />
-                      {getFieldError("revenue2024") && (
-                        <p className="text-sm text-red-500 flex items-center gap-1">
-                          <AlertCircle className="h-3 w-3" />
-                          {getFieldError("revenue2024")}
-                        </p>
-                      )}
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="revenue2025">Revenue 2025</Label>
@@ -1007,14 +708,7 @@ export default function CreateShowDialog({
                         min="0"
                         value={formData.revenue2025}
                         onChange={(e) => handleInputChange("revenue2025", e.target.value)}
-                        className={cn(getFieldError("revenue2025") && "border-red-500")}
                       />
-                      {getFieldError("revenue2025") && (
-                        <p className="text-sm text-red-500 flex items-center gap-1">
-                          <AlertCircle className="h-3 w-3" />
-                          {getFieldError("revenue2025")}
-                        </p>
-                      )}
                     </div>
                   </div>
 
@@ -1045,7 +739,6 @@ export default function CreateShowDialog({
                     </div>
                   </div>
 
-                  {/* New Checkboxes for Branded, Marketing, Web Management Revenue */}
                   <div className="flex flex-wrap gap-6">
                     <div className="flex items-center space-x-2">
                       <Checkbox
@@ -1075,11 +768,9 @@ export default function CreateShowDialog({
                 </CardContent>
               </Card>
 
-              {/* Contract Splits Section */}
               <Card>
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2">📊 Contract Splits</CardTitle>{" "}
-                  {/* Changed title */}
+                  <CardTitle className="flex items-center gap-2">📊 Contract Splits</CardTitle>
                   <CardDescription>Define how revenue is split for various contract types.</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
@@ -1095,14 +786,7 @@ export default function CreateShowDialog({
                         max="100"
                         value={formData.sideBonusPercent}
                         onChange={(e) => handleInputChange("sideBonusPercent", e.target.value)}
-                        className={cn(getFieldError("sideBonusPercent") && "border-red-500")}
                       />
-                      {getFieldError("sideBonusPercent") && (
-                        <p className="text-sm text-red-500 flex items-center gap-1">
-                          <AlertCircle className="h-3 w-3" />
-                          {getFieldError("sideBonusPercent")}
-                        </p>
-                      )}
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="youtubeAdsPercent">YouTube Ads (%)</Label>
@@ -1115,14 +799,7 @@ export default function CreateShowDialog({
                         max="100"
                         value={formData.youtubeAdsPercent}
                         onChange={(e) => handleInputChange("youtubeAdsPercent", e.target.value)}
-                        className={cn(getFieldError("youtubeAdsPercent") && "border-red-500")}
                       />
-                      {getFieldError("youtubeAdsPercent") && (
-                        <p className="text-sm text-red-500 flex items-center gap-1">
-                          <AlertCircle className="h-3 w-3" />
-                          {getFieldError("youtubeAdsPercent")}
-                        </p>
-                      )}
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="subscriptionsPercent">Subscriptions (%)</Label>
@@ -1135,14 +812,7 @@ export default function CreateShowDialog({
                         max="100"
                         value={formData.subscriptionsPercent}
                         onChange={(e) => handleInputChange("subscriptionsPercent", e.target.value)}
-                        className={cn(getFieldError("subscriptionsPercent") && "border-red-500")}
                       />
-                      {getFieldError("subscriptionsPercent") && (
-                        <p className="text-sm text-red-500 flex items-center gap-1">
-                          <AlertCircle className="h-3 w-3" />
-                          {getFieldError("subscriptionsPercent")}
-                        </p>
-                      )}
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="standardAdsPercent">Standard Ads (%)</Label>
@@ -1155,14 +825,7 @@ export default function CreateShowDialog({
                         max="100"
                         value={formData.standardAdsPercent}
                         onChange={(e) => handleInputChange("standardAdsPercent", e.target.value)}
-                        className={cn(getFieldError("standardAdsPercent") && "border-red-500")}
                       />
-                      {getFieldError("standardAdsPercent") && (
-                        <p className="text-sm text-red-500 flex items-center gap-1">
-                          <AlertCircle className="h-3 w-3" />
-                          {getFieldError("standardAdsPercent")}
-                        </p>
-                      )}
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="sponsorshipAdFpLeadPercent">Sponsorship Ad FP - Lead (%)</Label>
@@ -1175,14 +838,7 @@ export default function CreateShowDialog({
                         max="100"
                         value={formData.sponsorshipAdFpLeadPercent}
                         onChange={(e) => handleInputChange("sponsorshipAdFpLeadPercent", e.target.value)}
-                        className={cn(getFieldError("sponsorshipAdFpLeadPercent") && "border-red-500")}
                       />
-                      {getFieldError("sponsorshipAdFpLeadPercent") && (
-                        <p className="text-sm text-red-500 flex items-center gap-1">
-                          <AlertCircle className="h-3 w-3" />
-                          {getFieldError("sponsorshipAdFpLeadPercent")}
-                        </p>
-                      )}
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="sponsorshipAdPartnerLeadPercent">Sponsorship Ad - Partner Lead (%)</Label>
@@ -1195,14 +851,7 @@ export default function CreateShowDialog({
                         max="100"
                         value={formData.sponsorshipAdPartnerLeadPercent}
                         onChange={(e) => handleInputChange("sponsorshipAdPartnerLeadPercent", e.target.value)}
-                        className={cn(getFieldError("sponsorshipAdPartnerLeadPercent") && "border-red-500")}
                       />
-                      {getFieldError("sponsorshipAdPartnerLeadPercent") && (
-                        <p className="text-sm text-red-500 flex items-center gap-1">
-                          <AlertCircle className="h-3 w-3" />
-                          {getFieldError("sponsorshipAdPartnerLeadPercent")}
-                        </p>
-                      )}
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="sponsorshipAdPartnerSoldPercent">Sponsorship Ad - Partner Sold (%)</Label>
@@ -1215,14 +864,7 @@ export default function CreateShowDialog({
                         max="100"
                         value={formData.sponsorshipAdPartnerSoldPercent}
                         onChange={(e) => handleInputChange("sponsorshipAdPartnerSoldPercent", e.target.value)}
-                        className={cn(getFieldError("sponsorshipAdPartnerSoldPercent") && "border-red-500")}
                       />
-                      {getFieldError("sponsorshipAdPartnerSoldPercent") && (
-                        <p className="text-sm text-red-500 flex items-center gap-1">
-                          <AlertCircle className="h-3 w-3" />
-                          {getFieldError("sponsorshipAdPartnerSoldPercent")}
-                        </p>
-                      )}
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="programmaticAdsSpanPercent">Programmatic Ads/Span (%)</Label>
@@ -1235,14 +877,7 @@ export default function CreateShowDialog({
                         max="100"
                         value={formData.programmaticAdsSpanPercent}
                         onChange={(e) => handleInputChange("programmaticAdsSpanPercent", e.target.value)}
-                        className={cn(getFieldError("programmaticAdsSpanPercent") && "border-red-500")}
                       />
-                      {getFieldError("programmaticAdsSpanPercent") && (
-                        <p className="text-sm text-red-500 flex items-center gap-1">
-                          <AlertCircle className="h-3 w-3" />
-                          {getFieldError("programmaticAdsSpanPercent")}
-                        </p>
-                      )}
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="merchandisePercent">Merchandise (%)</Label>
@@ -1255,14 +890,7 @@ export default function CreateShowDialog({
                         max="100"
                         value={formData.merchandisePercent}
                         onChange={(e) => handleInputChange("merchandisePercent", e.target.value)}
-                        className={cn(getFieldError("merchandisePercent") && "border-red-500")}
                       />
-                      {getFieldError("merchandisePercent") && (
-                        <p className="text-sm text-red-500 flex items-center gap-1">
-                          <AlertCircle className="h-3 w-3" />
-                          {getFieldError("merchandisePercent")}
-                        </p>
-                      )}
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="brandedRevenuePercent">Branded Revenue (%)</Label>
@@ -1275,14 +903,7 @@ export default function CreateShowDialog({
                         max="100"
                         value={formData.brandedRevenuePercent}
                         onChange={(e) => handleInputChange("brandedRevenuePercent", e.target.value)}
-                        className={cn(getFieldError("brandedRevenuePercent") && "border-red-500")}
                       />
-                      {getFieldError("brandedRevenuePercent") && (
-                        <p className="text-sm text-red-500 flex items-center gap-1">
-                          <AlertCircle className="h-3 w-3" />
-                          {getFieldError("brandedRevenuePercent")}
-                        </p>
-                      )}
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="marketingServicesRevenuePercent">Marketing Services Revenue (%)</Label>
@@ -1295,24 +916,15 @@ export default function CreateShowDialog({
                         max="100"
                         value={formData.marketingServicesRevenuePercent}
                         onChange={(e) => handleInputChange("marketingServicesRevenuePercent", e.target.value)}
-                        className={cn(getFieldError("marketingServicesRevenuePercent") && "border-red-500")}
                       />
-                      {getFieldError("marketingServicesRevenuePercent") && (
-                        <p className="text-sm text-red-500 flex items-center gap-1">
-                          <AlertCircle className="h-3 w-3" />
-                          {getFieldError("marketingServicesRevenuePercent")}
-                        </p>
-                      )}
                     </div>
                   </div>
                 </CardContent>
               </Card>
 
-              {/* Hands Off Splits Section */}
               <Card>
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2">🤝 Hands Off Splits</CardTitle>{" "}
-                  {/* Changed title */}
+                  <CardTitle className="flex items-center gap-2">🤝 Hands Off Splits</CardTitle>
                   <CardDescription>Define revenue splits for hands-off scenarios.</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
@@ -1328,14 +940,7 @@ export default function CreateShowDialog({
                         max="100"
                         value={formData.directCustomerHandsOffPercent}
                         onChange={(e) => handleInputChange("directCustomerHandsOffPercent", e.target.value)}
-                        className={cn(getFieldError("directCustomerHandsOffPercent") && "border-red-500")}
                       />
-                      {getFieldError("directCustomerHandsOffPercent") && (
-                        <p className="text-sm text-red-500 flex items-center gap-1">
-                          <AlertCircle className="h-3 w-3" />
-                          {getFieldError("directCustomerHandsOffPercent")}
-                        </p>
-                      )}
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="youtubeHandsOffPercent">YouTube - Hands Off (%)</Label>
@@ -1348,14 +953,7 @@ export default function CreateShowDialog({
                         max="100"
                         value={formData.youtubeHandsOffPercent}
                         onChange={(e) => handleInputChange("youtubeHandsOffPercent", e.target.value)}
-                        className={cn(getFieldError("youtubeHandsOffPercent") && "border-red-500")}
                       />
-                      {getFieldError("youtubeHandsOffPercent") && (
-                        <p className="text-sm text-red-500 flex items-center gap-1">
-                          <AlertCircle className="h-3 w-3" />
-                          {getFieldError("youtubeHandsOffPercent")}
-                        </p>
-                      )}
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="subscriptionHandsOffPercent">Subscription - Hands Off (%)</Label>
@@ -1368,14 +966,7 @@ export default function CreateShowDialog({
                         max="100"
                         value={formData.subscriptionHandsOffPercent}
                         onChange={(e) => handleInputChange("subscriptionHandsOffPercent", e.target.value)}
-                        className={cn(getFieldError("subscriptionHandsOffPercent") && "border-red-500")}
                       />
-                      {getFieldError("subscriptionHandsOffPercent") && (
-                        <p className="text-sm text-red-500 flex items-center gap-1">
-                          <AlertCircle className="h-3 w-3" />
-                          {getFieldError("subscriptionHandsOffPercent")}
-                        </p>
-                      )}
                     </div>
                   </div>
                 </CardContent>
@@ -1392,11 +983,9 @@ export default function CreateShowDialog({
                 <CardContent className="space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label className="flex items-center gap-1">
-                        Genre <span className="text-red-500">*</span>
-                      </Label>
+                      <Label>Genre</Label>
                       <Select value={formData.genre_name} onValueChange={(value) => handleInputChange("genre_name", value)}>
-                        <SelectTrigger className={cn(getFieldError("genre_name") && "border-red-500")}>
+                        <SelectTrigger>
                           <SelectValue placeholder="Choose Genre" />
                         </SelectTrigger>
                         <SelectContent>
@@ -1407,17 +996,9 @@ export default function CreateShowDialog({
                           ))}
                         </SelectContent>
                       </Select>
-                      {getFieldError("genre_name") && (
-                        <p className="text-sm text-red-500 flex items-center gap-1">
-                          <AlertCircle className="h-3 w-3" />
-                          {getFieldError("genre_name")}
-                        </p>
-                      )}
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="showsPerYear" className="flex items-center gap-1">
-                        Shows per Year <span className="text-red-500">*</span>
-                      </Label>
+                      <Label htmlFor="showsPerYear">Shows per Year</Label>
                       <Input
                         id="showsPerYear"
                         type="number"
@@ -1425,14 +1006,7 @@ export default function CreateShowDialog({
                         min="1"
                         value={formData.showsPerYear}
                         onChange={(e) => handleInputChange("showsPerYear", e.target.value)}
-                        className={cn(getFieldError("showsPerYear") && "border-red-500")}
                       />
-                      {getFieldError("showsPerYear") && (
-                        <p className="text-sm text-red-500 flex items-center gap-1">
-                          <AlertCircle className="h-3 w-3" />
-                          {getFieldError("showsPerYear")}
-                        </p>
-                      )}
                     </div>
                   </div>
 
@@ -1446,14 +1020,7 @@ export default function CreateShowDialog({
                         min="0"
                         value={formData.adSlots}
                         onChange={(e) => handleInputChange("adSlots", e.target.value)}
-                        className={cn(getFieldError("adSlots") && "border-red-500")}
                       />
-                      {getFieldError("adSlots") && (
-                        <p className="text-sm text-red-500 flex items-center gap-1">
-                          <AlertCircle className="h-3 w-3" />
-                          {getFieldError("adSlots")}
-                        </p>
-                      )}
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="averageLength">Average Length (Minutes)</Label>
@@ -1464,14 +1031,7 @@ export default function CreateShowDialog({
                         min="0"
                         value={formData.averageLength}
                         onChange={(e) => handleInputChange("averageLength", e.target.value)}
-                        className={cn(getFieldError("averageLength") && "border-red-500")}
                       />
-                      {getFieldError("averageLength") && (
-                        <p className="text-sm text-red-500 flex items-center gap-1">
-                          <AlertCircle className="h-3 w-3" />
-                          {getFieldError("averageLength")}
-                        </p>
-                      )}
                     </div>
                   </div>
                   
@@ -1499,23 +1059,14 @@ export default function CreateShowDialog({
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="primaryContactShow" className="flex items-center gap-1">
-                      Primary Contact (Show) <span className="text-red-500">*</span>
-                    </Label>
+                    <Label htmlFor="primaryContactShow">Primary Contact (Show)</Label>
                     <Textarea
                       id="primaryContactShow"
                       placeholder="Enter in this order: Name, Address, Phone, Email"
                       rows={4}
                       value={formData.primaryContactShow}
                       onChange={(e) => handleInputChange("primaryContactShow", e.target.value)}
-                      className={cn(getFieldError("primaryContactShow") && "border-red-500")}
                     />
-                    {getFieldError("primaryContactShow") && (
-                      <p className="text-sm text-red-500 flex items-center gap-1">
-                        <AlertCircle className="h-3 w-3" />
-                        {getFieldError("primaryContactShow")}
-                      </p>
-                    )}
                   </div>
                 </CardContent>
               </Card>
@@ -1531,16 +1082,14 @@ export default function CreateShowDialog({
                 <CardContent className="space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="first:pt-2 space-y-2">
-                      <Label className="flex items-center gap-1">
-                        Age Demographic <span className="text-red-500">*</span>
-                      </Label>
+                      <Label>Age Demographic</Label>
                       <Select
                         value={formData.ageDemographic}
                         onValueChange={(value: "18-24" | "25-34" | "35-44" | "45-54" | "55+" | "") =>
                           handleInputChange("ageDemographic", value)
                         }
                       >
-                        <SelectTrigger className={cn(getFieldError("ageDemographic") && "border-red-500")}>
+                        <SelectTrigger>
                           <SelectValue placeholder="Choose age range" />
                         </SelectTrigger>
                         <SelectContent>
@@ -1551,12 +1100,6 @@ export default function CreateShowDialog({
                           <SelectItem value="55+">55+</SelectItem>
                         </SelectContent>
                       </Select>
-                      {getFieldError("ageDemographic") && (
-                        <p className="text-sm text-red-500 flex items-center gap-1">
-                          <AlertCircle className="h-3 w-3" />
-                          {getFieldError("ageDemographic")}
-                        </p>
-                      )}
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="gender">Gender Demographic (M/F)</Label>
@@ -1583,7 +1126,7 @@ export default function CreateShowDialog({
                         value={formData.region}
                         onValueChange={(value: "Urban" | "Rural" | "Both" | "") => handleInputChange("region", value)}
                       >
-                        <SelectTrigger className={cn(getFieldError("region") && "border-red-500")}>
+                        <SelectTrigger>
                           <SelectValue placeholder="Choose region" />
                         </SelectTrigger>
                         <SelectContent>
@@ -1592,12 +1135,6 @@ export default function CreateShowDialog({
                           <SelectItem value="Both">Both</SelectItem>
                         </SelectContent>
                       </Select>
-                      {getFieldError("region") && (
-                        <p className="text-sm text-red-500 flex items-center gap-1">
-                          <AlertCircle className="h-3 w-3" />
-                          {getFieldError("region")}
-                        </p>
-                      )}
                     </div>
                   </div>
 
@@ -1667,7 +1204,6 @@ export default function CreateShowDialog({
             </TabsContent>
           </div>
 
-          {/* Show validation errors summary if attempted to submit */}
           {attemptedSubmit && Object.keys(errors).length > 0 && (
             <Alert variant="destructive" className="mx-2 mb-4">
               <AlertCircle className="h-4 w-4" />
@@ -1678,7 +1214,6 @@ export default function CreateShowDialog({
             </Alert>
           )}
 
-          {/* Navigation Footer */}
           <div className="flex items-center justify-between p-6 border-t bg-background">
             <div className="flex gap-2">
               <Button variant="outline" onClick={handlePrevious} disabled={currentTabIndex === 0}>

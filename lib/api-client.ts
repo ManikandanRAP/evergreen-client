@@ -1,3 +1,5 @@
+import { toast } from "sonner"
+
 interface LoginCredentials {
   username: string
   password: string
@@ -205,7 +207,14 @@ interface FilterParams {
   is_original?: boolean | null
 }
 
-import { toast } from "sonner"
+// --- NEW INTERFACE FOR BULK RESPONSE ---
+interface BulkImportResponse {
+  message: string;
+  total: number;
+  successful: number;
+  failed: number;
+  errors: string[];
+}
 
 class ApiClient {
   private baseUrl: string
@@ -213,7 +222,6 @@ class ApiClient {
 
   constructor(baseUrl = process.env.NEXT_PUBLIC_API_URL as string) {
     this.baseUrl = baseUrl
-    // Try to get token from localStorage on client side
     if (typeof window !== "undefined") {
       this.token = localStorage.getItem("access_token")
     }
@@ -225,25 +233,17 @@ class ApiClient {
     if (!headers.has("Content-Type")) {
       headers.set("Content-Type", "application/json")
     }
-
     if (this.token) {
       headers.set("Authorization", `Bearer ${this.token}`)
     }
-
-    const response = await fetch(url, {
-      ...options,
-      headers,
-    })
-
+    const response = await fetch(url, { ...options, headers })
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}))
       throw new Error(errorData.detail || `HTTP error! status: ${response.status}`)
     }
-
     if (response.status === 204) {
       return {} as T
     }
-
     return response.json()
   }
 
@@ -261,59 +261,46 @@ class ApiClient {
     }
   }
 
-  // Authentication
   async login(credentials: LoginCredentials): Promise<Token> {
     const formData = new URLSearchParams()
     formData.append("username", credentials.username)
     formData.append("password", credentials.password)
-
     const response = await fetch(`${this.baseUrl}/login`, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/x-www-form-urlencoded",
-      },
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
       body: formData,
     })
-
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}))
       throw new Error(errorData.detail || "Login failed")
     }
-
     const token = await response.json()
     this.setToken(token.access_token)
     localStorage.setItem("access_token", token.access_token)
     return token
   }
 
-  // User endpoints
   async getCurrentUser(): Promise<User> {
     return this.request<User>("/users/me")
   }
 
   async deleteUser(userId: string): Promise<void> {
-    return this.request<void>(`/users/${userId}`, {
-      method: "DELETE",
-    })
+    return this.request<void>(`/users/${userId}`, { method: "DELETE" })
   }
 
-  // Podcast endpoints
   async getAllPodcasts(): Promise<Show[]> {
     return this.request<Show[]>("/podcasts")
   }
 
   async filterPodcasts(params: FilterParams): Promise<Show[]> {
     const searchParams = new URLSearchParams()
-
     Object.entries(params).forEach(([key, value]) => {
       if (value !== null && value !== undefined) {
         searchParams.append(key, String(value))
       }
     })
-
     const queryString = searchParams.toString()
     const endpoint = queryString ? `/podcasts/filter?${queryString}` : "/podcasts/filter"
-
     return this.request<Show[]>(endpoint)
   }
 
@@ -335,6 +322,27 @@ class ApiClient {
     }
   }
 
+  // --- NEW BULK CREATE METHOD ---
+  async bulkCreatePodcasts(data: ShowCreate[]): Promise<BulkImportResponse> {
+    try {
+      const response = await this.request<BulkImportResponse>("/podcasts/bulk-import", {
+        method: "POST",
+        body: JSON.stringify(data),
+      });
+      toast.success(response.message || "Bulk import completed!");
+      return response;
+    } catch (error: any) {
+      const detail = error.response?.data?.detail;
+      const errorMessage = typeof detail === 'string' ? detail : "Failed to import shows.";
+      toast.error(errorMessage);
+      if (detail?.errors) {
+        console.error("Import errors:", detail.errors);
+      }
+      throw error;
+    }
+  }
+  // --- END NEW METHOD ---
+
   async updatePodcast(showId: string, data: ShowUpdate): Promise<Show> {
     try {
       const updatedShow = await this.request<Show>(`/podcasts/${showId}`, {
@@ -351,9 +359,7 @@ class ApiClient {
 
   async deletePodcast(showId: string): Promise<void> {
     try {
-      await this.request<void>(`/podcasts/${showId}`, {
-        method: "DELETE",
-      })
+      await this.request<void>(`/podcasts/${showId}`, { method: "DELETE" })
       toast.success("Show deleted successfully!")
     } catch (error: any) {
       toast.error(error.message || "Failed to delete show.")
@@ -361,7 +367,6 @@ class ApiClient {
     }
   }
 
-  // Partner endpoints
   async createPartner(data: PartnerCreate): Promise<User> {
     return this.request<User>("/partners", {
       method: "POST",
@@ -384,7 +389,6 @@ class ApiClient {
     return this.request<Show[]>(`/partners/${partnerId}/podcasts`)
   }
 
-  // Partner-Show associations
   async associatePartnerWithShow(showId: string, partnerId: string): Promise<void> {
     return this.request<void>(`/podcasts/${showId}/partners/${partnerId}`, {
       method: "POST",
@@ -398,8 +402,6 @@ class ApiClient {
   }
 }
 
-// Create a singleton instance
 export const apiClient = new ApiClient()
 
-// Export types for use in components
 export type { User, Show, ShowCreate, ShowUpdate, PartnerCreate, PasswordUpdate, FilterParams, Token, LoginCredentials }

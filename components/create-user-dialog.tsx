@@ -196,7 +196,7 @@ export default function CreateUserDialog({ open, onOpenChange }: CreateUserDialo
           {/* Vendor Name in QBO - Only show for Partner */}
           {formData.userType === "partner" && (
             <div className="space-y-2">
-              <Label htmlFor="vendorId">Vendor Name in as QBO</Label>
+              <Label htmlFor="vendorId">Vendor Name as in QBO</Label>
               <Input
                 id="vendorId"
                 placeholder="Enter vendor name"
