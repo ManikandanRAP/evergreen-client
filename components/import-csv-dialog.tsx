@@ -31,7 +31,7 @@ const CSV_HEADERS = [
   "youtube_hands_off_percent", "subscription_hands_off_percent", "has_sponsorship_revenue",
   "has_non_evergreen_revenue", "requires_partner_access", "has_branded_revenue",
   "has_marketing_revenue", "has_web_mgmt_revenue", "primary_education",
-  "secondary_education", "show_name_in_qbo"
+  "secondary_education", "qbo_show_name"
 ];
 
 export default function ImportCSVDialog({ open, onOpenChange, onImportComplete }: ImportCSVDialogProps) {
@@ -221,7 +221,7 @@ export default function ImportCSVDialog({ open, onOpenChange, onImportComplete }
                 has_web_mgmt_revenue: row.has_web_mgmt_revenue?.toLowerCase() === 'yes',
                 primary_education: row.primary_education || null,
                 secondary_education: row.secondary_education || null,
-                show_name_in_qbo: row.show_name_in_qbo || null,
+                show_name_in_qbo: row.qbo_show_name || null,
             };
             showsToCreate.push(show);
         }
