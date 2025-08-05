@@ -1123,6 +1123,7 @@ export default function ShowsManagement() {
         onShowUpdated={handleShowUpdated}
         createShow={createShow}
         updateShow={updateShow}
+        existingShows={shows}
       />
       <DeleteShowDialog
         open={!!deletingShow}

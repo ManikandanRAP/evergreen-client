@@ -23,6 +23,7 @@ interface CreateShowDialogProps {
   onShowUpdated?: () => void
   createShow: (showData: Partial<Show>) => Promise<Show | null>
   updateShow: (showId: string, showData: Partial<Show>) => Promise<Show | null>
+  existingShows: Show[]
 }
 
 const educationLevels = ["No high School", "High School", "College", "Postgraduate"] as const
@@ -194,6 +195,7 @@ export default function CreateShowDialog({
   onShowUpdated,
   createShow,
   updateShow,
+  existingShows,
 }: CreateShowDialogProps) {
   const [formData, setFormData] = useState<ShowFormData>(initialFormData)
   const [currentTab, setCurrentTab] = useState("basic")
@@ -271,8 +273,16 @@ export default function CreateShowDialog({
   const currentTabIndex = tabs.findIndex((tab) => tab.id === currentTab)
 
   const validateField = (field: keyof ShowFormData, value: any): string => {
-    if (field === 'title' && (!value || (typeof value === "string" && value.trim() === ""))) {
-      return "This field is required"
+    if (field === "title") {
+      if (!value || typeof value !== "string" || value.trim() === "") {
+        return "This field is required"
+      }
+      const isDuplicate = existingShows.some(
+        (show) => show.name.toLowerCase() === value.toLowerCase() && show.id !== editingShow?.id,
+      )
+      if (isDuplicate) {
+        return "A show with this name already exists."
+      }
     }
 
     const numberFields = [

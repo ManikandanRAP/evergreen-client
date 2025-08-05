@@ -322,26 +322,31 @@ class ApiClient {
     }
   }
 
-  // --- NEW BULK CREATE METHOD ---
+  // --- UPDATED BULK CREATE METHOD ---
   async bulkCreatePodcasts(data: ShowCreate[]): Promise<BulkImportResponse> {
     try {
       const response = await this.request<BulkImportResponse>("/podcasts/bulk-import", {
         method: "POST",
         body: JSON.stringify(data),
       });
-      toast.success(response.message || "Bulk import completed!");
+
+      // Custom toast message based on the outcome
+      if (response.failed > 0 && response.successful === 0) {
+        toast.error(response.message || "All show imports failed.");
+      } else if (response.failed > 0) {
+        toast.warning(response.message || "Bulk import completed with some errors.");
+      } else {
+        toast.success(response.message || "Bulk import completed successfully!");
+      }
+      
       return response;
     } catch (error: any) {
-      const detail = error.response?.data?.detail;
-      const errorMessage = typeof detail === 'string' ? detail : "Failed to import shows.";
-      toast.error(errorMessage);
-      if (detail?.errors) {
-        console.error("Import errors:", detail.errors);
-      }
+      // This will now only catch true network/server errors
+      toast.error(error.message || "An unexpected error occurred during the import process.");
       throw error;
     }
   }
-  // --- END NEW METHOD ---
+  // --- END UPDATED METHOD ---
 
   async updatePodcast(showId: string, data: ShowUpdate): Promise<Show> {
     try {
