@@ -183,13 +183,13 @@ export default function ShowViewDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-none w-full sm:w-[90%] h-screen sm:h-[95vh] flex flex-col p-0 overflow-hidden dark:bg-black border-0 [&>button]:hidden">
-        <div className="relative px-6 py-4 bg-background dark:bg-[#262626] border-b dark:border-slate-800">
-          <h1 className="text-2xl font-semibold text-center">{show.name}</h1>
+        <DialogHeader className="relative px-6 py-4 bg-background dark:bg-[#262626] border-b dark:border-slate-800">
+          <DialogTitle className="text-2xl font-semibold text-center">{show.name}</DialogTitle>
           <DialogClose className="absolute top-1/2 -translate-y-1/2 right-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground border-2 border-slate-300 dark:border-slate-700 p-1.5">
             <X className="h-4 w-4" />
             <span className="sr-only">Close</span>
           </DialogClose>
-        </div>
+        </DialogHeader>
 
         <ScrollArea className="flex-1">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 px-6 pb-6">

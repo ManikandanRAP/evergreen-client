@@ -312,7 +312,7 @@ export default function Dashboard() {
       case "ledger":
         return <RevenueLedger />
       case "administrator":
-        return user.role === "admin" ? <AdministratorPage /> : <DashboardContent />
+        return user.role === "admin" ? <AdministratorPage /> : <DashboardOverview />
       case "settings":
         return <Settings />
       default:
@@ -327,7 +327,7 @@ export default function Dashboard() {
       {/* Dynamic padding based on sidebar state */}
       <div className={cn("transition-all duration-300 ease-in-out", isSidebarCollapsed ? "lg:pl-20" : "lg:pl-64")}>
         <main className="p-4 lg:p-8">
-          <div className="max-w-7xl mx-auto">{renderContent()}</div>
+          <div>{renderContent()}</div>
         </main>
       </div>
     </div>

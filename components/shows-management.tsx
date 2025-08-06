@@ -865,7 +865,7 @@ export default function ShowsManagement() {
 
       {/* Shows Display */}
       {viewMode === "cards" ? (
-        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-6">
           {filteredShows.map((show) => (
             <Card
               key={show.id}
@@ -909,28 +909,28 @@ export default function ShowsManagement() {
                       <DollarSign className="h-4 w-4 text-emerald-600" />
                       <span className="text-muted-foreground">Min Guarantee:</span>
                     </div>
-                    <span className="font-medium">{formatCurrency(show.minimumGuarantee)}</span>
+                    <span className="font-medium text-right">{formatCurrency(show.minimumGuarantee)}</span>
                     <div className="flex items-center gap-2">
                       <Calendar className="h-4 w-4 text-cyan-600" />
                       <span className="text-muted-foreground">Age:</span>
                     </div>
-                    <span className="font-medium">{show.ageMonths} months</span>
+                    <span className="font-medium text-right">{show.ageMonths} months</span>
                     <div className="flex items-center gap-2">
                       <Radio className="h-4 w-4 text-green-600" />
                       <span className="text-muted-foreground">Shows/Year:</span>
                     </div>
-                    <span className="font-medium">{show.showsPerYear}</span>
+                    <span className="font-medium text-right">{show.showsPerYear}</span>
                     <div className="flex items-center gap-2">
                       <Users className="h-4 w-4 text-blue-600" />
                       <span className="text-muted-foreground">Relationship:</span>
                     </div>
                     <Badge
-                      className={`text-xs border justify-self-start pointer-events-none ${getRelationshipBadgeClass(show.relationship)}`}
+                      className={`text-xs border justify-self-end pointer-events-none ${getRelationshipBadgeClass(show.relationship)}`}
                     >
                       {show.relationship}
                     </Badge>
                   </div>
-                  <div className="pt-2 border-t border-border/50">
+                  <div className="pt-4 border-t border-border/50">
                     <div className="flex justify-between items-center text-sm">
                       <span className="text-muted-foreground">Revenue Split:</span>
                       <div className="flex gap-2">
@@ -944,7 +944,7 @@ export default function ShowsManagement() {
                     </div>
                   </div>
                 </div>
-                <div className="flex justify-center gap-2 pt-2 border-t border-border/50">
+                <div className="flex justify-center gap-2 pt-4 border-t border-border/50">
                   <Button
                     variant="outline"
                     size="sm"
@@ -985,24 +985,25 @@ export default function ShowsManagement() {
         <Card className="evergreen-card">
           <CardContent className="p-0">
             <div className="overflow-x-auto">
-              <table className="w-full">
+              <table className="w-full text-sm">
                 <thead className="border-b">
-                  <tr className="text-left">
+                  <tr className="text-left text-sm">
                     <th className="p-4 w-12">
                       <Checkbox
                         checked={selectedShows.size === filteredShows.length && filteredShows.length > 0}
                         onCheckedChange={handleSelectAll}
                       />
                     </th>
-                    <th className="p-4 font-medium">Show Name</th>
-                    <th className="p-4 font-medium">Type</th>
-                    <th className="p-4 font-medium">Genre</th>
-                    <th className="p-4 font-medium">Format</th>
-                    <th className="p-4 font-medium">Relationship</th>
-                    <th className="p-4 font-medium">Min Guarantee</th>
-                    <th className="p-4 font-medium">Age</th>
-                    <th className="p-4 font-medium">Shows/Year</th>
-                    <th className="p-4 font-medium">Actions</th>
+                    <th className="p-2 font-semibold">Show Name</th>
+                    <th className="p-2 font-semibold">Status</th>
+                    <th className="p-2 font-semibold">Type</th>
+                    <th className="p-2 font-semibold">Genre</th>
+                    <th className="p-2 font-semibold">Format</th>
+                    <th className="p-2 font-semibold">Relationship</th>
+                    <th className="p-2 font-semibold">Min Guarantee</th>
+                    <th className="p-2 font-semibold">Age</th>
+                    <th className="p-2 font-semibold">Shows/Year</th>
+                    <th className="p-2 font-semibold">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -1019,49 +1020,39 @@ export default function ShowsManagement() {
                           onCheckedChange={() => handleSelectShow(show.id)}
                         />
                       </td>
-                      <td className="p-4">
-                        <div className="space-y-1">
-                          <p className="font-medium">{show.name}</p>
-                          <div className="flex gap-1">
-                            {show.isTentpole && (
-                              <Badge className="text-xs border bg-purple-100 text-purple-800 border-purple-300 dark:bg-purple-900/50 dark:text-purple-300 dark:border-purple-700">
-                                Tentpole
-                              </Badge>
-                            )}
-                            {show.isOriginal && (
-                              <Badge className="bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 text-xs">
-                                Original
-                              </Badge>
-                            )}
-                          </div>
+                      <td className="p-2 font-medium">
+                        <span className="cursor-pointer hover:underline" onClick={() => handleViewShow(show)}>
+                          {show.name}
+                        </span>
+                      </td>
+                      <td className="p-2">
+                        <div className="flex flex-col gap-1 items-start">
+                          <Badge className={`text-xs border pointer-events-none ${show.isTentpole 
+                              ? 'bg-emerald-100 text-emerald-800 border-emerald-300 dark:bg-emerald-900/50 dark:text-emerald-300 dark:border-emerald-700' 
+                              : 'bg-red-100 text-red-800 border-red-300 dark:bg-red-900/50 dark:text-red-300 dark:border-red-700'}`}>
+                            Tentpole - {show.isTentpole ? 'Yes' : 'No'}
+                          </Badge>
+                          <Badge className={`text-xs border pointer-events-none ${show.isUndersized 
+                              ? 'bg-emerald-100 text-emerald-800 border-emerald-300 dark:bg-emerald-900/50 dark:text-emerald-300 dark:border-emerald-700' 
+                              : 'bg-red-100 text-red-800 border-red-300 dark:bg-red-900/50 dark:text-red-300 dark:border-red-700'}`}>
+                            Undersized - {show.isUndersized ? 'Yes' : 'No'}
+                          </Badge>
                         </div>
                       </td>
-                      <td className="p-4">
-                        <Badge variant="outline" className="text-xs">
-                          {show.selectType}
-                        </Badge>
-                      </td>
-                      <td className="p-4">
-                        <Badge className="text-xs border bg-purple-100 text-purple-800 border-purple-300 dark:bg-purple-900/50 dark:text-purple-300 dark:border-purple-700">
-                          {show.genre_name}
-                        </Badge>
-                      </td>
-                      <td className="p-4">
-                        <Badge className="text-xs border bg-purple-100 text-purple-800 border-purple-300 dark:bg-purple-900/50 dark:text-purple-300 dark:border-purple-700">
-                          {show.format}
-                        </Badge>
-                      </td>
-                      <td className="p-4">
+                      <td className="p-2 capitalize">{show.showType}</td>
+                      <td className="p-2">{show.genre_name}</td>
+                      <td className="p-2">{show.format}</td>
+                      <td className="p-2">
                         <Badge
-                          className={`text-xs border ${getRelationshipBadgeClass(show.relationship)}`}
+                          className={`text-xs border pointer-events-none ${getRelationshipBadgeClass(show.relationship)}`}
                         >
                           {show.relationship}
                         </Badge>
                       </td>
-                      <td className="p-4 font-medium text-emerald-600">{formatCurrency(show.minimumGuarantee)}</td>
-                      <td className="p-4">{show.ageMonths}m</td>
-                      <td className="p-4">{show.showsPerYear}</td>
-                      <td className="p-4">
+                      <td className="p-2 font-medium text-emerald-600">{formatCurrency(show.minimumGuarantee)}</td>
+                      <td className="p-2">{show.ageMonths}m</td>
+                      <td className="p-2">{show.showsPerYear}</td>
+                      <td className="p-2">
                         <div className="flex gap-1">
                           <Button
                             variant="outline"
