@@ -869,7 +869,7 @@ export default function ShowsManagement() {
           {filteredShows.map((show) => (
             <Card
               key={show.id}
-              className={`evergreen-card hover:shadow-lg transition-all duration-200 group flex flex-col h-full ${
+              className={`evergreen-card transition-all duration-200 group flex flex-col h-full ${
                 selectedShows.has(show.id) ? "ring-2 ring-emerald-500 bg-emerald-50/50 dark:bg-emerald-950/20" : ""
               }`}
             >
@@ -885,18 +885,20 @@ export default function ShowsManagement() {
                       {show.name}
                     </CardTitle>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <Badge className="text-xs border bg-purple-100 text-purple-800 border-purple-300 dark:bg-purple-900/50 dark:text-purple-300 dark:border-purple-700">
-                      {show.format}
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <Badge className="text-xs border bg-purple-100 text-purple-800 border-purple-300 dark:bg-purple-900/50 dark:text-purple-300 dark:border-purple-700 capitalize pointer-events-none">
+                      {show.showType}
                     </Badge>
-                    <Badge className="text-xs border bg-purple-100 text-purple-800 border-purple-300 dark:bg-purple-900/50 dark:text-purple-300 dark:border-purple-700">
-                      {show.genre_name}
+                    <Badge className={`text-xs border pointer-events-none ${show.isTentpole 
+                        ? 'bg-emerald-100 text-emerald-800 border-emerald-300 dark:bg-emerald-900/50 dark:text-emerald-300 dark:border-emerald-700' 
+                        : 'bg-red-100 text-red-800 border-red-300 dark:bg-red-900/50 dark:text-red-300 dark:border-red-700'}`}>
+                      Tentpole - {show.isTentpole ? 'Yes' : 'No'}
                     </Badge>
-                    {show.isTentpole && (
-                      <Badge className="text-xs border bg-purple-100 text-purple-800 border-purple-300 dark:bg-purple-900/50 dark:text-purple-300 dark:border-purple-700">
-                        Tentpole
-                      </Badge>
-                    )}
+                    <Badge className={`text-xs border pointer-events-none ${show.isUndersized 
+                        ? 'bg-emerald-100 text-emerald-800 border-emerald-300 dark:bg-emerald-900/50 dark:text-emerald-300 dark:border-emerald-700' 
+                        : 'bg-red-100 text-red-800 border-red-300 dark:bg-red-900/50 dark:text-red-300 dark:border-red-700'}`}>
+                      Undersized - {show.isUndersized ? 'Yes' : 'No'}
+                    </Badge>
                   </div>
                 </div>
               </CardHeader>
@@ -923,7 +925,7 @@ export default function ShowsManagement() {
                       <span className="text-muted-foreground">Relationship:</span>
                     </div>
                     <Badge
-                      className={`text-xs border justify-self-start ${getRelationshipBadgeClass(show.relationship)}`}
+                      className={`text-xs border justify-self-start pointer-events-none ${getRelationshipBadgeClass(show.relationship)}`}
                     >
                       {show.relationship}
                     </Badge>
@@ -932,10 +934,10 @@ export default function ShowsManagement() {
                     <div className="flex justify-between items-center text-sm">
                       <span className="text-muted-foreground">Revenue Split:</span>
                       <div className="flex gap-2">
-                        <Badge variant="outline" className="text-xs">
+                        <Badge className="text-xs border bg-purple-100 text-purple-800 border-purple-300 dark:bg-purple-900/50 dark:text-purple-300 dark:border-purple-700 pointer-events-none">
                           EG: {show.revenueSplit.evergreen}%
                         </Badge>
-                        <Badge variant="outline" className="text-xs">
+                        <Badge className="text-xs border bg-purple-100 text-purple-800 border-purple-300 dark:bg-purple-900/50 dark:text-purple-300 dark:border-purple-700 pointer-events-none">
                           Partner: {show.revenueSplit.partner}%
                         </Badge>
                       </div>
