@@ -33,10 +33,10 @@ import {
   RotateCcw,
 } from "lucide-react"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
-import CreateShowDialog from "./create-show-dialog"
-import DeleteShowDialog from "./delete-show-dialog"
-import ImportCSVDialog from "./import-csv-dialog"
-import ShowViewDialog from "./show-view-dialog"
+import CreateShowDialog from "@/components/create-show-dialog"
+import DeleteShowDialog from "@/components/delete-show-dialog"
+import ImportCSVDialog from "@/components/import-csv-dialog"
+import ShowViewDialog from "@/components/show-view-dialog"
 import type { Show } from "@/lib/show-types"
 import { Checkbox } from "@/components/ui/checkbox"
 
@@ -377,6 +377,18 @@ export default function ShowsManagement() {
     return [...new Set(values)].filter(Boolean).sort((a,b) => String(a).localeCompare(String(b)))
   }
 
+  const getRelationshipBadgeClass = (relationship: string) => {
+    switch (relationship) {
+      case "Strong":
+        return "bg-emerald-100 text-emerald-800 border-emerald-300 dark:bg-emerald-900/50 dark:text-emerald-300 dark:border-emerald-700"
+      case "Medium":
+        return "bg-orange-100 text-orange-800 border-orange-300 dark:bg-orange-900/50 dark:text-orange-300 dark:border-orange-700"
+      case "Weak":
+        return "bg-red-100 text-red-800 border-red-300 dark:bg-red-900/50 dark:text-red-300 dark:border-red-700"
+      default:
+        return "bg-slate-100 text-slate-800 border-slate-300 dark:bg-slate-900/50 dark:text-slate-300 dark:border-slate-700"
+    }
+  }
 
   if (loading) {
     return (
@@ -874,14 +886,14 @@ export default function ShowsManagement() {
                     </CardTitle>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Badge variant={show.format === "Video" ? "default" : "secondary"} className="text-xs">
+                    <Badge className="text-xs border bg-purple-100 text-purple-800 border-purple-300 dark:bg-purple-900/50 dark:text-purple-300 dark:border-purple-700">
                       {show.format}
                     </Badge>
-                    <Badge variant="outline" className="text-xs truncate max-w-[120px]">
+                    <Badge className="text-xs border bg-purple-100 text-purple-800 border-purple-300 dark:bg-purple-900/50 dark:text-purple-300 dark:border-purple-700">
                       {show.genre_name}
                     </Badge>
                     {show.isTentpole && (
-                      <Badge className="bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200 text-xs">
+                      <Badge className="text-xs border bg-purple-100 text-purple-800 border-purple-300 dark:bg-purple-900/50 dark:text-purple-300 dark:border-purple-700">
                         Tentpole
                       </Badge>
                     )}
@@ -911,14 +923,7 @@ export default function ShowsManagement() {
                       <span className="text-muted-foreground">Relationship:</span>
                     </div>
                     <Badge
-                      variant={
-                        show.relationship === "Strong"
-                          ? "default"
-                          : show.relationship === "Medium"
-                            ? "secondary"
-                            : "outline"
-                      }
-                      className="text-xs justify-self-start"
+                      className={`text-xs border justify-self-start ${getRelationshipBadgeClass(show.relationship)}`}
                     >
                       {show.relationship}
                     </Badge>
@@ -1017,7 +1022,7 @@ export default function ShowsManagement() {
                           <p className="font-medium">{show.name}</p>
                           <div className="flex gap-1">
                             {show.isTentpole && (
-                              <Badge className="bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200 text-xs">
+                              <Badge className="text-xs border bg-purple-100 text-purple-800 border-purple-300 dark:bg-purple-900/50 dark:text-purple-300 dark:border-purple-700">
                                 Tentpole
                               </Badge>
                             )}
@@ -1035,25 +1040,18 @@ export default function ShowsManagement() {
                         </Badge>
                       </td>
                       <td className="p-4">
-                        <Badge variant="outline" className="text-xs">
+                        <Badge className="text-xs border bg-purple-100 text-purple-800 border-purple-300 dark:bg-purple-900/50 dark:text-purple-300 dark:border-purple-700">
                           {show.genre_name}
                         </Badge>
                       </td>
                       <td className="p-4">
-                        <Badge variant={show.format === "Video" ? "default" : "secondary"} className="text-xs">
+                        <Badge className="text-xs border bg-purple-100 text-purple-800 border-purple-300 dark:bg-purple-900/50 dark:text-purple-300 dark:border-purple-700">
                           {show.format}
                         </Badge>
                       </td>
                       <td className="p-4">
                         <Badge
-                          variant={
-                            show.relationship === "Strong"
-                              ? "default"
-                              : show.relationship === "Medium"
-                                ? "secondary"
-                                : "outline"
-                          }
-                          className="text-xs"
+                          className={`text-xs border ${getRelationshipBadgeClass(show.relationship)}`}
                         >
                           {show.relationship}
                         </Badge>

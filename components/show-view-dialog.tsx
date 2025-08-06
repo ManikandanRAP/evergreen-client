@@ -1,6 +1,12 @@
 "use client"
 
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogClose,
+} from "@/components/ui/dialog"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
@@ -18,44 +24,61 @@ import {
   BarChart3,
   Target,
   GraduationCap,
+  Briefcase,
+  Percent,
+  Hash,
+  X,
 } from "lucide-react"
 import type { Show } from "@/lib/show-types"
+import React from "react"
 
-interface ShowViewDialogProps {
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  show: Show | null
+// --- Reusable Sub-components for Cleaner Layout ---
+
+// A generic component to display a piece of detail with a label and value
+const DetailItem = ({
+  label,
+  value,
+  icon,
+  isBadge = false,
+  badgeVariant = "outline",
+}: {
+  label: string
+  value: React.ReactNode
+  icon?: React.ElementType
+  isBadge?: boolean
+  badgeVariant?: "default" | "secondary" | "destructive" | "outline"
+}) => {
+  const Icon = icon
+  return (
+    <div>
+      <label className="text-xs font-medium text-muted-foreground flex items-center gap-1.5">
+        {Icon && <Icon className="h-3.5 w-3.5" />}
+        {label}
+      </label>
+      {isBadge ? (
+        <Badge variant={badgeVariant} className="mt-1 text-xs md:text-sm">
+          {value}
+        </Badge>
+      ) : (
+        <p className="text-sm md:text-base font-semibold">{value || "N/A"}</p>
+      )}
+    </div>
+  )
 }
 
-export default function ShowViewDialog({ open, onOpenChange, show }: ShowViewDialogProps) {
-  if (!show) return null
-
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
-    }).format(amount)
-  }
-
-  const formatPercentage = (amount: number | null | undefined) => {
-    if (amount === null || typeof amount === "undefined") {
-      return "N/A"
+// A dedicated component for displaying contact information cleanly
+const ContactCard = ({
+  title,
+  contactString,
+}: {
+  title: string
+  contactString: string
+}) => {
+  const parseContact = (str: string) => {
+    if (!str || str === "Internal" || str === "-") {
+      return { name: str || "Not specified", address: "", phone: "", email: "" }
     }
-    return `${amount}%`
-  }
-
-  const parseContact = (contactString: string) => {
-    if (!contactString || contactString === "Internal" || contactString === "-") {
-      return {
-        name: contactString || "Not specified",
-        address: "",
-        phone: "",
-        email: "",
-      }
-    }
-
-    // Parse contact string format: "Name, Address, Phone, Email"
-    const parts = contactString.split(", ")
+    const parts = str.split(", ")
     return {
       name: parts[0] || "",
       address: parts.slice(1, -2).join(", ") || "",
@@ -64,494 +87,290 @@ export default function ShowViewDialog({ open, onOpenChange, show }: ShowViewDia
     }
   }
 
-  const hostContact = parseContact(show.primaryContactHost)
-  const showContact = parseContact(show.primaryContactShow)
+  const contact = parseContact(contactString)
+
+  return (
+    <div className="space-y-2">
+      <h5 className="font-semibold text-sm text-muted-foreground">{title}</h5>
+      <div className="space-y-2 text-sm">
+        <div className="flex items-center gap-2">
+          <Users className="h-4 w-4 flex-shrink-0 text-gray-400" />
+          <span>{contact.name}</span>
+        </div>
+        {contact.address && (
+          <div className="flex items-start gap-2">
+            <MapPin className="h-4 w-4 flex-shrink-0 text-gray-400 mt-0.5" />
+            <span>{contact.address}</span>
+          </div>
+        )}
+        {contact.phone && (
+          <div className="flex items-center gap-2">
+            <Phone className="h-4 w-4 flex-shrink-0 text-gray-400" />
+            <span>{contact.phone}</span>
+          </div>
+        )}
+        {contact.email && (
+          <div className="flex items-center gap-2">
+            <Mail className="h-4 w-4 flex-shrink-0 text-gray-400" />
+            <span className="truncate">{contact.email}</span>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
+// --- Main Dialog Component ---
+
+interface ShowViewDialogProps {
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  show: Show | null
+}
+
+export default function ShowViewDialog({
+  open,
+  onOpenChange,
+  show,
+}: ShowViewDialogProps) {
+  if (!show) return null
+
+  const formatCurrency = (amount: number) =>
+    new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
+    }).format(amount)
+
+  const formatPercentage = (amount: number | null | undefined) =>
+    amount === null || typeof amount === "undefined" ? "N/A" : `${amount}%`
+
+  const revenueFlags = [
+    { label: "Branded Revenue", value: show.hasBrandedRevenue },
+    { label: "Marketing Revenue", value: show.hasMarketingRevenue },
+    { label: "Web Management Revenue", value: show.hasWebManagementRevenue },
+    { label: "Sponsorship Revenue", value: show.hasSponsorshipRevenue },
+    { label: "Non Evergreen Revenue", value: show.hasNonEvergreenRevenue },
+    { label: "Partner Ledger Access", value: show.requiresPartnerLedgerAccess },
+  ]
+
+  const statusFlags = [
+    { label: "Tentpole", value: show.isTentpole },
+    { label: "Original", value: show.isOriginal },
+    { label: "Active", value: show.isActive },
+    { label: "Undersized", value: show.isUndersized },
+  ]
+
+  const contractSplits = [
+    { label: "Side Bonus", value: formatPercentage(show.sideBonusPercent) },
+    { label: "YouTube Ads", value: formatPercentage(show.youtubeAdsPercent) },
+    { label: "Subscriptions", value: formatPercentage(show.subscriptionsPercent) },
+    { label: "Standard Ads", value: formatPercentage(show.standardAdsPercent) },
+    { label: "Sponsorship (FP Lead)", value: formatPercentage(show.sponsorshipAdFpLeadPercent) },
+    { label: "Sponsorship (Partner Lead)", value: formatPercentage(show.sponsorshipAdPartnerLeadPercent) },
+    { label: "Sponsorship (Partner Sold)", value: formatPercentage(show.sponsorshipAdPartnerSoldPercent) },
+    { label: "Programmatic Ads", value: formatPercentage(show.programmaticAdsSpanPercent) },
+    { label: "Merchandise", value: formatPercentage(show.merchandisePercent) },
+    { label: "Branded Revenue", value: formatPercentage(show.brandedRevenuePercent) },
+    { label: "Marketing Services", value: formatPercentage(show.marketingServicesRevenuePercent) },
+  ]
+
+  const handsOffSplits = [
+      { label: "Direct Customer", value: formatPercentage(show.directCustomerHandsOffPercent) },
+      { label: "YouTube", value: formatPercentage(show.youtubeHandsOffPercent) },
+      { label: "Subscriptions", value: formatPercentage(show.subscriptionHandsOffPercent) },
+  ]
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-6xl h-[85vh] flex flex-col">
-        <DialogHeader className="flex-shrink-0">
-          <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-emerald-600 to-cyan-600 bg-clip-text text-transparent">
-            {show.name}
-          </DialogTitle>
-        </DialogHeader>
+      <DialogContent className="max-w-none w-full sm:w-[90%] h-screen sm:h-[95vh] flex flex-col p-0 overflow-hidden dark:bg-black border-0 [&>button]:hidden">
+        <div className="relative px-6 py-4 bg-background dark:bg-[#262626] border-b dark:border-slate-800">
+          <h1 className="text-2xl font-semibold text-center">{show.name}</h1>
+          <DialogClose className="absolute top-1/2 -translate-y-1/2 right-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground border-2 border-slate-300 dark:border-slate-700 p-1.5">
+            <X className="h-4 w-4" />
+            <span className="sr-only">Close</span>
+          </DialogClose>
+        </div>
 
-        <ScrollArea className="flex-1 pr-4">
-          <div className="space-y-6">
-            {/* Basic Information */}
-            <Card className="evergreen-card">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Info className="h-5 w-5 text-emerald-600" />
-                  Basic Information
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  <div className="space-y-4">
-                    <div>
-                      <label className="text-sm font-medium text-muted-foreground">Show Type</label>
-                      <p className="font-medium capitalize">{show.showType}</p>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-muted-foreground">Format</label>
-                      <div className="mt-1">
-                        <Badge variant={show.format === "Video" ? "default" : "secondary"}>{show.format}</Badge>
-                      </div>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-muted-foreground">Relationship</label>
-                      <div className="mt-1">
-                        <Badge
-                          variant={
-                            show.relationship === "Strong"
-                              ? "default"
-                              : show.relationship === "Medium"
-                              ? "secondary"
-                              : "outline"
-                          }
-                        >
-                          {show.relationship}
-                        </Badge>
-                      </div>
-                    </div>
+        <ScrollArea className="flex-1">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 px-6 pb-6">
+            {/* Column 1 */}
+            <div className="space-y-6">
+              <Card className="dark:bg-[#262626]">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-lg">
+                    <Info className="h-5 w-5 text-emerald-500" /> Basic Information
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="grid grid-cols-3 gap-x-6 gap-y-6">
+                  <DetailItem label="Show Type" value={show.showType} />
+                  <DetailItem label="Format" value={show.format} />
+                  <DetailItem label="Relationship" value={show.relationship} />
+                  <DetailItem label="Subnetwork" value={show.subnetwork_id} />
+                  <DetailItem label="Created Date" value={new Date(show.start_date).toLocaleDateString()} />
+                  <DetailItem label="Age" value={`${show.ageMonths} months`} />
+                  <div className="col-span-3">
+                     <label className="text-xs font-medium text-muted-foreground">Status Flags</label>
+                     <div className="flex flex-wrap gap-2 mt-1">
+                        {statusFlags.map(flag => (
+                           <Badge key={flag.label} 
+                                  className={`text-xs border pointer-events-none ${flag.value 
+                                    ? 'bg-emerald-100 text-emerald-800 border-emerald-300 dark:bg-emerald-900/50 dark:text-emerald-300 dark:border-emerald-700' 
+                                    : 'bg-red-100 text-red-800 border-red-300 dark:bg-red-900/50 dark:text-red-300 dark:border-red-700'}`}>
+                             {flag.label} - {flag.value ? 'Yes' : 'No'}
+                           </Badge>
+                        ))}
+                     </div>
                   </div>
+                </CardContent>
+              </Card>
+              <Card className="dark:bg-[#262626]">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-base">
+                    <Users className="h-5 w-5 text-gray-500" /> Contact Information
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <ContactCard title="Host Contact" contactString={show.primaryContactHost} />
+                  <Separator className="dark:bg-slate-700" />
+                  <ContactCard title="Show Primary Contact" contactString={show.primaryContactShow} />
+                   <Separator className="dark:bg-slate-700" />
+                   <div>
+                        <h5 className="font-semibold text-sm text-muted-foreground">Evergreen Production Staff</h5>
+                        <div className="flex items-center gap-2 mt-1 text-sm">
+                            <Users className="h-4 w-4 flex-shrink-0 text-gray-400" />
+                            <span>{show.evergreenProductionStaffName || "None"}</span>
+                        </div>
+                   </div>
+                </CardContent>
+              </Card>
+            </div>
 
-                  <div className="space-y-4">
-                    <div>
-                      <label className="text-sm font-medium text-muted-foreground">Created Date</label>
-                      <p className="font-medium">{new Date(show.start_date).toLocaleDateString()}</p>
+            {/* Column 2 */}
+            <div className="space-y-6">
+              <Card className="dark:bg-[#262626]">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-lg">
+                    <DollarSign className="h-5 w-5 text-emerald-500" /> Financial Information
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <div className="grid grid-cols-3 gap-6 mb-6">
+                        <DetailItem label="Minimum Guarantee" value={formatCurrency(show.minimumGuarantee)} />
+                        <DetailItem label="Ownership %" value={`${show.ownershipPercentage}%`} />
+                        <DetailItem label="Latest CPM" value={`$${show.latestCPM}`} />
                     </div>
-                    <div>
-                      <label className="text-sm font-medium text-muted-foreground">Subnetwork</label>
-                      <p className="font-medium">{show.subnetwork_id || "None"}</p>
+                     <div className="space-y-6">
+                        <div>
+                            <h4 className="font-semibold flex items-center gap-2 mb-3 text-base">
+                                <BarChart3 className="h-4 w-4" /> Revenue by Year
+                            </h4>
+                            <div className="grid grid-cols-3 gap-3">
+                                <div className="text-center p-3 bg-muted/50 dark:bg-black rounded-lg">
+                                    <p className="text-xs text-muted-foreground">2023</p>
+                                    <p className="text-base font-bold text-emerald-600">{formatCurrency(show.revenue2023)}</p>
+                                </div>
+                                <div className="text-center p-3 bg-muted/50 dark:bg-black rounded-lg">
+                                    <p className="text-xs text-muted-foreground">2024</p>
+                                    <p className="text-base font-bold text-cyan-600">{formatCurrency(show.revenue2024)}</p>
+                                </div>
+                                <div className="text-center p-3 bg-muted/50 dark:bg-black rounded-lg">
+                                    <p className="text-xs text-muted-foreground">2025</p>
+                                    <p className="text-base font-bold text-green-600">{formatCurrency(show.revenue2025)}</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div>
+                           <h4 className="font-semibold flex items-center gap-2 mb-3 text-base">
+                                <Percent className="h-4 w-4" /> Revenue Split
+                            </h4>
+                           <div className="grid grid-cols-2 gap-3">
+                               <div className="text-center p-3 bg-muted/50 dark:bg-black rounded-lg">
+                                   <p className="text-xs text-muted-foreground">Evergreen</p>
+                                   <p className="text-base font-bold text-emerald-600">{show.revenueSplit.evergreen}%</p>
+                               </div>
+                               <div className="text-center p-3 bg-muted/50 dark:bg-black rounded-lg">
+                                   <p className="text-xs text-muted-foreground">Partner</p>
+                                   <p className="text-base font-bold text-cyan-600">{show.revenueSplit.partner}%</p>
+                               </div>
+                           </div>
+                        </div>
                     </div>
-                  </div>
-
-                  
-                  <div className="space-y-4">
+                    
+                    <Separator className="my-4 dark:bg-slate-700" />
                     
                     <div>
-                      <label className="text-sm font-medium text-muted-foreground">Age</label>
-                      <div className="flex items-center gap-2">
-                        <Calendar className="h-4 w-4 text-cyan-600" />
-                        <span className="font-medium">{show.ageMonths} months</span>
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className="text-sm font-medium text-muted-foreground">Status</label>
-                      <div className="flex flex-col gap-2">
-                        <div className="flex gap-2">
-                          <Badge variant={show.isTentpole ? "default" : "outline"} className="text-xs px-2 w-auto">
-                            {show.isTentpole ? "Tentpole" : "Not Tentpole"}
-                          </Badge>
-                          <Badge variant={show.isOriginal ? "default" : "outline"} className="text-xs px-2 w-auto">
-                            {show.isOriginal ? "Original" : "Not Original"}
-                          </Badge>
+                        <h4 className="font-semibold flex items-center gap-2 mb-3 text-base">
+                            <TrendingUp className="h-4 w-4" /> Revenue Flags
+                        </h4>
+                        <div className="flex flex-wrap gap-2">
+                            {revenueFlags.map(flag => (
+                                <Badge key={flag.label} 
+                                       className={`text-xs border pointer-events-none ${flag.value 
+                                        ? 'bg-emerald-100 text-emerald-800 border-emerald-300 dark:bg-emerald-900/50 dark:text-emerald-300 dark:border-emerald-700' 
+                                        : 'bg-red-100 text-red-800 border-red-300 dark:bg-red-900/50 dark:text-red-300 dark:border-red-700'}`}>
+                                  {flag.label} - {flag.value ? 'Yes' : 'No'}
+                                </Badge>
+                            ))}
                         </div>
-                        <div className="flex gap-2">
-                          <Badge variant={show.isActive ? "default" : "outline"} className="text-xs px-2 w-auto">
-                            {show.isActive ? "Active" : "Inactive"}
-                          </Badge>
-                          <Badge variant={show.isUndersized ? "default" : "outline"} className="text-xs px-2 w-auto">
-                            {show.isUndersized ? "Undersized" : "Not Undersized"}
-                          </Badge>
+                    </div>
+                </CardContent>
+              </Card>
+              <Card className="dark:bg-[#262626]">
+                 <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-base">
+                    <Target className="h-5 w-5 text-gray-500" /> Demographics
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <div className="grid grid-cols-3 gap-4">
+                        <DetailItem label="Age" value={show.ageDemographic} />
+                        <DetailItem label="Gender" value={show.gender} />
+                        <DetailItem label="Region" value={show.region} />
+                        <DetailItem label="Primary Education" value={show.primary_education} />
+                        <DetailItem label="Secondary Education" value={show.secondary_education} />
+                    </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Column 3 */}
+            <div className="space-y-6">
+              <Card className="dark:bg-[#262626]">
+                 <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-base">
+                    <Percent className="h-5 w-5 text-gray-500" /> Financial Splits
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                    <div>
+                        <h4 className="font-semibold text-sm text-muted-foreground mb-2">Contract Splits</h4>
+                        <div className="grid grid-cols-2 gap-x-4 gap-y-2">
+                            {contractSplits.map(split => <DetailItem key={split.label} label={split.label} value={split.value} />)}
                         </div>
-                      </div>
                     </div>
-
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Financial Information */}
-            <Card className="evergreen-card">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <DollarSign className="h-5 w-5 text-emerald-600" />
-                  Financial Information
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                  <div className="space-y-4">
+                    <Separator className="dark:bg-slate-700" />
                     <div>
-                      <label className="text-sm font-medium text-muted-foreground">Minimum Guarantee</label>
-                      <p className="text-lg font-bold text-emerald-600">{formatCurrency(show.minimumGuarantee)}</p>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-muted-foreground">Ownership %</label>
-                      <p className="text-lg font-bold">{show.ownershipPercentage}%</p>
-                    </div>
-                  </div>
-
-                  <div className="space-y-4">
-                    <div>
-                      <label className="text-sm font-medium text-muted-foreground">Latest CPM</label>
-                      <p className="text-lg font-bold text-cyan-600">${show.latestCPM}</p>
-                    </div>
-                    {/* <div>
-                      <label className="text-sm font-medium text-muted-foreground">Branded Revenue</label>
-                      <p className="font-medium">{formatCurrency(show.brandedRevenueAmount)}</p>
-                    </div> */}
-                  </div>
-
-                  <div className="space-y-4">
-                    <div>
-                      <label className="text-sm font-medium text-muted-foreground">Revenue Flags</label>
-                      <div className="flex gap-2  p-2 justify-start w-[400px] ">
-                        <div className="flex-row gap-2  h-[100px]">
-                          <div className=" w-full h-[20px] mb-2">
-                            <Badge variant={show.hasBrandedRevenue ? "default" : "outline"} className="text-xs">
-                              {show.hasBrandedRevenue ? "Has" : "No"} Branded
-                            </Badge>
-                          </div>
-                          <div className=" w-full h-[20px] mb-2">
-                            <Badge variant={show.hasMarketingRevenue ? "default" : "outline"} className="text-xs ">
-                              {show.hasMarketingRevenue ? "Has" : "No"} Marketing
-                            </Badge>
-                          </div>
-                          <div className=" w-full h-[20px] mb-2">
-                            <Badge variant={show.hasWebManagementRevenue ? "default" : "outline"} className="text-xs ">
-                              {show.hasWebManagementRevenue ? "Has" : "No"} Web Management
-                            </Badge>
-                          </div>
+                        <h4 className="font-semibold text-sm text-muted-foreground mb-2">Hands-Off Splits</h4>
+                         <div className="grid grid-cols-3 gap-x-4 gap-y-2">
+                            {handsOffSplits.map(split => <DetailItem key={split.label} label={split.label} value={split.value} />)}
                         </div>
-                        <div className="flex-row gap-2  ">
-                          <div className=" w-full h-[20px] mb-2">
-                            <Badge variant={show.hasSponsorshipRevenue ? "default" : "outline"} className="text-xs ">
-                              {show.hasSponsorshipRevenue ? "Has" : "No"} Sponsorship
-                            </Badge>
-                          </div>
-                          <div className=" w-full h-[20px] mb-2">
-                            <Badge variant={show.hasNonEvergreenRevenue ? "default" : "outline"} className="text-xs ">
-                              {show.hasNonEvergreenRevenue ? "Has" : "No"} Non Evergreen
-                            </Badge>
-                          </div>
-                          <div className=" w-full h-[20px] mb-2">
-                            <Badge variant={show.requiresPartnerLedgerAccess ? "default" : "outline"} className="text-xs ">
-                              {show.requiresPartnerLedgerAccess ? "Requires" : "No"} Partner Access
-                            </Badge>
-                          </div>
-                        </div>
-                      </div>
                     </div>
-                  </div>
-                </div>
-
-                <Separator className="my-6" />
-
-                {/* Revenue Split */}
-                <div className="space-y-4">
-                  <h4 className="font-semibold flex items-center gap-2">
-                    <TrendingUp className="h-4 w-4" />
-                    Revenue Split
-                  </h4>
-                  <div className="flex gap-4">
-                    <Badge variant="outline" className="text-sm">
-                      Evergreen: {show.revenueSplit.evergreen}%
-                    </Badge>
-                    <Badge variant="outline" className="text-sm">
-                      Partner: {show.revenueSplit.partner}%
-                    </Badge>
-                  </div>
-                </div>
-
-                <Separator className="my-6" />
-
-                {/* Revenue by Year */}
-                <div className="space-y-4">
-                  <h4 className="font-semibold flex items-center gap-2">
-                    <BarChart3 className="h-4 w-4" />
-                    Revenue by Year
-                  </h4>
-                  <div className="grid grid-cols-3 gap-4">
-                    <div className="text-center p-4 bg-muted/30 rounded-lg">
-                      <p className="text-sm text-muted-foreground">2023</p>
-                      <p className="text-lg font-bold text-emerald-600">{formatCurrency(show.revenue2023)}</p>
-                    </div>
-                    <div className="text-center p-4 bg-muted/30 rounded-lg">
-                      <p className="text-sm text-muted-foreground">2024</p>
-                      <p className="text-lg font-bold text-cyan-600">{formatCurrency(show.revenue2024)}</p>
-                    </div>
-                    <div className="text-center p-4 bg-muted/30 rounded-lg">
-                      <p className="text-sm text-muted-foreground">2025</p>
-                      <p className="text-lg font-bold text-green-600">{formatCurrency(show.revenue2025)}</p>
-                    </div>
-                  </div>
-                </div>
-
-                <Separator className="my-6" />
-
-                <div className="space-y-4 mt-3">
-                  <h4 className="font-semibold flex items-center gap-2">
-                    <BarChart3 className="h-4 w-4" />
-                    Contract Splits
-                  </h4>
-                  <div className="space-y-4 grid grid-cols-3 justify-center ">
-                    <div className="first:pt-4">
-                      <label className="text-sm font-medium text-muted-foreground">Side Bonus</label>
-                      <p className="text-lg font-bold text-emerald-600">
-                        {formatPercentage(show.sideBonusPercent)}
-                      </p>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-muted-foreground">YouTube Ads</label>
-                      <p className="text-lg font-bold text-emerald-600">
-                        {formatPercentage(show.youtubeAdsPercent)}
-                      </p>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-muted-foreground">Subscriptions</label>
-                      <p className="text-lg font-bold text-emerald-600">
-                        {formatPercentage(show.subscriptionsPercent)}
-                      </p>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-muted-foreground">Standard Ads</label>
-                      <p className="text-lg font-bold text-emerald-600">
-                        {formatPercentage(show.standardAdsPercent)}
-                      </p>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-muted-foreground">Sponsorship (FP Lead)</label>
-                      <p className="text-lg font-bold text-emerald-600">
-                        {formatPercentage(show.sponsorshipAdFpLeadPercent)}
-                      </p>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-muted-foreground">Sponsorship (Partner Lead)</label>
-                      <p className="text-lg font-bold text-emerald-600">
-                        {formatPercentage(show.sponsorshipAdPartnerLeadPercent)}
-                      </p>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-muted-foreground">Sponsorship (Partner Sold)</label>
-                      <p className="text-lg font-bold text-emerald-600">
-                        {formatPercentage(show.sponsorshipAdPartnerSoldPercent)}
-                      </p>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-muted-foreground">Programmatic Ads</label>
-                      <p className="text-lg font-bold text-emerald-600">
-                        {formatPercentage(show.programmaticAdsSpanPercent)}
-                      </p>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-muted-foreground">Merchandise</label>
-                      <p className="text-lg font-bold text-emerald-600">
-                        {formatPercentage(show.merchandisePercent)}
-                      </p>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-muted-foreground">Branded Revenue</label>
-                      <p className="text-lg font-bold text-emerald-600">
-                        {formatPercentage(show.brandedRevenuePercent)}
-                      </p>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-muted-foreground">Marketing Services</label>
-                      <p className="text-lg font-bold text-emerald-600">
-                        {formatPercentage(show.marketingServicesRevenuePercent)}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                <Separator className="my-6" />
-
-                <div className="space-y-4 mt-3">
-                  <h4 className="font-semibold flex items-center gap-2">
-                    <BarChart3 className="h-4 w-4" />
-                    Hands Off Splits
-                  </h4>
-                  <div className="space-y-4 grid grid-cols-3  justify-center ">
-                    <div className="first:pt-4">
-                      <label className="text-sm font-medium text-muted-foreground">Direct Customer</label>
-                      <p className="text-lg font-bold text-emerald-600">
-                        {formatPercentage(show.directCustomerHandsOffPercent)}
-                      </p>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-muted-foreground">YouTube</label>
-                      <p className="text-lg font-bold text-emerald-600">
-                        {formatPercentage(show.youtubeHandsOffPercent)}
-                      </p>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-muted-foreground">Subscriptions</label>
-                      <p className="text-lg font-bold text-emerald-600">
-                        {formatPercentage(show.subscriptionHandsOffPercent)}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Content Details */}
-            <Card className="evergreen-card">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Radio className="h-5 w-5 text-emerald-600" />
-                  Content Details
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                  <div>
-                    <label className="text-sm font-medium text-muted-foreground">Genre</label>
-                    <div className="mt-1">
-                      <Badge variant="outline" className="mt-1">
-                        {show.genre_name}
-                      </Badge>
-                    </div>
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-muted-foreground">Shows per Year</label>
-                    <p className="text-lg font-bold text-cyan-600">{show.showsPerYear}</p>
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-muted-foreground">Ad Slots</label>
-                    <p className="text-lg font-bold">{show.adSlots}</p>
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-muted-foreground">Average Length</label>
-                    <p className="text-lg font-bold">{show.averageLength} min</p>
-                  </div>
-                </div>
-
-                <Separator className="my-6" />
-
-                {/* Contact Information */}
-                <div className="space-y-6">
-                  <h4 className="font-semibold flex items-center gap-2">
-                    <Users className="h-4 w-4" />
-                    Contact Information
-                  </h4>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {/* Host Contact */}
-                    <div className="space-y-3">
-                      <h5 className="font-medium text-muted-foreground">Host Contact</h5>
-                      <div className="space-y-2">
-                        <div className="flex items-center gap-2">
-                          <Users className="h-4 w-4 text-muted-foreground" />
-                          <span className="font-medium">{hostContact.name}</span>
-                        </div>
-                        {hostContact.address && (
-                          <div className="flex items-start gap-2">
-                            <MapPin className="h-4 w-4 text-muted-foreground mt-0.5" />
-                            <span className="text-sm">{hostContact.address}</span>
-                          </div>
-                        )}
-                        {hostContact.phone && (
-                          <div className="flex items-center gap-2">
-                            <Phone className="h-4 w-4 text-muted-foreground" />
-                            <span className="text-sm">{hostContact.phone}</span>
-                          </div>
-                        )}
-                        {hostContact.email && (
-                          <div className="flex items-center gap-2">
-                            <Mail className="h-4 w-4 text-muted-foreground" />
-                            <span className="text-sm">{hostContact.email}</span>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Show Contact */}
-                    <div className="space-y-3">
-                      <h5 className="font-medium text-muted-foreground">Show Primary Contact</h5>
-                      <div className="space-y-2">
-                        <div className="flex items-center gap-2">
-                          <Users className="h-4 w-4 text-muted-foreground" />
-                          <span className="font-medium">{showContact.name}</span>
-                        </div>
-                        {showContact.address && (
-                          <div className="flex items-start gap-2">
-                            <MapPin className="h-4 w-4 text-muted-foreground mt-0.5" />
-                            <span className="text-sm">{showContact.address}</span>
-                          </div>
-                        )}
-                        {showContact.phone && (
-                          <div className="flex items-center gap-2">
-                            <Phone className="h-4 w-4 text-muted-foreground" />
-                            <span className="text-sm">{showContact.phone}</span>
-                          </div>
-                        )}
-                        {showContact.email && (
-                          <div className="flex items-center gap-2">
-                            <Mail className="h-4 w-4 text-muted-foreground" />
-                            <span className="text-sm">{showContact.email}</span>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                  <div className="pt-4">
-                    <h5 className="font-medium text-muted-foreground">Evergreen Production Staff Primary Contact</h5>
-                    <div className="flex items-center gap-2 mt-2">
-                      <Users className="h-4 w-4 text-muted-foreground" />
-                      <span className="font-medium">{show.evergreenProductionStaffName || "None"}</span>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Demographics */}
-            <Card className="evergreen-card">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Target className="h-5 w-5 text-emerald-600" />
-                  Demographics
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  <div>
-                    <label className="text-sm font-medium text-muted-foreground">Age Demographic</label>
-                    <div className="mt-1">
-                      <Badge variant="outline">{show.ageDemographic || "N/A"}</Badge>
-                    </div>
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-muted-foreground">Gender Demographic</label>
-                    <div className="mt-1">
-                      <Badge variant="outline">{show.gender || "N/A"}</Badge>
-                    </div>
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-muted-foreground">Region</label>
-                    <div className="mt-1">
-                      <Badge variant="outline" className="capitalize">
-                        {show.region || "N/A"}
-                      </Badge>
-                    </div>
-                  </div>
-                </div>
-                <Separator className="my-6" />
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <h4 className="font-semibold flex items-center gap-2 mb-2">
-                      <GraduationCap className="h-4 w-4" />
-                      Education Demographic
-                    </h4>
-                    <div className="space-y-2">
-                      <p className="text-sm font-medium">
-                        Primary: <Badge variant="outline">{show.primary_education || "N/A"}</Badge>
-                      </p>
-                      <p className="text-sm font-medium">
-                        Secondary: <Badge variant="outline">{show.secondary_education || "N/A"}</Badge>
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
+              <Card className="dark:bg-[#262626]">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-lg">
+                    <Radio className="h-5 w-5 text-emerald-500" /> Content Details
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="grid grid-cols-2 gap-6">
+                   <DetailItem label="Genre" value={show.genre_name} />
+                   <DetailItem label="Shows per Year" value={show.showsPerYear} />
+                   <DetailItem label="Ad Slots" value={show.adSlots} />
+                   <DetailItem label="Average Length" value={`${show.averageLength} min`} />
+                </CardContent>
+              </Card>
+            </div>
           </div>
         </ScrollArea>
       </DialogContent>
