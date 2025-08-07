@@ -409,11 +409,13 @@ export default function RevenueLedger() {
       <Card>
         <Collapsible open={isFiltersOpen} onOpenChange={setIsFiltersOpen}>
           <CollapsibleTrigger asChild>
-            <CardHeader className="cursor-pointer hover:bg-accent/50 transition-colors rounded-lg">
+            <CardHeader className="cursor-pointer hover:bg-accent/50 transition-colors rounded-lg group px-6 py-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                   <Filter className="h-5 w-5" />
-                   <CardTitle>Filters</CardTitle>
+                  <CardTitle className="flex items-center gap-2 font-semibold text-lg">
+                    <Filter className="h-5 w-5" />
+                    Filters
+                  </CardTitle>
                 </div>
                 <div className="flex items-center gap-4">
                   <Badge variant="secondary">
