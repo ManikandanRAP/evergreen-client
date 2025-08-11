@@ -7,6 +7,7 @@ export type UserRole = "admin" | "partner"
 
 interface AuthContextType {
   user: User | null
+  token: string | null // Expose token in the context
   login: (email: string, password: string) => Promise<boolean>
   logout: () => void
   isLoading: boolean
@@ -16,20 +17,24 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
+  const [token, setToken] = useState<string | null>(null) // Add state for the token
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    // Check for stored token and validate it
+    // Check for stored token and validate it on initial load
     const initAuth = async () => {
-      const token = localStorage.getItem("access_token")
-      if (token) {
+      const storedToken = localStorage.getItem("access_token")
+      if (storedToken) {
         try {
-          apiClient.setToken(token)
+          apiClient.setToken(storedToken)
           const currentUser = await apiClient.getCurrentUser()
           setUser(currentUser)
+          setToken(storedToken) // Set the token in state
         } catch (error) {
           console.error("Failed to validate token:", error)
           apiClient.clearToken()
+          localStorage.removeItem("access_token")
+          setToken(null)
         }
       }
       setIsLoading(false)
@@ -46,8 +51,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       await apiClient.login(credentials)
+      const newToken = localStorage.getItem("access_token") // Get token after login
       const currentUser = await apiClient.getCurrentUser()
       setUser(currentUser)
+      setToken(newToken) // Set the new token in state
       return true
     } catch (error) {
       console.error("Login failed:", error)
@@ -57,10 +64,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logout = () => {
     setUser(null)
+    setToken(null) // Clear token from state
     apiClient.clearToken()
+    localStorage.removeItem("access_token")
   }
 
-  return <AuthContext.Provider value={{ user, login, logout, isLoading }}>{children}</AuthContext.Provider>
+  return (
+    <AuthContext.Provider value={{ user, token, login, logout, isLoading }}>
+      {children}
+    </AuthContext.Provider>
+  )
 }
 
 export const useAuth = () => {
