@@ -14,7 +14,10 @@ import { Loader2, Eye, Check, ChevronsUpDown } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { useAuth } from "@/lib/auth-context"
 
-const API_URL = "http://127.0.0.1:8000"
+// Use the environment variable for the API URL.
+// This will be http://127.0.0.1:8000 on your local machine (from .env.local)
+// and the production URL on your server.
+const API_URL = process.env.NEXT_PUBLIC_API_URL
 
 interface Show {
   show_name: string
