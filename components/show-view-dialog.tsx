@@ -8,6 +8,7 @@ import {
   DialogClose,
 } from "@/components/ui/dialog"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 import { ScrollArea } from "@/components/ui/scroll-area"
@@ -28,9 +29,11 @@ import {
   Percent,
   Hash,
   X,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react"
 import type { Show } from "@/lib/show-types"
-import React from "react"
+import React, { useEffect, useState } from "react"
 
 // --- Reusable Sub-components for Cleaner Layout ---
 
@@ -126,14 +129,50 @@ interface ShowViewDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   show: Show | null
+  onNavigate: (direction: "next" | "previous") => void
+  hasNext: boolean
+  hasPrevious: boolean
 }
 
 export default function ShowViewDialog({
   open,
   onOpenChange,
   show,
+  onNavigate,
+  hasNext,
+  hasPrevious,
 }: ShowViewDialogProps) {
+  const [animationDirection, setAnimationDirection] = useState<"next" | "previous" | null>(null)
+
+  useEffect(() => {
+    if (!open) {
+      // Reset animation direction when dialog closes
+      setAnimationDirection(null)
+      return
+    }
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "ArrowRight" && hasNext) {
+        setAnimationDirection("next")
+        onNavigate("next")
+      } else if (e.key === "ArrowLeft" && hasPrevious) {
+        setAnimationDirection("previous")
+        onNavigate("previous")
+      }
+    }
+
+    document.addEventListener("keydown", handleKeyDown)
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown)
+    }
+  }, [open, hasNext, hasPrevious, onNavigate])
+
   if (!show) return null
+
+  const handleNavigationClick = (direction: "next" | "previous") => {
+    setAnimationDirection(direction)
+    onNavigate(direction)
+  }
 
   const formatCurrency = (amount: number) =>
     new Intl.NumberFormat("en-US", {
@@ -166,33 +205,84 @@ export default function ShowViewDialog({
     { label: "Subscriptions", value: formatPercentage(show.subscriptionsPercent) },
     { label: "Standard Ads", value: formatPercentage(show.standardAdsPercent) },
     { label: "Sponsorship (FP Lead)", value: formatPercentage(show.sponsorshipAdFpLeadPercent) },
-    { label: "Sponsorship (Partner Lead)", value: formatPercentage(show.sponsorshipAdPartnerLeadPercent) },
-    { label: "Sponsorship (Partner Sold)", value: formatPercentage(show.sponsorshipAdPartnerSoldPercent) },
+    {
+      label: "Sponsorship (Partner Lead)",
+      value: formatPercentage(show.sponsorshipAdPartnerLeadPercent),
+    },
+    {
+      label: "Sponsorship (Partner Sold)",
+      value: formatPercentage(show.sponsorshipAdPartnerSoldPercent),
+    },
     { label: "Programmatic Ads", value: formatPercentage(show.programmaticAdsSpanPercent) },
     { label: "Merchandise", value: formatPercentage(show.merchandisePercent) },
     { label: "Branded Revenue", value: formatPercentage(show.brandedRevenuePercent) },
-    { label: "Marketing Services", value: formatPercentage(show.marketingServicesRevenuePercent) },
+    {
+      label: "Marketing Services",
+      value: formatPercentage(show.marketingServicesRevenuePercent),
+    },
   ]
 
   const handsOffSplits = [
-      { label: "Direct Customer", value: formatPercentage(show.directCustomerHandsOffPercent) },
-      { label: "YouTube", value: formatPercentage(show.youtubeHandsOffPercent) },
-      { label: "Subscriptions", value: formatPercentage(show.subscriptionHandsOffPercent) },
+    { label: "Direct Customer", value: formatPercentage(show.directCustomerHandsOffPercent) },
+    { label: "YouTube", value: formatPercentage(show.youtubeHandsOffPercent) },
+    { label: "Subscriptions", value: formatPercentage(show.subscriptionHandsOffPercent) },
   ]
+
+  const animationClass =
+    animationDirection === "next"
+      ? "animate-in slide-in-from-right-8 fade-in-0 duration-300"
+      : animationDirection === "previous"
+      ? "animate-in slide-in-from-left-8 fade-in-0 duration-300"
+      : "" // No slide animation on initial open
+
+  const buttonStyles =
+    "navigation-button rounded-sm opacity-70 transition-opacity hover:opacity-100 disabled:pointer-events-none border-2 border-slate-300 dark:border-slate-700 p-1.5"
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-none w-full sm:w-[90%] h-screen sm:h-[95vh] flex flex-col p-0 overflow-hidden dark:bg-black border-0 [&>button]:hidden">
-        <DialogHeader className="relative px-6 py-4 bg-background dark:bg-[#262626] border-b dark:border-slate-800">
-          <DialogTitle className="text-2xl font-semibold text-center">{show.name}</DialogTitle>
-          <DialogClose className="absolute top-1/2 -translate-y-1/2 right-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground border-2 border-slate-300 dark:border-slate-700 p-1.5">
-            <X className="h-4 w-4" />
-            <span className="sr-only">Close</span>
-          </DialogClose>
+      <DialogContent className="max-w-none w-full sm:w-[90%] h-screen sm:h-[95vh] flex flex-col p-0 overflow-hidden dark:bg-black border-0 [&>button:not(.navigation-button)]:hidden">
+        <DialogHeader className="flex flex-row items-center justify-between px-6 py-4 bg-background dark:bg-[#262626] border-b dark:border-slate-800">
+          <div className="flex flex-none items-center gap-2">
+            {hasPrevious ? (
+              <Button
+                variant="ghost"
+                onClick={() => handleNavigationClick("previous")}
+                className={buttonStyles}
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+            ) : (
+              // Placeholder to maintain spacing
+              <div className="w-8" />
+            )}
+            {hasNext ? (
+              <Button
+                variant="ghost"
+                onClick={() => handleNavigationClick("next")}
+                className={buttonStyles}
+              >
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            ) : (
+              // Placeholder to maintain spacing
+              <div className="w-8" />
+            )}
+          </div>
+
+          <DialogTitle className="flex-1 text-2xl font-semibold text-center truncate px-4">
+            {show.name}
+          </DialogTitle>
+
+          <div className="flex flex-none justify-end">
+            <DialogClose className={buttonStyles}>
+              <X className="h-4 w-4" />
+              <span className="sr-only">Close</span>
+            </DialogClose>
+          </div>
         </DialogHeader>
 
         <ScrollArea className="flex-1">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 px-6 pb-6">
+          <div key={show.id} className={`grid grid-cols-1 lg:grid-cols-3 gap-6 p-6 ${animationClass}`}>
             {/* Column 1 */}
             <div className="space-y-6">
               <Card className="dark:bg-[#262626]">
@@ -206,20 +296,29 @@ export default function ShowViewDialog({
                   <DetailItem label="Format" value={show.format} />
                   <DetailItem label="Relationship" value={show.relationship} />
                   <DetailItem label="Subnetwork" value={show.subnetwork_id} />
-                  <DetailItem label="Created Date" value={new Date(show.start_date).toLocaleDateString()} />
+                  <DetailItem
+                    label="Created Date"
+                    value={new Date(show.start_date).toLocaleDateString()}
+                  />
                   <DetailItem label="Age" value={`${show.ageMonths} months`} />
                   <div className="col-span-3">
-                     <label className="text-xs font-medium text-muted-foreground">Status Flags</label>
-                     <div className="flex flex-wrap gap-2 mt-1">
-                        {statusFlags.map(flag => (
-                           <Badge key={flag.label} 
-                                  className={`text-xs border pointer-events-none ${flag.value 
-                                    ? 'bg-emerald-100 text-emerald-800 border-emerald-300 dark:bg-emerald-900/50 dark:text-emerald-300 dark:border-emerald-700' 
-                                    : 'bg-red-100 text-red-800 border-red-300 dark:bg-red-900/50 dark:text-red-300 dark:border-red-700'}`}>
-                             {flag.label} - {flag.value ? 'Yes' : 'No'}
-                           </Badge>
-                        ))}
-                     </div>
+                    <label className="text-xs font-medium text-muted-foreground">
+                      Status Flags
+                    </label>
+                    <div className="flex flex-wrap gap-2 mt-1">
+                      {statusFlags.map((flag) => (
+                        <Badge
+                          key={flag.label}
+                          className={`text-xs border pointer-events-none ${
+                            flag.value
+                              ? "bg-emerald-100 text-emerald-800 border-emerald-300 dark:bg-emerald-900/50 dark:text-emerald-300 dark:border-emerald-700"
+                              : "bg-red-100 text-red-800 border-red-300 dark:bg-red-900/50 dark:text-red-300 dark:border-red-700"
+                          }`}
+                        >
+                          {flag.label} - {flag.value ? "Yes" : "No"}
+                        </Badge>
+                      ))}
+                    </div>
                   </div>
                 </CardContent>
               </Card>
@@ -232,15 +331,20 @@ export default function ShowViewDialog({
                 <CardContent className="space-y-4">
                   <ContactCard title="Host Contact" contactString={show.primaryContactHost} />
                   <Separator className="dark:bg-slate-700" />
-                  <ContactCard title="Show Primary Contact" contactString={show.primaryContactShow} />
-                   <Separator className="dark:bg-slate-700" />
-                   <div>
-                        <h5 className="font-semibold text-sm text-muted-foreground">Evergreen Production Staff</h5>
-                        <div className="flex items-center gap-2 mt-1 text-sm">
-                            <Users className="h-4 w-4 flex-shrink-0 text-gray-400" />
-                            <span>{show.evergreenProductionStaffName || "None"}</span>
-                        </div>
-                   </div>
+                  <ContactCard
+                    title="Show Primary Contact"
+                    contactString={show.primaryContactShow}
+                  />
+                  <Separator className="dark:bg-slate-700" />
+                  <div>
+                    <h5 className="font-semibold text-sm text-muted-foreground">
+                      Evergreen Production Staff
+                    </h5>
+                    <div className="flex items-center gap-2 mt-1 text-sm">
+                      <Users className="h-4 w-4 flex-shrink-0 text-gray-400" />
+                      <span>{show.evergreenProductionStaffName || "None"}</span>
+                    </div>
+                  </div>
                 </CardContent>
               </Card>
             </div>
@@ -254,81 +358,98 @@ export default function ShowViewDialog({
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                    <div className="grid grid-cols-3 gap-6 mb-6">
-                        <DetailItem label="Minimum Guarantee" value={formatCurrency(show.minimumGuarantee)} />
-                        <DetailItem label="Ownership %" value={`${show.ownershipPercentage}%`} />
-                        <DetailItem label="Latest CPM" value={`$${show.latestCPM}`} />
-                    </div>
-                     <div className="space-y-6">
-                        <div>
-                            <h4 className="font-semibold flex items-center gap-2 mb-3 text-base">
-                                <BarChart3 className="h-4 w-4" /> Revenue by Year
-                            </h4>
-                            <div className="grid grid-cols-3 gap-3">
-                                <div className="text-center p-3 bg-muted/50 dark:bg-black rounded-lg">
-                                    <p className="text-xs text-muted-foreground">2023</p>
-                                    <p className="text-base font-bold text-emerald-600">{formatCurrency(show.revenue2023)}</p>
-                                </div>
-                                <div className="text-center p-3 bg-muted/50 dark:bg-black rounded-lg">
-                                    <p className="text-xs text-muted-foreground">2024</p>
-                                    <p className="text-base font-bold text-cyan-600">{formatCurrency(show.revenue2024)}</p>
-                                </div>
-                                <div className="text-center p-3 bg-muted/50 dark:bg-black rounded-lg">
-                                    <p className="text-xs text-muted-foreground">2025</p>
-                                    <p className="text-base font-bold text-green-600">{formatCurrency(show.revenue2025)}</p>
-                                </div>
-                            </div>
-                        </div>
-                        <div>
-                           <h4 className="font-semibold flex items-center gap-2 mb-3 text-base">
-                                <Percent className="h-4 w-4" /> Revenue Split
-                            </h4>
-                           <div className="grid grid-cols-2 gap-3">
-                               <div className="text-center p-3 bg-muted/50 dark:bg-black rounded-lg">
-                                   <p className="text-xs text-muted-foreground">Evergreen</p>
-                                   <p className="text-base font-bold text-emerald-600">{show.revenueSplit.evergreen}%</p>
-                               </div>
-                               <div className="text-center p-3 bg-muted/50 dark:bg-black rounded-lg">
-                                   <p className="text-xs text-muted-foreground">Partner</p>
-                                   <p className="text-base font-bold text-cyan-600">{show.revenueSplit.partner}%</p>
-                               </div>
-                           </div>
-                        </div>
-                    </div>
-                    
-                    <Separator className="my-4 dark:bg-slate-700" />
-                    
+                  <div className="grid grid-cols-3 gap-6 mb-6">
+                    <DetailItem
+                      label="Minimum Guarantee"
+                      value={formatCurrency(show.minimumGuarantee)}
+                    />
+                    <DetailItem label="Ownership %" value={`${show.ownershipPercentage}%`} />
+                    <DetailItem label="Latest CPM" value={`$${show.latestCPM}`} />
+                  </div>
+                  <div className="space-y-6">
                     <div>
-                        <h4 className="font-semibold flex items-center gap-2 mb-3 text-base">
-                            <TrendingUp className="h-4 w-4" /> Revenue Flags
-                        </h4>
-                        <div className="flex flex-wrap gap-2">
-                            {revenueFlags.map(flag => (
-                                <Badge key={flag.label} 
-                                       className={`text-xs border pointer-events-none ${flag.value 
-                                        ? 'bg-emerald-100 text-emerald-800 border-emerald-300 dark:bg-emerald-900/50 dark:text-emerald-300 dark:border-emerald-700' 
-                                        : 'bg-red-100 text-red-800 border-red-300 dark:bg-red-900/50 dark:text-red-300 dark:border-red-700'}`}>
-                                  {flag.label} - {flag.value ? 'Yes' : 'No'}
-                                </Badge>
-                            ))}
+                      <h4 className="font-semibold flex items-center gap-2 mb-3 text-base">
+                        <BarChart3 className="h-4 w-4" /> Revenue by Year
+                      </h4>
+                      <div className="grid grid-cols-3 gap-3">
+                        <div className="text-center p-3 bg-muted/50 dark:bg-black rounded-lg">
+                          <p className="text-xs text-muted-foreground">2023</p>
+                          <p className="text-base font-bold text-emerald-600">
+                            {formatCurrency(show.revenue2023)}
+                          </p>
                         </div>
+                        <div className="text-center p-3 bg-muted/50 dark:bg-black rounded-lg">
+                          <p className="text-xs text-muted-foreground">2024</p>
+                          <p className="text-base font-bold text-cyan-600">
+                            {formatCurrency(show.revenue2024)}
+                          </p>
+                        </div>
+                        <div className="text-center p-3 bg-muted/50 dark:bg-black rounded-lg">
+                          <p className="text-xs text-muted-foreground">2025</p>
+                          <p className="text-base font-bold text-green-600">
+                            {formatCurrency(show.revenue2025)}
+                          </p>
+                        </div>
+                      </div>
                     </div>
+                    <div>
+                      <h4 className="font-semibold flex items-center gap-2 mb-3 text-base">
+                        <Percent className="h-4 w-4" /> Revenue Split
+                      </h4>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="text-center p-3 bg-muted/50 dark:bg-black rounded-lg">
+                          <p className="text-xs text-muted-foreground">Evergreen</p>
+                          <p className="text-base font-bold text-emerald-600">
+                            {show.revenueSplit.evergreen}%
+                          </p>
+                        </div>
+                        <div className="text-center p-3 bg-muted/50 dark:bg-black rounded-lg">
+                          <p className="text-xs text-muted-foreground">Partner</p>
+                          <p className="text-base font-bold text-cyan-600">
+                            {show.revenueSplit.partner}%
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <Separator className="my-4 dark:bg-slate-700" />
+
+                  <div>
+                    <h4 className="font-semibold flex items-center gap-2 mb-3 text-base">
+                      <TrendingUp className="h-4 w-4" /> Revenue Flags
+                    </h4>
+                    <div className="flex flex-wrap gap-2">
+                      {revenueFlags.map((flag) => (
+                        <Badge
+                          key={flag.label}
+                          className={`text-xs border pointer-events-none ${
+                            flag.value
+                              ? "bg-emerald-100 text-emerald-800 border-emerald-300 dark:bg-emerald-900/50 dark:text-emerald-300 dark:border-emerald-700"
+                              : "bg-red-100 text-red-800 border-red-300 dark:bg-red-900/50 dark:text-red-300 dark:border-red-700"
+                          }`}
+                        >
+                          {flag.label} - {flag.value ? "Yes" : "No"}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
                 </CardContent>
               </Card>
               <Card className="dark:bg-[#262626]">
-                 <CardHeader>
+                <CardHeader>
                   <CardTitle className="flex items-center gap-2 text-base">
                     <Target className="h-5 w-5 text-gray-500" /> Demographics
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                    <div className="grid grid-cols-3 gap-4">
-                        <DetailItem label="Age" value={show.ageDemographic} />
-                        <DetailItem label="Gender" value={show.gender} />
-                        <DetailItem label="Region" value={show.region} />
-                        <DetailItem label="Primary Education" value={show.primary_education} />
-                        <DetailItem label="Secondary Education" value={show.secondary_education} />
-                    </div>
+                  <div className="grid grid-cols-3 gap-4">
+                    <DetailItem label="Age" value={show.ageDemographic} />
+                    <DetailItem label="Gender" value={show.gender} />
+                    <DetailItem label="Region" value={show.region} />
+                    <DetailItem label="Primary Education" value={show.primary_education} />
+                    <DetailItem label="Secondary Education" value={show.secondary_education} />
+                  </div>
                 </CardContent>
               </Card>
             </div>
@@ -336,25 +457,33 @@ export default function ShowViewDialog({
             {/* Column 3 */}
             <div className="space-y-6">
               <Card className="dark:bg-[#262626]">
-                 <CardHeader>
+                <CardHeader>
                   <CardTitle className="flex items-center gap-2 text-base">
                     <Percent className="h-5 w-5 text-gray-500" /> Financial Splits
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                    <div>
-                        <h4 className="font-semibold text-sm text-muted-foreground mb-2">Contract Splits</h4>
-                        <div className="grid grid-cols-2 gap-x-4 gap-y-2">
-                            {contractSplits.map(split => <DetailItem key={split.label} label={split.label} value={split.value} />)}
-                        </div>
+                  <div>
+                    <h4 className="font-semibold text-sm text-muted-foreground mb-2">
+                      Contract Splits
+                    </h4>
+                    <div className="grid grid-cols-2 gap-x-4 gap-y-2">
+                      {contractSplits.map((split) => (
+                        <DetailItem key={split.label} label={split.label} value={split.value} />
+                      ))}
                     </div>
-                    <Separator className="dark:bg-slate-700" />
-                    <div>
-                        <h4 className="font-semibold text-sm text-muted-foreground mb-2">Hands-Off Splits</h4>
-                         <div className="grid grid-cols-3 gap-x-4 gap-y-2">
-                            {handsOffSplits.map(split => <DetailItem key={split.label} label={split.label} value={split.value} />)}
-                        </div>
+                  </div>
+                  <Separator className="dark:bg-slate-700" />
+                  <div>
+                    <h4 className="font-semibold text-sm text-muted-foreground mb-2">
+                      Hands-Off Splits
+                    </h4>
+                    <div className="grid grid-cols-3 gap-x-4 gap-y-2">
+                      {handsOffSplits.map((split) => (
+                        <DetailItem key={split.label} label={split.label} value={split.value} />
+                      ))}
                     </div>
+                  </div>
                 </CardContent>
               </Card>
               <Card className="dark:bg-[#262626]">
@@ -364,10 +493,10 @@ export default function ShowViewDialog({
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="grid grid-cols-2 gap-6">
-                   <DetailItem label="Genre" value={show.genre_name} />
-                   <DetailItem label="Shows per Year" value={show.showsPerYear} />
-                   <DetailItem label="Ad Slots" value={show.adSlots} />
-                   <DetailItem label="Average Length" value={`${show.averageLength} min`} />
+                  <DetailItem label="Genre" value={show.genre_name} />
+                  <DetailItem label="Shows per Year" value={show.showsPerYear} />
+                  <DetailItem label="Ad Slots" value={show.adSlots} />
+                  <DetailItem label="Average Length" value={`${show.averageLength} min`} />
                 </CardContent>
               </Card>
             </div>

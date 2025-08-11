@@ -1,13 +1,19 @@
 "use client"
 
-import { useState, useMemo } from "react"
+import { useState, useMemo, useEffect } from "react"
 import { useAuth } from "@/lib/auth-context"
 import { useShows } from "@/hooks/use-shows"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import {
@@ -32,7 +38,11 @@ import {
   ChevronDown,
   RotateCcw,
 } from "lucide-react"
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible"
 import CreateShowDialog from "@/components/create-show-dialog"
 import DeleteShowDialog from "@/components/delete-show-dialog"
 import ImportCSVDialog from "@/components/import-csv-dialog"
@@ -115,7 +125,7 @@ export default function ShowsManagement() {
   const [isFiltersOpen, setIsFiltersOpen] = useState(false)
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
   const [isImportDialogOpen, setIsImportDialogOpen] = useState(false)
-  const [viewingShow, setViewingShow] = useState<Show | null>(null)
+  const [viewingShowIndex, setViewingShowIndex] = useState<number | null>(null)
   const [editingShow, setEditingShow] = useState<Show | null>(null)
   const [deletingShow, setDeletingShow] = useState<Show | null>(null)
   const [viewMode, setViewMode] = useState<"cards" | "list">("cards")
@@ -127,7 +137,10 @@ export default function ShowsManagement() {
   }
 
   const handleViewShow = (show: Show) => {
-    setViewingShow(show)
+    const index = filteredShows.findIndex((s) => s.id === show.id)
+    if (index !== -1) {
+      setViewingShowIndex(index)
+    }
   }
 
   const handleEditShow = (show: Show) => {
@@ -175,7 +188,9 @@ export default function ShowsManagement() {
 
   const handleExportCSV = () => {
     const showsToExport =
-      selectedShows.size > 0 ? filteredShows.filter((show) => selectedShows.has(show.id)) : filteredShows
+      selectedShows.size > 0
+        ? filteredShows.filter((show) => selectedShows.has(show.id))
+        : filteredShows
 
     if (showsToExport.length === 0) {
       alert("No shows available to export")
@@ -250,7 +265,9 @@ export default function ShowsManagement() {
       show.isUndersized ? "Yes" : "No",
     ])
 
-    const csvContent = [csvHeaders, ...csvData].map((row) => row.map((field) => `"${field}"`).join(",")).join("\n")
+    const csvContent = [csvHeaders, ...csvData]
+      .map((row) => row.map((field) => `"${field}"`).join(","))
+      .join("\n")
 
     const blob = new Blob([csvContent], { type: "text/csv" })
     const url = URL.createObjectURL(blob)
@@ -301,14 +318,45 @@ export default function ShowsManagement() {
       }
 
       // --- Text & Dropdown Filters ---
-      if (filters.subnetwork && filters.subnetwork !== "all" && show.subnetwork_id !== filters.subnetwork) return false
+      if (
+        filters.subnetwork &&
+        filters.subnetwork !== "all" &&
+        show.subnetwork_id !== filters.subnetwork
+      )
+        return false
       if (filters.format && filters.format !== "all" && show.format !== filters.format) return false
-      if (filters.relationship && filters.relationship !== "all" && show.relationship !== filters.relationship) return false
-      if (filters.showType && filters.showType !== "all" && show.showType.toLowerCase() !== filters.showType) return false
-      if (filters.genre_name && filters.genre_name !== "all" && show.genre_name !== filters.genre_name) return false
-      if (filters.ageDemographic && filters.ageDemographic !== "all" && show.ageDemographic !== filters.ageDemographic) return false
-      if (filters.genderDemographic && filters.genderDemographic !== "all" && show.genderDemographic !== filters.genderDemographic) return false
-      if (filters.region && filters.region !== "all" && show.region !== filters.region) return false
+      if (
+        filters.relationship &&
+        filters.relationship !== "all" &&
+        show.relationship !== filters.relationship
+      )
+        return false
+      if (
+        filters.showType &&
+        filters.showType !== "all" &&
+        show.showType.toLowerCase() !== filters.showType
+      )
+        return false
+      if (
+        filters.genre_name &&
+        filters.genre_name !== "all" &&
+        show.genre_name !== filters.genre_name
+      )
+        return false
+      if (
+        filters.ageDemographic &&
+        filters.ageDemographic !== "all" &&
+        show.ageDemographic !== filters.ageDemographic
+      )
+        return false
+      if (
+        filters.genderDemographic &&
+        filters.genderDemographic !== "all" &&
+        show.genderDemographic !== filters.genderDemographic
+      )
+        return false
+      if (filters.region && filters.region !== "all" && show.region !== filters.region)
+        return false
 
       // --- Boolean (Yes/No) Filters ---
       const booleanFilters: (keyof ShowFilters)[] = [
@@ -365,6 +413,18 @@ export default function ShowsManagement() {
     })
   }, [shows, filters])
 
+  const viewingShow = viewingShowIndex !== null ? filteredShows[viewingShowIndex] : null
+
+  const handleNavigate = (direction: "next" | "previous") => {
+    if (viewingShowIndex === null) return
+
+    const newIndex = direction === "next" ? viewingShowIndex + 1 : viewingShowIndex - 1
+
+    if (newIndex >= 0 && newIndex < filteredShows.length) {
+      setViewingShowIndex(newIndex)
+    }
+  }
+
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat("en-US", {
       style: "currency",
@@ -374,7 +434,9 @@ export default function ShowsManagement() {
 
   const getUniqueValues = (key: keyof Show) => {
     const values = shows.map((show) => show[key]) as (string | number)[]
-    return [...new Set(values)].filter(Boolean).sort((a,b) => String(a).localeCompare(String(b)))
+    return [...new Set(values)]
+      .filter(Boolean)
+      .sort((a, b) => String(a).localeCompare(String(b)))
   }
 
   const getRelationshipBadgeClass = (relationship: string) => {
@@ -428,7 +490,12 @@ export default function ShowsManagement() {
           <AlertDescription>
             <div className="font-medium mb-1">Failed to load shows</div>
             <p className="text-sm">{error}</p>
-            <Button variant="outline" size="sm" className="mt-2 bg-transparent" onClick={() => fetchShows()}>
+            <Button
+              variant="outline"
+              size="sm"
+              className="mt-2 bg-transparent"
+              onClick={() => fetchShows()}
+            >
               Try Again
             </Button>
           </AlertDescription>
@@ -445,7 +512,9 @@ export default function ShowsManagement() {
             Shows Management
           </h1>
           <p className="text-muted-foreground">
-            {user?.role === "admin" ? "Manage all shows in the network" : "View your assigned shows"}
+            {user?.role === "admin"
+              ? "Manage all shows in the network"
+              : "View your assigned shows"}
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -479,7 +548,11 @@ export default function ShowsManagement() {
             </Button>
           )}
 
-          <Button variant="outline" onClick={handleExportCSV} className="flex items-center gap-2 bg-transparent">
+          <Button
+            variant="outline"
+            onClick={handleExportCSV}
+            className="flex items-center gap-2 bg-transparent"
+          >
             <Download className="h-4 w-4" />
             Export CSV
           </Button>
@@ -571,8 +644,13 @@ export default function ShowsManagement() {
                 {/* --- Main Dropdowns --- */}
                 <div className="space-y-2">
                   <Label>Format</Label>
-                  <Select value={filters.format} onValueChange={(value) => setFilters((prev) => ({ ...prev, format: value }))}>
-                    <SelectTrigger><SelectValue placeholder="All formats" /></SelectTrigger>
+                  <Select
+                    value={filters.format}
+                    onValueChange={(value) => setFilters((prev) => ({ ...prev, format: value }))}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="All formats" />
+                    </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">All Formats</SelectItem>
                       <SelectItem value="Audio">Audio</SelectItem>
@@ -584,12 +662,20 @@ export default function ShowsManagement() {
 
                 <div className="space-y-2">
                   <Label>Subnetwork</Label>
-                  <Select value={filters.subnetwork} onValueChange={(value) => setFilters((prev) => ({ ...prev, subnetwork: value }))}>
-                    <SelectTrigger><SelectValue placeholder="All subnetworks" /></SelectTrigger>
+                  <Select
+                    value={filters.subnetwork}
+                    onValueChange={(value) => setFilters((prev) => ({ ...prev, subnetwork: value }))
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="All subnetworks" />
+                    </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">All Subnetworks</SelectItem>
                       {getUniqueValues("subnetwork_id").map((sub) => (
-                        <SelectItem key={String(sub)} value={String(sub)}>{sub}</SelectItem>
+                        <SelectItem key={String(sub)} value={String(sub)}>
+                          {sub}
+                        </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
@@ -597,12 +683,21 @@ export default function ShowsManagement() {
 
                 <div className="space-y-2">
                   <Label>Genre</Label>
-                  <Select value={filters.genre_name} onValueChange={(value) => setFilters((prev) => ({ ...prev, genre_name: value }))}>
-                    <SelectTrigger><SelectValue placeholder="All Genres" /></SelectTrigger>
+                  <Select
+                    value={filters.genre_name}
+                    onValueChange={(value) =>
+                      setFilters((prev) => ({ ...prev, genre_name: value }))
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="All Genres" />
+                    </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">All Genres</SelectItem>
                       {getUniqueValues("genre_name").map((genre) => (
-                        <SelectItem key={String(genre)} value={String(genre)}>{genre}</SelectItem>
+                        <SelectItem key={String(genre)} value={String(genre)}>
+                          {genre}
+                        </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
@@ -610,8 +705,15 @@ export default function ShowsManagement() {
 
                 <div className="space-y-2">
                   <Label>Relationship</Label>
-                  <Select value={filters.relationship} onValueChange={(value) => setFilters((prev) => ({ ...prev, relationship: value }))}>
-                    <SelectTrigger><SelectValue placeholder="All relationships" /></SelectTrigger>
+                  <Select
+                    value={filters.relationship}
+                    onValueChange={(value) =>
+                      setFilters((prev) => ({ ...prev, relationship: value }))
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="All relationships" />
+                    </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">All Relationships</SelectItem>
                       <SelectItem value="Strong">Strong</SelectItem>
@@ -623,8 +725,13 @@ export default function ShowsManagement() {
 
                 <div className="space-y-2">
                   <Label>Show Type</Label>
-                  <Select value={filters.showType} onValueChange={(value) => setFilters((prev) => ({ ...prev, showType: value }))}>
-                    <SelectTrigger><SelectValue placeholder="All show types" /></SelectTrigger>
+                  <Select
+                    value={filters.showType}
+                    onValueChange={(value) => setFilters((prev) => ({ ...prev, showType: value }))}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="All show types" />
+                    </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">All Show Types</SelectItem>
                       <SelectItem value="original">Original</SelectItem>
@@ -636,24 +743,38 @@ export default function ShowsManagement() {
 
                 <div className="space-y-2">
                   <Label>Ownership %</Label>
-                  <Select value={filters.ownershipPercentage} onValueChange={(value) => setFilters((prev) => ({ ...prev, ownershipPercentage: value }))}>
-                    <SelectTrigger><SelectValue placeholder="All ownership" /></SelectTrigger>
+                  <Select
+                    value={filters.ownershipPercentage}
+                    onValueChange={(value) =>
+                      setFilters((prev) => ({ ...prev, ownershipPercentage: value }))
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="All ownership" />
+                    </SelectTrigger>
                     <SelectContent>
-                        <SelectItem value="all">All Ownership</SelectItem>
-                        {getUniqueValues("ownershipPercentage").map((percentage) => (
-                            <SelectItem key={String(percentage)} value={String(percentage)}>
-                            {percentage}%
-                            </SelectItem>
-                        ))}
+                      <SelectItem value="all">All Ownership</SelectItem>
+                      {getUniqueValues("ownershipPercentage").map((percentage) => (
+                        <SelectItem key={String(percentage)} value={String(percentage)}>
+                          {percentage}%
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>
-                
+
                 {/* --- Demographics --- */}
                 <div className="space-y-2">
                   <Label>Age Demographic</Label>
-                  <Select value={filters.ageDemographic} onValueChange={(value) => setFilters((prev) => ({ ...prev, ageDemographic: value }))}>
-                    <SelectTrigger><SelectValue placeholder="All ages" /></SelectTrigger>
+                  <Select
+                    value={filters.ageDemographic}
+                    onValueChange={(value) =>
+                      setFilters((prev) => ({ ...prev, ageDemographic: value }))
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="All ages" />
+                    </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">All Ages</SelectItem>
                       <SelectItem value="18-24">18-24</SelectItem>
@@ -667,8 +788,15 @@ export default function ShowsManagement() {
 
                 <div className="space-y-2">
                   <Label>Gender Demographic</Label>
-                  <Select value={filters.genderDemographic} onValueChange={(value) => setFilters((prev) => ({ ...prev, genderDemographic: value }))}>
-                    <SelectTrigger><SelectValue placeholder="All genders" /></SelectTrigger>
+                  <Select
+                    value={filters.genderDemographic}
+                    onValueChange={(value) =>
+                      setFilters((prev) => ({ ...prev, genderDemographic: value }))
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="All genders" />
+                    </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">All Genders</SelectItem>
                       {getUniqueValues("genderDemographic").map((gender) => (
@@ -682,12 +810,19 @@ export default function ShowsManagement() {
 
                 <div className="space-y-2">
                   <Label>Region</Label>
-                  <Select value={filters.region} onValueChange={(value) => setFilters((prev) => ({ ...prev, region: value }))}>
-                    <SelectTrigger><SelectValue placeholder="All Regions" /></SelectTrigger>
+                  <Select
+                    value={filters.region}
+                    onValueChange={(value) => setFilters((prev) => ({ ...prev, region: value }))}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="All Regions" />
+                    </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">All Regions</SelectItem>
                       {getUniqueValues("region").map((region) => (
-                        <SelectItem key={String(region)} value={String(region)} className="capitalize">{region}</SelectItem>
+                        <SelectItem key={String(region)} value={String(region)} className="capitalize">
+                          {region}
+                        </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
@@ -696,8 +831,13 @@ export default function ShowsManagement() {
                 {/* --- Boolean Statuses --- */}
                 <div className="space-y-2">
                   <Label>Tentpole Show</Label>
-                  <Select value={filters.tentpole} onValueChange={(value) => setFilters((prev) => ({ ...prev, tentpole: value }))}>
-                    <SelectTrigger><SelectValue placeholder="All shows" /></SelectTrigger>
+                  <Select
+                    value={filters.tentpole}
+                    onValueChange={(value) => setFilters((prev) => ({ ...prev, tentpole: value }))}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="All shows" />
+                    </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">All Shows</SelectItem>
                       <SelectItem value="yes">Yes</SelectItem>
@@ -705,11 +845,18 @@ export default function ShowsManagement() {
                     </SelectContent>
                   </Select>
                 </div>
-                
+
                 <div className="space-y-2">
                   <Label>Undersized Show</Label>
-                  <Select value={filters.isUndersized} onValueChange={(value) => setFilters((prev) => ({ ...prev, isUndersized: value }))}>
-                    <SelectTrigger><SelectValue placeholder="All sizes" /></SelectTrigger>
+                  <Select
+                    value={filters.isUndersized}
+                    onValueChange={(value) =>
+                      setFilters((prev) => ({ ...prev, isUndersized: value }))
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="All sizes" />
+                    </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">All Sizes</SelectItem>
                       <SelectItem value="yes">Undersized</SelectItem>
@@ -720,8 +867,15 @@ export default function ShowsManagement() {
 
                 <div className="space-y-2">
                   <Label>Original Content</Label>
-                  <Select value={filters.isOriginal} onValueChange={(value) => setFilters((prev) => ({ ...prev, isOriginal: value }))}>
-                    <SelectTrigger><SelectValue placeholder="All content" /></SelectTrigger>
+                  <Select
+                    value={filters.isOriginal}
+                    onValueChange={(value) =>
+                      setFilters((prev) => ({ ...prev, isOriginal: value }))
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="All content" />
+                    </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">All Content</SelectItem>
                       <SelectItem value="yes">Original</SelectItem>
@@ -732,8 +886,13 @@ export default function ShowsManagement() {
 
                 <div className="space-y-2">
                   <Label>Show Status</Label>
-                  <Select value={filters.isActive} onValueChange={(value) => setFilters((prev) => ({ ...prev, isActive: value }))}>
-                    <SelectTrigger><SelectValue placeholder="All statuses" /></SelectTrigger>
+                  <Select
+                    value={filters.isActive}
+                    onValueChange={(value) => setFilters((prev) => ({ ...prev, isActive: value }))}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="All statuses" />
+                    </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">All Statuses</SelectItem>
                       <SelectItem value="yes">Active</SelectItem>
@@ -745,8 +904,15 @@ export default function ShowsManagement() {
                 {/* --- Revenue Flags --- */}
                 <div className="space-y-2">
                   <Label>Has Branded Revenue</Label>
-                  <Select value={filters.hasBrandedRevenue} onValueChange={(value) => setFilters((prev) => ({ ...prev, hasBrandedRevenue: value }))}>
-                    <SelectTrigger><SelectValue placeholder="Any" /></SelectTrigger>
+                  <Select
+                    value={filters.hasBrandedRevenue}
+                    onValueChange={(value) =>
+                      setFilters((prev) => ({ ...prev, hasBrandedRevenue: value }))
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Any" />
+                    </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">Any</SelectItem>
                       <SelectItem value="yes">Yes</SelectItem>
@@ -757,8 +923,15 @@ export default function ShowsManagement() {
 
                 <div className="space-y-2">
                   <Label>Has Marketing Revenue</Label>
-                  <Select value={filters.hasMarketingRevenue} onValueChange={(value) => setFilters((prev) => ({ ...prev, hasMarketingRevenue: value }))}>
-                    <SelectTrigger><SelectValue placeholder="Any" /></SelectTrigger>
+                  <Select
+                    value={filters.hasMarketingRevenue}
+                    onValueChange={(value) =>
+                      setFilters((prev) => ({ ...prev, hasMarketingRevenue: value }))
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Any" />
+                    </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">Any</SelectItem>
                       <SelectItem value="yes">Yes</SelectItem>
@@ -766,11 +939,18 @@ export default function ShowsManagement() {
                     </SelectContent>
                   </Select>
                 </div>
-                
+
                 <div className="space-y-2">
                   <Label>Has Web Mngmt Revenue</Label>
-                  <Select value={filters.hasWebManagementRevenue} onValueChange={(value) => setFilters((prev) => ({ ...prev, hasWebManagementRevenue: value }))}>
-                    <SelectTrigger><SelectValue placeholder="Any" /></SelectTrigger>
+                  <Select
+                    value={filters.hasWebManagementRevenue}
+                    onValueChange={(value) =>
+                      setFilters((prev) => ({ ...prev, hasWebManagementRevenue: value }))
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Any" />
+                    </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">Any</SelectItem>
                       <SelectItem value="yes">Yes</SelectItem>
@@ -781,8 +961,15 @@ export default function ShowsManagement() {
 
                 <div className="space-y-2">
                   <Label>Sponsorship Revenue</Label>
-                  <Select value={filters.hasSponsorshipRevenue} onValueChange={(value) => setFilters((prev) => ({ ...prev, hasSponsorshipRevenue: value }))}>
-                    <SelectTrigger><SelectValue placeholder="Any" /></SelectTrigger>
+                  <Select
+                    value={filters.hasSponsorshipRevenue}
+                    onValueChange={(value) =>
+                      setFilters((prev) => ({ ...prev, hasSponsorshipRevenue: value }))
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Any" />
+                    </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">Any</SelectItem>
                       <SelectItem value="yes">Yes</SelectItem>
@@ -794,37 +981,84 @@ export default function ShowsManagement() {
                 {/* --- Numeric Inputs --- */}
                 <div className="space-y-2">
                   <Label>Min. Guarantee ($)</Label>
-                  <Input type="number" placeholder="e.g. 5000" value={filters.minimumGuarantee} onChange={(e) => setFilters((prev) => ({ ...prev, minimumGuarantee: e.target.value }))} />
+                  <Input
+                    type="number"
+                    placeholder="e.g. 5000"
+                    value={filters.minimumGuarantee}
+                    onChange={(e) =>
+                      setFilters((prev) => ({ ...prev, minimumGuarantee: e.target.value }))
+                    }
+                  />
                 </div>
 
                 <div className="space-y-2">
                   <Label>Min. Shows/Year</Label>
-                  <Input type="number" placeholder="e.g. 52" value={filters.showsPerYear} onChange={(e) => setFilters((prev) => ({ ...prev, showsPerYear: e.target.value }))} />
+                  <Input
+                    type="number"
+                    placeholder="e.g. 52"
+                    value={filters.showsPerYear}
+                    onChange={(e) =>
+                      setFilters((prev) => ({ ...prev, showsPerYear: e.target.value }))
+                    }
+                  />
                 </div>
 
                 <div className="space-y-2">
                   <Label>Min. Ad Slots</Label>
-                  <Input type="number" placeholder="e.g. 3" value={filters.adSlots} onChange={(e) => setFilters((prev) => ({ ...prev, adSlots: e.target.value }))} />
+                  <Input
+                    type="number"
+                    placeholder="e.g. 3"
+                    value={filters.adSlots}
+                    onChange={(e) => setFilters((prev) => ({ ...prev, adSlots: e.target.value }))}
+                  />
                 </div>
 
                 <div className="space-y-2">
                   <Label>Min. Avg Length (min)</Label>
-                  <Input type="number" placeholder="e.g. 60" value={filters.averageLength} onChange={(e) => setFilters((prev) => ({ ...prev, averageLength: e.target.value }))} />
+                  <Input
+                    type="number"
+                    placeholder="e.g. 60"
+                    value={filters.averageLength}
+                    onChange={(e) =>
+                      setFilters((prev) => ({ ...prev, averageLength: e.target.value }))
+                    }
+                  />
                 </div>
 
                 <div className="space-y-2">
                   <Label>Min. Revenue 2023 ($)</Label>
-                  <Input type="number" placeholder="e.g. 10000" value={filters.revenue2023} onChange={(e) => setFilters((prev) => ({ ...prev, revenue2023: e.target.value }))} />
+                  <Input
+                    type="number"
+                    placeholder="e.g. 10000"
+                    value={filters.revenue2023}
+                    onChange={(e) =>
+                      setFilters((prev) => ({ ...prev, revenue2023: e.target.value }))
+                    }
+                  />
                 </div>
 
                 <div className="space-y-2">
                   <Label>Min. Revenue 2024 ($)</Label>
-                  <Input type="number" placeholder="e.g. 15000" value={filters.revenue2024} onChange={(e) => setFilters((prev) => ({ ...prev, revenue2024: e.target.value }))} />
+                  <Input
+                    type="number"
+                    placeholder="e.g. 15000"
+                    value={filters.revenue2024}
+                    onChange={(e) =>
+                      setFilters((prev) => ({ ...prev, revenue2024: e.target.value }))
+                    }
+                  />
                 </div>
 
                 <div className="space-y-2">
                   <Label>Min. Revenue 2025 ($)</Label>
-                  <Input type="number" placeholder="e.g. 20000" value={filters.revenue2025} onChange={(e) => setFilters((prev) => ({ ...prev, revenue2025: e.target.value }))} />
+                  <Input
+                    type="number"
+                    placeholder="e.g. 20000"
+                    value={filters.revenue2025}
+                    onChange={(e) =>
+                      setFilters((prev) => ({ ...prev, revenue2025: e.target.value }))
+                    }
+                  />
                 </div>
               </div>
               <div className="flex justify-end pt-4">
@@ -870,7 +1104,9 @@ export default function ShowsManagement() {
             <Card
               key={show.id}
               className={`evergreen-card transition-all duration-200 group flex flex-col h-full ${
-                selectedShows.has(show.id) ? "ring-2 ring-emerald-500 bg-emerald-50/50 dark:bg-emerald-950/20" : ""
+                selectedShows.has(show.id)
+                  ? "ring-2 ring-emerald-500 bg-emerald-50/50 dark:bg-emerald-950/20"
+                  : ""
               }`}
             >
               <CardHeader className="flex-shrink-0">
@@ -889,15 +1125,23 @@ export default function ShowsManagement() {
                     <Badge className="text-xs border bg-purple-100 text-purple-800 border-purple-300 dark:bg-purple-900/50 dark:text-purple-300 dark:border-purple-700 capitalize pointer-events-none">
                       {show.showType}
                     </Badge>
-                    <Badge className={`text-xs border pointer-events-none ${show.isTentpole 
-                        ? 'bg-emerald-100 text-emerald-800 border-emerald-300 dark:bg-emerald-900/50 dark:text-emerald-300 dark:border-emerald-700' 
-                        : 'bg-red-100 text-red-800 border-red-300 dark:bg-red-900/50 dark:text-red-300 dark:border-red-700'}`}>
-                      Tentpole - {show.isTentpole ? 'Yes' : 'No'}
+                    <Badge
+                      className={`text-xs border pointer-events-none ${
+                        show.isTentpole
+                          ? "bg-emerald-100 text-emerald-800 border-emerald-300 dark:bg-emerald-900/50 dark:text-emerald-300 dark:border-emerald-700"
+                          : "bg-red-100 text-red-800 border-red-300 dark:bg-red-900/50 dark:text-red-300 dark:border-red-700"
+                      }`}
+                    >
+                      Tentpole - {show.isTentpole ? "Yes" : "No"}
                     </Badge>
-                    <Badge className={`text-xs border pointer-events-none ${show.isUndersized 
-                        ? 'bg-emerald-100 text-emerald-800 border-emerald-300 dark:bg-emerald-900/50 dark:text-emerald-300 dark:border-emerald-700' 
-                        : 'bg-red-100 text-red-800 border-red-300 dark:bg-red-900/50 dark:text-red-300 dark:border-red-700'}`}>
-                      Undersized - {show.isUndersized ? 'Yes' : 'No'}
+                    <Badge
+                      className={`text-xs border pointer-events-none ${
+                        show.isUndersized
+                          ? "bg-emerald-100 text-emerald-800 border-emerald-300 dark:bg-emerald-900/50 dark:text-emerald-300 dark:border-emerald-700"
+                          : "bg-red-100 text-red-800 border-red-300 dark:bg-red-900/50 dark:text-red-300 dark:border-red-700"
+                      }`}
+                    >
+                      Undersized - {show.isUndersized ? "Yes" : "No"}
                     </Badge>
                   </div>
                 </div>
@@ -909,7 +1153,9 @@ export default function ShowsManagement() {
                       <DollarSign className="h-4 w-4 text-emerald-600" />
                       <span className="text-muted-foreground">Min Guarantee:</span>
                     </div>
-                    <span className="font-medium text-right">{formatCurrency(show.minimumGuarantee)}</span>
+                    <span className="font-medium text-right">
+                      {formatCurrency(show.minimumGuarantee)}
+                    </span>
                     <div className="flex items-center gap-2">
                       <Calendar className="h-4 w-4 text-cyan-600" />
                       <span className="text-muted-foreground">Age:</span>
@@ -925,7 +1171,9 @@ export default function ShowsManagement() {
                       <span className="text-muted-foreground">Relationship:</span>
                     </div>
                     <Badge
-                      className={`text-xs border justify-self-end pointer-events-none ${getRelationshipBadgeClass(show.relationship)}`}
+                      className={`text-xs border justify-self-end pointer-events-none ${getRelationshipBadgeClass(
+                        show.relationship,
+                      )}`}
                     >
                       {show.relationship}
                     </Badge>
@@ -990,7 +1238,9 @@ export default function ShowsManagement() {
                   <tr className="text-left text-sm">
                     <th className="p-4 w-12">
                       <Checkbox
-                        checked={selectedShows.size === filteredShows.length && filteredShows.length > 0}
+                        checked={
+                          selectedShows.size === filteredShows.length && filteredShows.length > 0
+                        }
                         onCheckedChange={handleSelectAll}
                       />
                     </th>
@@ -1011,7 +1261,9 @@ export default function ShowsManagement() {
                     <tr
                       key={show.id}
                       className={`border-b hover:bg-accent/50 transition-colors ${
-                        selectedShows.has(show.id) ? "bg-emerald-50/50 dark:bg-emerald-950/20" : ""
+                        selectedShows.has(show.id)
+                          ? "bg-emerald-50/50 dark:bg-emerald-950/20"
+                          : ""
                       }`}
                     >
                       <td className="p-4">
@@ -1021,21 +1273,32 @@ export default function ShowsManagement() {
                         />
                       </td>
                       <td className="p-2 font-medium">
-                        <span className="cursor-pointer hover:underline" onClick={() => handleViewShow(show)}>
+                        <span
+                          className="cursor-pointer hover:underline"
+                          onClick={() => handleViewShow(show)}
+                        >
                           {show.name}
                         </span>
                       </td>
                       <td className="p-2">
                         <div className="flex flex-col gap-1 items-start">
-                          <Badge className={`text-xs border pointer-events-none ${show.isTentpole 
-                              ? 'bg-emerald-100 text-emerald-800 border-emerald-300 dark:bg-emerald-900/50 dark:text-emerald-300 dark:border-emerald-700' 
-                              : 'bg-red-100 text-red-800 border-red-300 dark:bg-red-900/50 dark:text-red-300 dark:border-red-700'}`}>
-                            Tentpole - {show.isTentpole ? 'Yes' : 'No'}
+                          <Badge
+                            className={`text-xs border pointer-events-none ${
+                              show.isTentpole
+                                ? "bg-emerald-100 text-emerald-800 border-emerald-300 dark:bg-emerald-900/50 dark:text-emerald-300 dark:border-emerald-700"
+                                : "bg-red-100 text-red-800 border-red-300 dark:bg-red-900/50 dark:text-red-300 dark:border-red-700"
+                            }`}
+                          >
+                            Tentpole - {show.isTentpole ? "Yes" : "No"}
                           </Badge>
-                          <Badge className={`text-xs border pointer-events-none ${show.isUndersized 
-                              ? 'bg-emerald-100 text-emerald-800 border-emerald-300 dark:bg-emerald-900/50 dark:text-emerald-300 dark:border-emerald-700' 
-                              : 'bg-red-100 text-red-800 border-red-300 dark:bg-red-900/50 dark:text-red-300 dark:border-red-700'}`}>
-                            Undersized - {show.isUndersized ? 'Yes' : 'No'}
+                          <Badge
+                            className={`text-xs border pointer-events-none ${
+                              show.isUndersized
+                                ? "bg-emerald-100 text-emerald-800 border-emerald-300 dark:bg-emerald-900/50 dark:text-emerald-300 dark:border-emerald-700"
+                                : "bg-red-100 text-red-800 border-red-300 dark:bg-red-900/50 dark:text-red-300 dark:border-red-700"
+                            }`}
+                          >
+                            Undersized - {show.isUndersized ? "Yes" : "No"}
                           </Badge>
                         </div>
                       </td>
@@ -1044,12 +1307,16 @@ export default function ShowsManagement() {
                       <td className="p-2">{show.format}</td>
                       <td className="p-2">
                         <Badge
-                          className={`text-xs border pointer-events-none ${getRelationshipBadgeClass(show.relationship)}`}
+                          className={`text-xs border pointer-events-none ${getRelationshipBadgeClass(
+                            show.relationship,
+                          )}`}
                         >
                           {show.relationship}
                         </Badge>
                       </td>
-                      <td className="p-2 font-medium text-emerald-600">{formatCurrency(show.minimumGuarantee)}</td>
+                      <td className="p-2 font-medium text-emerald-600">
+                        {formatCurrency(show.minimumGuarantee)}
+                      </td>
                       <td className="p-2">{show.ageMonths}m</td>
                       <td className="p-2">{show.showsPerYear}</td>
                       <td className="p-2">
@@ -1128,7 +1395,14 @@ export default function ShowsManagement() {
         onOpenChange={setIsImportDialogOpen}
         onImportComplete={handleImportComplete}
       />
-      <ShowViewDialog open={!!viewingShow} onOpenChange={(open) => !open && setViewingShow(null)} show={viewingShow} />
+      <ShowViewDialog
+        open={viewingShowIndex !== null}
+        onOpenChange={(open) => !open && setViewingShowIndex(null)}
+        show={viewingShow}
+        onNavigate={handleNavigate}
+        hasNext={viewingShowIndex !== null && viewingShowIndex < filteredShows.length - 1}
+        hasPrevious={viewingShowIndex !== null && viewingShowIndex > 0}
+      />
     </div>
   )
 }
