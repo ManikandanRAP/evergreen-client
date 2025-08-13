@@ -1,355 +1,323 @@
 "use client"
 
-import { useState, useMemo } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { useAuth } from "@/lib/auth-context"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { DollarSign, TrendingUp, CreditCard, Filter, ChevronDown, ChevronUp, ArrowUpDown } from 'lucide-react'
+import {
+  DollarSign,
+  TrendingUp,
+  CreditCard,
+  Filter,
+  ChevronDown,
+  ChevronUp,
+  ArrowUpDown,
+  Loader2,
+  LogIn,
+  ChevronLeft,
+  ChevronRight,
+  ChevronsUpDown,
+  Check
+} from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
 import { Badge } from "@/components/ui/badge"
+import { cn } from "@/lib/utils"
 
-// Mock data for Revenue transactions (Evergreen <-> Ad Agencies)
-const mockRevenueData = [
-  {
-    id: "1",
-    invoice_classref_name: "Five Minute News",
-    customer: "News Network Ads",
-    invoice_description: "January 2024 Advertising Revenue",
-    invoice_date: "2024-01-15",
-    payment_amount: 5000,
-    invoice_itemrefname: "Sponsorship",
-    evergreen_percentage: 40,
-    evergreen_compensation: 2000,
-    partner_percentage: 60,
-    partner_compensation: 3000,
-  },
-  {
-    id: "2",
-    invoice_classref_name: "Banking Transformed",
-    customer: "Financial Services Corp",
-    invoice_description: "Q1 2024 Branded Content",
-    invoice_date: "2024-02-01",
-    payment_amount: 8500,
-    invoice_itemrefname: "Branded Content",
-    evergreen_percentage: 100,
-    evergreen_compensation: 8500,
-    partner_percentage: 0,
-    partner_compensation: 0,
-  },
-  {
-    id: "3",
-    invoice_classref_name: "Disturbed",
-    customer: "Crime Network Media",
-    invoice_description: "February 2024 Programmatic Ads",
-    invoice_date: "2024-02-15",
-    payment_amount: 3200,
-    invoice_itemrefname: "Programmatic",
-    evergreen_percentage: 100,
-    evergreen_compensation: 3200,
-    partner_percentage: 0,
-    partner_compensation: 0,
-  },
-  {
-    id: "4",
-    invoice_classref_name: "Five Minute News",
-    customer: "Political Action Committee",
-    invoice_description: "March 2024 Election Coverage Ads",
-    invoice_date: "2024-03-01",
-    payment_amount: 4200,
-    invoice_itemrefname: "Sponsorship",
-    evergreen_percentage: 40,
-    evergreen_compensation: 1680,
-    partner_percentage: 60,
-    partner_compensation: 2520,
-  },
-  {
-    id: "5",
-    invoice_classref_name: "Banking Transformed",
-    customer: "Tech Startup Inc",
-    invoice_description: "April 2024 Product Launch Campaign",
-    invoice_date: "2024-04-10",
-    payment_amount: 6800,
-    invoice_itemrefname: "Branded Content",
-    evergreen_percentage: 100,
-    evergreen_compensation: 6800,
-    partner_percentage: 0,
-    partner_compensation: 0,
-  },
-]
+// Combobox (shadcn/ui)
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command"
 
-// Mock data for Partner Payments (Evergreen <-> Partners)
-const mockPartnerPayments = [
-  {
-    id: "1",
-    show_qbo_name: "Five Minute News",
-    vendor_qbo_name: "News Partner LLC",
-    docnumber: "BILL-001",
-    txndate: "2024-01-20",
-    bill_amount: 3000,
-    linked_paymentid: "PAY-001",
-    payment_date: "2024-02-01",
-    paid_amount: 3000,
-    sum_of_related_bill_amts: 3000,
-    balance_billpayments: 0,
-  },
-  {
-    id: "2",
-    show_qbo_name: "Five Minute News",
-    vendor_qbo_name: "News Partner LLC",
-    docnumber: "BILL-002",
-    txndate: "2024-03-05",
-    bill_amount: 2520,
-    linked_paymentid: "PAY-002",
-    payment_date: "2024-03-15",
-    paid_amount: 2520,
-    sum_of_related_bill_amts: 2520,
-    balance_billpayments: 0,
-  },
-  {
-    id: "3",
-    show_qbo_name: "Banking Transformed",
-    vendor_qbo_name: "Finance Expert Inc",
-    docnumber: "BILL-003",
-    txndate: "2024-02-10",
-    bill_amount: 0,
-    linked_paymentid: null,
-    payment_date: null,
-    paid_amount: 0,
-    sum_of_related_bill_amts: 0,
-    balance_billpayments: 0,
-  },
-  {
-    id: "4",
-    show_qbo_name: "Disturbed",
-    vendor_qbo_name: "Crime Stories Media",
-    docnumber: "BILL-004",
-    txndate: "2024-02-20",
-    bill_amount: 1500,
-    linked_paymentid: "PAY-003",
-    payment_date: "2024-03-01",
-    paid_amount: 1500,
-    sum_of_related_bill_amts: 1500,
-    balance_billpayments: 0,
-  },
-]
+type SortDirection = "asc" | "desc" | null
+type SortConfig = { key: string; direction: SortDirection }
 
-// Mock user-show mappings (for partner users)
-const mockUserShowMappings = {
-  "partner-1": ["Five Minute News"],
-  "partner-2": ["Banking Transformed"],
-  "partner-3": ["Disturbed"],
+type LedgerItem = {
+  payment_id: number
+  payment_line_linkedtxn_txnid: string | null
+  customer: string
+  invoice_doc_number: string | null
+  payment_amount: number | null
+  invoice_amount: number | null
+  pending_payments: number | null
+  invoice_date: string | null // <-- can be null from backend
+  invoice_description: string
+  invoice_classref_name: string
+  invoice_classref_value: string | null
+  invoice_itemrefname: string | null
+  split_evergreen_pct_ads?: number | null
+  split_evergreen_pct_programmatic?: number | null
+  effective_date?: string | null
+  vendor_qbo_id?: number | null
+  evergreen_percentage?: number | null // fraction (e.g., 0.7)
+  partner_percentage?: number | null   // fraction
+  evergreen_compensation?: number | null
+  partner_compensation?: number | null
 }
 
-type SortDirection = 'asc' | 'desc' | null
-type SortConfig = {
-  key: string
-  direction: SortDirection
+type PartnerPayout = {
+  bill_id: number
+  docnumber: string | null
+  txndate: string
+  vendor_qbo_id: number
+  vendor_qbo_name: string
+  bill_line_classref_value: string | null
+  linked_paymentid: string | null
+  bill_amount: number | null
+  sum_of_related_bill_amts: number | null
+  paid_amount: number | null
+  payment_date: string | null
+  balance_billpayments: number | null
+  show_qbo_id: number | null
+  show_qbo_name: string
 }
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL
+const PAGE_SIZE = 10
 
 export default function RevenueLedger() {
-  const { user } = useAuth()
+  const { user, token, loading } = useAuth()
+
   const [selectedShow, setSelectedShow] = useState<string>("all")
   const [dateFrom, setDateFrom] = useState<string>("")
   const [dateTo, setDateTo] = useState<string>("")
   const [isFiltersOpen, setIsFiltersOpen] = useState(false)
-  
-  // Sorting states
-  const [revenueSortConfig, setRevenueSortConfig] = useState<SortConfig>({ key: '', direction: null })
-  const [paymentsSortConfig, setPaymentsSortConfig] = useState<SortConfig>({ key: '', direction: null })
 
-  // Get available shows based on user role
-  const availableShows = useMemo(() => {
-    if (user?.role === "admin") {
-      // Admin sees all shows
-      const allShows = [...new Set([
-        ...mockRevenueData.map(item => item.invoice_classref_name),
-        ...mockPartnerPayments.map(item => item.show_qbo_name)
-      ])]
-      return allShows
-    } else if (user?.role === "partner") {
-      // Partner sees only their mapped shows
-      const userShows = mockUserShowMappings[user.id as keyof typeof mockUserShowMappings] || []
-      return userShows
-    }
-    return []
-  }, [user])
+  const [ledger, setLedger] = useState<LedgerItem[]>([])
+  const [payouts, setPayouts] = useState<PartnerPayout[]>([])
+  const [fetching, setFetching] = useState<boolean>(false)
+  const [error, setError] = useState<string | null>(null)
 
-  // Filter revenue data
-  const filteredRevenueData = useMemo(() => {
-    let filtered = mockRevenueData
+  const [revenueSortConfig, setRevenueSortConfig] = useState<SortConfig>({ key: "", direction: null })
+  const [paymentsSortConfig, setPaymentsSortConfig] = useState<SortConfig>({ key: "", direction: null })
 
-    // Filter by user role
-    if (user?.role === "partner") {
-      const userShows = mockUserShowMappings[user.id as keyof typeof mockUserShowMappings] || []
-      filtered = filtered.filter(item => userShows.includes(item.invoice_classref_name))
+  // Pagination
+  const [revenuePage, setRevenuePage] = useState<number>(1)
+  const [paymentsPage, setPaymentsPage] = useState<number>(1)
+  const [revenuePageInput, setRevenuePageInput] = useState<string>("1")
+  const [paymentsPageInput, setPaymentsPageInput] = useState<string>("1")
+
+  // Fetch (auth-gated)
+  useEffect(() => {
+    if (loading) return
+    if (!token) {
+      setLedger([])
+      setPayouts([])
+      return
     }
 
-    // Filter by selected show
-    if (selectedShow !== "all") {
-      filtered = filtered.filter(item => item.invoice_classref_name === selectedShow)
-    }
+    let isMounted = true
+    const run = async () => {
+      setFetching(true)
+      setError(null)
+      try {
+        const headers: HeadersInit = { "Content-Type": "application/json", Authorization: `Bearer ${token}` }
+        const base = API_URL?.replace(/\/$/, "") || ""
+        const [ledgerRes, payoutRes] = await Promise.all([
+          fetch(`${base}/ledger`, { headers }),
+          fetch(`${base}/partner_payouts`, { headers }),
+        ])
+        if (!ledgerRes.ok) throw new Error(await readErr(ledgerRes, "Ledger request failed"))
+        if (!payoutRes.ok) throw new Error(await readErr(payoutRes, "Partner payouts request failed"))
 
-    // Filter by date range
-    if (dateFrom || dateTo) {
-      filtered = filtered.filter(item => {
-        const itemDate = new Date(item.invoice_date)
-        const fromDate = dateFrom ? new Date(dateFrom) : new Date("1900-01-01")
-        const toDate = dateTo ? new Date(dateTo) : new Date("2100-12-31")
-        return itemDate >= fromDate && itemDate <= toDate
-      })
-    }
-
-    return filtered
-  }, [user, selectedShow, dateFrom, dateTo])
-
-  // Filter partner payments data
-  const filteredPartnerPayments = useMemo(() => {
-    let filtered = mockPartnerPayments
-
-    // Filter by user role
-    if (user?.role === "partner") {
-      const userShows = mockUserShowMappings[user.id as keyof typeof mockUserShowMappings] || []
-      filtered = filtered.filter(item => userShows.includes(item.show_qbo_name))
-    }
-
-    // Filter by selected show
-    if (selectedShow !== "all") {
-      filtered = filtered.filter(item => item.show_qbo_name === selectedShow)
-    }
-
-    // Filter by date range (applies to both bill date and payment date)
-    if (dateFrom || dateTo) {
-      filtered = filtered.filter(item => {
-        const billDate = new Date(item.txndate)
-        const paymentDate = item.payment_date ? new Date(item.payment_date) : null
-        const fromDate = dateFrom ? new Date(dateFrom) : new Date("1900-01-01")
-        const toDate = dateTo ? new Date(dateTo) : new Date("2100-12-31")
-        
-        const billInRange = billDate >= fromDate && billDate <= toDate
-        const paymentInRange = paymentDate ? (paymentDate >= fromDate && paymentDate <= toDate) : false
-        
-        return billInRange || paymentInRange
-      })
-    }
-
-    return filtered
-  }, [user, selectedShow, dateFrom, dateTo])
-
-  // Sorting function
-  const sortData = <T extends Record<string, any>>(data: T[], sortConfig: SortConfig): T[] => {
-    if (!sortConfig.direction || !sortConfig.key) {
-      return data
-    }
-
-    return [...data].sort((a, b) => {
-      const aValue = a[sortConfig.key]
-      const bValue = b[sortConfig.key]
-
-      // Handle null/undefined values
-      if (aValue == null && bValue == null) return 0
-      if (aValue == null) return sortConfig.direction === 'asc' ? -1 : 1
-      if (bValue == null) return sortConfig.direction === 'asc' ? 1 : -1
-
-      // Handle different data types
-      let comparison = 0
-      if (typeof aValue === 'number' && typeof bValue === 'number') {
-        comparison = aValue - bValue
-      } else if (typeof aValue === 'string' && typeof bValue === 'string') {
-        // Check if it's a date string
-        if (aValue.match(/^\d{4}-\d{2}-\d{2}$/) && bValue.match(/^\d{4}-\d{2}-\d{2}$/)) {
-          comparison = new Date(aValue).getTime() - new Date(bValue).getTime()
-        } else {
-          comparison = aValue.localeCompare(bValue)
-        }
-      } else {
-        comparison = String(aValue).localeCompare(String(bValue))
+        const ledgerJson: LedgerItem[] = await ledgerRes.json()
+        const payoutsJson: PartnerPayout[] = await payoutRes.json()
+        if (!isMounted) return
+        setLedger(Array.isArray(ledgerJson) ? ledgerJson : [])
+        setPayouts(Array.isArray(payoutsJson) ? payoutsJson : [])
+      } catch (e: any) {
+        if (!isMounted) return
+        setError(e?.message || "Failed to load ledger data")
+      } finally {
+        if (isMounted) setFetching(false)
       }
+    }
+    run()
+    return () => {
+      isMounted = false
+    }
+  }, [loading, token])
 
-      return sortConfig.direction === 'asc' ? comparison : -comparison
+  // Shows list from fetched data
+  const availableShows = useMemo(() => {
+    const set = new Set<string>()
+    for (const r of ledger) if (r.invoice_classref_name) set.add(r.invoice_classref_name)
+    for (const p of payouts) if (p.show_qbo_name) set.add(p.show_qbo_name)
+    return Array.from(set).sort((a, b) => a.localeCompare(b))
+  }, [ledger, payouts])
+
+  // Filters
+  const filteredRevenueData = useMemo(() => {
+    let filtered = ledger
+    if (selectedShow !== "all") filtered = filtered.filter((i) => i.invoice_classref_name === selectedShow)
+    if (dateFrom || dateTo) {
+      filtered = filtered.filter((i) => {
+        const d = toDate(i.invoice_date) // <-- safe now
+        const from = dateFrom ? toDate(dateFrom) : new Date("1900-01-01")
+        const to = dateTo ? toDate(dateTo, true) : new Date("2100-12-31")
+        return d >= from && d <= to
+      })
+    }
+    return filtered
+  }, [ledger, selectedShow, dateFrom, dateTo])
+
+  const filteredPartnerPayments = useMemo(() => {
+    let filtered = payouts
+    if (selectedShow !== "all") filtered = filtered.filter((i) => i.show_qbo_name === selectedShow)
+    if (dateFrom || dateTo) {
+      filtered = filtered.filter((i) => {
+        const bill = toDate(i.txndate)
+        const pay = i.payment_date ? toDate(i.payment_date) : null
+        const from = dateFrom ? toDate(dateFrom) : new Date("1900-01-01")
+        const to = dateTo ? toDate(dateTo, true) : new Date("2100-12-31")
+        const billIn = bill >= from && bill <= to
+        const payIn = pay ? pay >= from && pay <= to : false
+        return billIn || payIn
+      })
+    }
+    return filtered
+  }, [payouts, selectedShow, dateFrom, dateTo])
+
+  // Reset pages when datasets change (filters)
+  useEffect(() => {
+    setRevenuePage(1)
+  }, [selectedShow, dateFrom, dateTo, ledger])
+  useEffect(() => {
+    setPaymentsPage(1)
+  }, [selectedShow, dateFrom, dateTo, payouts])
+
+  // Sorting
+  const sortData = <T extends Record<string, any>>(data: T[], cfg: SortConfig): T[] => {
+    if (!cfg.direction || !cfg.key) return data
+    return [...data].sort((a, b) => {
+      const av = a[cfg.key]
+      const bv = b[cfg.key]
+      if (av == null && bv == null) return 0
+      if (av == null) return cfg.direction === "asc" ? -1 : 1
+      if (bv == null) return cfg.direction === "asc" ? 1 : -1
+
+      const isDate =
+        typeof av === "string" && /^\d{4}-\d{2}-\d{2}/.test(av) &&
+        typeof bv === "string" && /^\d{4}-\d{2}-\d{2}/.test(bv)
+
+      let cmp = 0
+      if (typeof av === "number" && typeof bv === "number") cmp = av - bv
+      else if (isDate) cmp = toDate(av).getTime() - toDate(bv).getTime()
+      else if (typeof av === "string" && typeof bv === "string") cmp = av.localeCompare(bv)
+      else cmp = String(av).localeCompare(String(bv))
+      return cfg.direction === "asc" ? cmp : -cmp
     })
   }
 
-  // Handle sorting clicks
-  const handleSort = (key: string, isRevenueTable: boolean) => {
-    const currentConfig = isRevenueTable ? revenueSortConfig : paymentsSortConfig
-    const setConfig = isRevenueTable ? setRevenueSortConfig : setPaymentsSortConfig
-
-    let newDirection: SortDirection = 'asc'
-    
-    if (currentConfig.key === key) {
-      if (currentConfig.direction === 'asc') {
-        newDirection = 'desc'
-      } else if (currentConfig.direction === 'desc') {
-        newDirection = null
-      } else {
-        newDirection = 'asc'
-      }
-    }
-
-    setConfig({ key: newDirection ? key : '', direction: newDirection })
+  const handleSort = (key: string, isRevenue: boolean) => {
+    const cfg = isRevenue ? revenueSortConfig : paymentsSortConfig
+    const setCfg = isRevenue ? setRevenueSortConfig : setPaymentsSortConfig
+    let dir: SortDirection = "asc"
+    if (cfg.key === key) dir = cfg.direction === "asc" ? "desc" : cfg.direction === "desc" ? null : "asc"
+    setCfg({ key: dir ? key : "", direction: dir })
   }
 
-  // Get sorted data
-  const sortedRevenueData = useMemo(() => {
-    return sortData(filteredRevenueData, revenueSortConfig)
-  }, [filteredRevenueData, revenueSortConfig])
+  const sortedRevenueData = useMemo(() => sortData(filteredRevenueData, revenueSortConfig), [filteredRevenueData, revenueSortConfig])
+  const sortedPartnerPayments = useMemo(() => sortData(filteredPartnerPayments, paymentsSortConfig), [filteredPartnerPayments, paymentsSortConfig])
 
-  const sortedPartnerPayments = useMemo(() => {
-    return sortData(filteredPartnerPayments, paymentsSortConfig)
-  }, [filteredPartnerPayments, paymentsSortConfig])
+  // Reset page to 1 when sorting changes
+  useEffect(() => {
+    setRevenuePage(1)
+  }, [revenueSortConfig])
+  useEffect(() => {
+    setPaymentsPage(1)
+  }, [paymentsSortConfig])
 
-  // Calculate summary values
+  // Pagination slices
+  const revenueTotal = sortedRevenueData.length
+  const revenueTotalPages = Math.max(1, Math.ceil(revenueTotal / PAGE_SIZE))
+  const revenuePageSafe = Math.min(Math.max(1, revenuePage), revenueTotalPages)
+  const revenueSlice = useMemo(() => {
+    const start = (revenuePageSafe - 1) * PAGE_SIZE
+    return sortedRevenueData.slice(start, start + PAGE_SIZE)
+  }, [sortedRevenueData, revenuePageSafe])
+
+  const paymentsTotal = sortedPartnerPayments.length
+  const paymentsTotalPages = Math.max(1, Math.ceil(paymentsTotal / PAGE_SIZE))
+  const paymentsPageSafe = Math.min(Math.max(1, paymentsPage), paymentsTotalPages)
+  const paymentsSlice = useMemo(() => {
+    const start = (paymentsPageSafe - 1) * PAGE_SIZE
+    return sortedPartnerPayments.slice(start, start + PAGE_SIZE)
+  }, [sortedPartnerPayments, paymentsPageSafe])
+
+  // sync inputs
+  useEffect(() => setRevenuePageInput(String(revenuePageSafe)), [revenuePageSafe])
+  useEffect(() => setPaymentsPageInput(String(paymentsPageSafe)), [paymentsPageSafe])
+
+  // Summary
   const summaryData = useMemo(() => {
-    const totalNetRevenue = filteredRevenueData.reduce((sum, item) => sum + item.payment_amount, 0)
-    const totalPartnerCompensation = filteredRevenueData.reduce((sum, item) => sum + item.partner_compensation, 0)
-    
-    // Calculate total payments made (sum of unique payment IDs)
-    const uniquePaymentIds = new Set()
-    const totalPaymentsMade = filteredPartnerPayments.reduce((sum, item) => {
-      if (item.linked_paymentid && !uniquePaymentIds.has(item.linked_paymentid)) {
-        uniquePaymentIds.add(item.linked_paymentid)
-        return sum + item.paid_amount
+    const totalNetRevenue = filteredRevenueData.reduce((s, i) => s + num(i.payment_amount), 0)
+    const totalPartnerCompensation = filteredRevenueData.reduce((s, i) => s + num(i.partner_compensation), 0)
+    const seen = new Set<string>()
+    const totalPaymentsMade = filteredPartnerPayments.reduce((s, i) => {
+      if (i.linked_paymentid && !seen.has(i.linked_paymentid)) {
+        seen.add(i.linked_paymentid)
+        return s + num(i.paid_amount)
       }
-      return sum
+      return s
     }, 0)
-
-    return {
-      totalNetRevenue,
-      totalPartnerCompensation,
-      totalPaymentsMade,
-    }
+    return { totalNetRevenue, totalPartnerCompensation, totalPaymentsMade }
   }, [filteredRevenueData, filteredPartnerPayments])
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
-    }).format(amount)
+  // helpers
+  const formatCurrency = (v: number | null | undefined) =>
+    new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(num(v))
+  const formatDate = (s: string | null) => (s ? toDate(s).toLocaleDateString() : "-")
+  const formatPct = (f: number | null | undefined) => (f == null ? "-" : `${Math.round(f * 100)}%`)
+  const renderSortIcon = (key: string, isRevenue: boolean) => {
+    const cfg = isRevenue ? revenueSortConfig : paymentsSortConfig
+    if (cfg.key !== key || !cfg.direction) return <ArrowUpDown className="ml-2 h-4 w-4 text-muted-foreground" />
+    return cfg.direction === "asc" ? (
+      <ChevronUp className="ml-2 h-4 w-4 text-primary" />
+    ) : (
+      <ChevronDown className="ml-2 h-4 w-4 text-primary" />
+    )
   }
-
-  const formatDate = (dateString: string | null) => {
-    if (!dateString) return "-";
-    // Add a day to the date to correct for timezone issues if necessary
-    const date = new Date(dateString)
-    const userTimezoneOffset = date.getTimezoneOffset() * 60000;
-    return new Date(date.getTime() + userTimezoneOffset).toLocaleDateString()
+  const rangeLabel = (page: number, total: number) => {
+    if (total === 0) return "0–0 of 0"
+    const start = (page - 1) * PAGE_SIZE + 1
+    const end = Math.min(page * PAGE_SIZE, total)
+    return `${start}–${end} of ${total}`
   }
+  const clamp = (val: number, min: number, max: number) => Math.max(min, Math.min(max, val || 1))
+  const tryJumpRevenue = () => setRevenuePage(clamp(parseInt(revenuePageInput, 10), 1, revenueTotalPages))
+  const tryJumpPayments = () => setPaymentsPage(clamp(parseInt(paymentsPageInput, 10), 1, paymentsTotalPages))
 
-  // Render sort icon
-  const renderSortIcon = (columnKey: string, isRevenueTable: boolean) => {
-    const currentConfig = isRevenueTable ? revenueSortConfig : paymentsSortConfig
-    
-    if (currentConfig.key !== columnKey || !currentConfig.direction) {
-      return <ArrowUpDown className="ml-2 h-4 w-4 text-muted-foreground" />
-    }
-    
-    return currentConfig.direction === 'asc' 
-      ? <ChevronUp className="ml-2 h-4 w-4 text-primary" />
-      : <ChevronDown className="ml-2 h-4 w-4 text-primary" />
+  // Auth gating
+  if (loading) {
+    return (
+      <div className="p-6 flex items-center gap-2 text-sm text-muted-foreground">
+        <Loader2 className="h-4 w-4 animate-spin" /> Checking authentication…
+      </div>
+    )
+  }
+  if (!token) {
+    return (
+      <div className="p-6">
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <LogIn className="h-5 w-5" />
+              Not authenticated
+            </CardTitle>
+            <CardDescription>Please log in to view the Revenue Ledger.</CardDescription>
+          </CardHeader>
+        </Card>
+      </div>
+    )
   }
 
   return (
@@ -371,9 +339,7 @@ export default function RevenueLedger() {
             <DollarSign className="h-4 w-4 text-emerald-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-emerald-600">
-              {formatCurrency(summaryData.totalNetRevenue)}
-            </div>
+            <div className="text-2xl font-bold text-emerald-600">{formatCurrency(summaryData.totalNetRevenue)}</div>
             <p className="text-xs text-muted-foreground">Sum of all payment amounts</p>
           </CardContent>
         </Card>
@@ -384,9 +350,7 @@ export default function RevenueLedger() {
             <TrendingUp className="h-4 w-4 text-blue-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-blue-600">
-              {formatCurrency(summaryData.totalPartnerCompensation)}
-            </div>
+            <div className="text-2xl font-bold text-blue-600">{formatCurrency(summaryData.totalPartnerCompensation)}</div>
             <p className="text-xs text-muted-foreground">Sum of partner compensation</p>
           </CardContent>
         </Card>
@@ -397,15 +361,13 @@ export default function RevenueLedger() {
             <CreditCard className="h-4 w-4 text-green-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">
-              {formatCurrency(summaryData.totalPaymentsMade)}
-            </div>
+            <div className="text-2xl font-bold text-green-600">{formatCurrency(summaryData.totalPaymentsMade)}</div>
             <p className="text-xs text-muted-foreground">Sum of unique payment amounts</p>
           </CardContent>
         </Card>
       </div>
 
-      {/* Collapsible Filters */}
+      {/* Filters */}
       <Card>
         <Collapsible open={isFiltersOpen} onOpenChange={setIsFiltersOpen}>
           <CollapsibleTrigger asChild>
@@ -418,17 +380,9 @@ export default function RevenueLedger() {
                   </CardTitle>
                 </div>
                 <div className="flex items-center gap-4">
-                  <Badge variant="secondary">
-                    {filteredRevenueData.length} revenue entries
-                  </Badge>
-                  <Badge variant="outline">
-                    {filteredPartnerPayments.length} payment entries
-                  </Badge>
-                  {isFiltersOpen ? (
-                    <ChevronUp className="h-5 w-5" />
-                  ) : (
-                    <ChevronDown className="h-5 w-5" />
-                  )}
+                  <Badge variant="secondary">{filteredRevenueData.length} revenue entries</Badge>
+                  <Badge variant="outline">{filteredPartnerPayments.length} payment entries</Badge>
+                  {isFiltersOpen ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
                 </div>
               </div>
             </CardHeader>
@@ -436,39 +390,25 @@ export default function RevenueLedger() {
           <CollapsibleContent>
             <CardContent className="pt-4">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {/* Show Combobox */}
                 <div className="space-y-2">
                   <Label>Show Name</Label>
-                  <Select value={selectedShow} onValueChange={setSelectedShow}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="All shows" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Shows</SelectItem>
-                      {availableShows.map((show) => (
-                        <SelectItem key={show} value={show}>
-                          {show}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <ShowCombobox
+                    value={selectedShow}
+                    onChange={(val) => setSelectedShow(val)}
+                    options={["all", ...availableShows]}
+                    placeholder="Search shows…"
+                  />
                 </div>
 
                 <div className="space-y-2">
                   <Label>From Date</Label>
-                  <Input
-                    type="date"
-                    value={dateFrom}
-                    onChange={(e) => setDateFrom(e.target.value)}
-                  />
+                  <Input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} />
                 </div>
 
                 <div className="space-y-2">
                   <Label>To Date</Label>
-                  <Input
-                    type="date"
-                    value={dateTo}
-                    onChange={(e) => setDateTo(e.target.value)}
-                  />
+                  <Input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} />
                 </div>
               </div>
             </CardContent>
@@ -476,84 +416,108 @@ export default function RevenueLedger() {
         </Collapsible>
       </Card>
 
+      {/* Loading / Error banners */}
+      {fetching && (
+        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          <Loader2 className="h-4 w-4 animate-spin" /> Loading ledger & payouts…
+        </div>
+      )}
+      {error && <div className="text-sm text-red-600">{error}</div>}
+
       {/* Revenue Table */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Revenue</CardTitle>
-          <CardDescription>Transactions between Evergreen and Ad Agencies</CardDescription>
+      <Card className={cn(fetching ? "opacity-60" : "")}>
+        <CardHeader className="flex-row items-start justify-between space-y-0">
+          <div>
+            <CardTitle>Revenue</CardTitle>
+            <CardDescription>Transactions between Evergreen and Ad Agencies</CardDescription>
+          </div>
+          {/* TOP RIGHT: Pagination controls */}
+          <PaginationControls
+            page={revenuePageSafe}
+            totalPages={revenueTotalPages}
+            totalItems={revenueTotal}
+            pageInput={revenuePageInput}
+            setPage={setRevenuePage}
+            setPageInput={setRevenuePageInput}
+            onGo={tryJumpRevenue}
+            rangeText={rangeLabel(revenuePageSafe, revenueTotal)}
+          />
         </CardHeader>
+
         <CardContent>
           <div className="border rounded-lg overflow-hidden">
             <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead className="border-r p-0">
-                    <Button variant="ghost" className="w-full justify-start text-left font-semibold hover:bg-transparent px-4 py-2" onClick={() => handleSort('invoice_classref_name', true)}>
-                      Show Name {renderSortIcon('invoice_classref_name', true)}
+                    <Button variant="ghost" className="w-full justify-start text-left font-semibold hover:bg-transparent px-4 py-2" onClick={() => handleSort("invoice_classref_name", true)}>
+                      Show Name {renderSortIcon("invoice_classref_name", true)}
                     </Button>
                   </TableHead>
                   <TableHead className="border-r p-0">
-                    <Button variant="ghost" className="w-full justify-start text-left font-semibold hover:bg-transparent px-4 py-2" onClick={() => handleSort('customer', true)}>
-                      Customer {renderSortIcon('customer', true)}
+                    <Button variant="ghost" className="w-full justify-start text-left font-semibold hover:bg-transparent px-4 py-2" onClick={() => handleSort("customer", true)}>
+                      Customer {renderSortIcon("customer", true)}
                     </Button>
                   </TableHead>
                   <TableHead className="border-r p-0">
-                    <Button variant="ghost" className="w-full justify-start text-left font-semibold hover:bg-transparent px-4 py-2" onClick={() => handleSort('invoice_description', true)}>
-                      Description {renderSortIcon('invoice_description', true)}
+                    <Button variant="ghost" className="w-full justify-start text-left font-semibold hover:bg-transparent px-4 py-2" onClick={() => handleSort("invoice_description", true)}>
+                      Description {renderSortIcon("invoice_description", true)}
                     </Button>
                   </TableHead>
                   <TableHead className="border-r p-0">
-                    <Button variant="ghost" className="w-full justify-start text-left font-semibold hover:bg-transparent px-4 py-2" onClick={() => handleSort('invoice_date', true)}>
-                      Invoice Date {renderSortIcon('invoice_date', true)}
+                    <Button variant="ghost" className="w-full justify-start text-left font-semibold hover:bg-transparent px-4 py-2" onClick={() => handleSort("invoice_date", true)}>
+                      Invoice Date {renderSortIcon("invoice_date", true)}
                     </Button>
                   </TableHead>
                   <TableHead className="border-r p-0">
-                    <Button variant="ghost" className="w-full justify-end text-right font-semibold hover:bg-transparent px-4 py-2" onClick={() => handleSort('payment_amount', true)}>
-                      Payment Amt {renderSortIcon('payment_amount', true)}
+                    <Button variant="ghost" className="w-full justify-end text-right font-semibold hover:bg-transparent px-4 py-2" onClick={() => handleSort("payment_amount", true)}>
+                      Payment Amt {renderSortIcon("payment_amount", true)}
                     </Button>
                   </TableHead>
                   <TableHead className="border-r p-0">
-                    <Button variant="ghost" className="w-full justify-start text-left font-semibold hover:bg-transparent px-4 py-2" onClick={() => handleSort('invoice_itemrefname', true)}>
-                      Comp Type {renderSortIcon('invoice_itemrefname', true)}
+                    <Button variant="ghost" className="w-full justify-start text-left font-semibold hover:bg-transparent px-4 py-2" onClick={() => handleSort("invoice_itemrefname", true)}>
+                      Comp Type {renderSortIcon("invoice_itemrefname", true)}
                     </Button>
                   </TableHead>
                   <TableHead className="border-r p-0">
-                    <Button variant="ghost" className="w-full justify-end text-right font-semibold hover:bg-transparent px-4 py-2" onClick={() => handleSort('evergreen_percentage', true)}>
-                      % Evergreen {renderSortIcon('evergreen_percentage', true)}
+                    <Button variant="ghost" className="w-full justify-end text-right font-semibold hover:bg-transparent px-4 py-2" onClick={() => handleSort("evergreen_percentage", true)}>
+                      % Evergreen {renderSortIcon("evergreen_percentage", true)}
                     </Button>
                   </TableHead>
                   <TableHead className="border-r p-0">
-                    <Button variant="ghost" className="w-full justify-end text-right font-semibold hover:bg-transparent px-4 py-2" onClick={() => handleSort('evergreen_compensation', true)}>
-                      Evergreen Comp {renderSortIcon('evergreen_compensation', true)}
+                    <Button variant="ghost" className="w-full justify-end text-right font-semibold hover:bg-transparent px-4 py-2" onClick={() => handleSort("evergreen_compensation", true)}>
+                      Evergreen Comp {renderSortIcon("evergreen_compensation", true)}
                     </Button>
                   </TableHead>
                   <TableHead className="border-r p-0">
-                    <Button variant="ghost" className="w-full justify-end text-right font-semibold hover:bg-transparent px-4 py-2" onClick={() => handleSort('partner_percentage', true)}>
-                      % Partner {renderSortIcon('partner_percentage', true)}
+                    <Button variant="ghost" className="w-full justify-end text-right font-semibold hover:bg-transparent px-4 py-2" onClick={() => handleSort("partner_percentage", true)}>
+                      % Partner {renderSortIcon("partner_percentage", true)}
                     </Button>
                   </TableHead>
                   <TableHead className="p-0">
-                    <Button variant="ghost" className="w-full justify-end text-right font-semibold hover:bg-transparent px-4 py-2" onClick={() => handleSort('partner_compensation', true)}>
-                      Partner Comp {renderSortIcon('partner_compensation', true)}
+                    <Button variant="ghost" className="w-full justify-end text-right font-semibold hover:bg-transparent px-4 py-2" onClick={() => handleSort("partner_compensation", true)}>
+                      Partner Comp {renderSortIcon("partner_compensation", true)}
                     </Button>
                   </TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {sortedRevenueData.length > 0 ? sortedRevenueData.map((item) => (
-                  <TableRow key={item.id}>
-                    <TableCell className="font-medium border-r px-4 py-3">{item.invoice_classref_name}</TableCell>
-                    <TableCell className="border-r px-4 py-3">{item.customer}</TableCell>
-                    <TableCell className="max-w-xs truncate border-r px-4 py-3">{item.invoice_description}</TableCell>
-                    <TableCell className="border-r px-4 py-3">{formatDate(item.invoice_date)}</TableCell>
-                    <TableCell className="text-right font-mono border-r px-4 py-3">{formatCurrency(item.payment_amount)}</TableCell>
-                    <TableCell className="border-r px-4 py-3">{item.invoice_itemrefname}</TableCell>
-                    <TableCell className="text-right border-r px-4 py-3">{item.evergreen_percentage}%</TableCell>
-                    <TableCell className="text-right font-mono text-emerald-600 border-r px-4 py-3">{formatCurrency(item.evergreen_compensation)}</TableCell>
-                    <TableCell className="text-right border-r px-4 py-3">{item.partner_percentage}%</TableCell>
-                    <TableCell className="text-right font-mono text-blue-600 px-4 py-3">{formatCurrency(item.partner_compensation)}</TableCell>
-                  </TableRow>
-                )) : (
+                {revenueSlice.length > 0 ? (
+                  revenueSlice.map((item) => (
+                    <TableRow key={`${item.payment_id}-${item.invoice_doc_number}-${item.invoice_date}`}>
+                      <TableCell className="font-medium border-r px-4 py-3">{item.invoice_classref_name}</TableCell>
+                      <TableCell className="border-r px-4 py-3">{item.customer}</TableCell>
+                      <TableCell className="max-w-xs truncate border-r px-4 py-3">{item.invoice_description}</TableCell>
+                      <TableCell className="border-r px-4 py-3">{formatDate(item.invoice_date)}</TableCell>
+                      <TableCell className="text-right font-mono border-r px-4 py-3">{formatCurrency(item.payment_amount)}</TableCell>
+                      <TableCell className="border-r px-4 py-3">{item.invoice_itemrefname || "-"}</TableCell>
+                      <TableCell className="text-right border-r px-4 py-3">{formatPct(item.evergreen_percentage)}</TableCell>
+                      <TableCell className="text-right font-mono text-emerald-600 border-r px-4 py-3">{formatCurrency(item.evergreen_compensation)}</TableCell>
+                      <TableCell className="text-right border-r px-4 py-3">{formatPct(item.partner_percentage)}</TableCell>
+                      <TableCell className="text-right font-mono text-blue-600 px-4 py-3">{formatCurrency(item.partner_compensation)}</TableCell>
+                    </TableRow>
+                  ))
+                ) : (
                   <TableRow>
                     <TableCell colSpan={10} className="h-24 text-center">
                       No revenue data found matching your criteria.
@@ -563,87 +527,117 @@ export default function RevenueLedger() {
               </TableBody>
             </Table>
           </div>
+
+          {/* Revenue Pagination (bottom) */}
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mt-3">
+            <span className="text-xs text-muted-foreground">{rangeLabel(revenuePageSafe, revenueTotal)}</span>
+            <PaginationControls
+              page={revenuePageSafe}
+              totalPages={revenueTotalPages}
+              totalItems={revenueTotal}
+              pageInput={revenuePageInput}
+              setPage={setRevenuePage}
+              setPageInput={setRevenuePageInput}
+              onGo={tryJumpRevenue}
+            />
+          </div>
         </CardContent>
       </Card>
 
-      {/* Partner Payments Table */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Partner Payments</CardTitle>
-          <CardDescription>Transactions between Evergreen and Partners</CardDescription>
+      {/* Partner Payments */}
+      <Card className={cn(fetching ? "opacity-60" : "")}>
+        <CardHeader className="flex-row items-start justify-between space-y-0">
+          <div>
+            <CardTitle>Partner Payments</CardTitle>
+            <CardDescription>Transactions between Evergreen and Partners</CardDescription>
+          </div>
+          {/* TOP RIGHT: Pagination controls */}
+          <PaginationControls
+            page={paymentsPageSafe}
+            totalPages={paymentsTotalPages}
+            totalItems={paymentsTotal}
+            pageInput={paymentsPageInput}
+            setPage={setPaymentsPage}
+            setPageInput={setPaymentsPageInput}
+            onGo={tryJumpPayments}
+            rangeText={rangeLabel(paymentsPageSafe, paymentsTotal)}
+          />
         </CardHeader>
+
         <CardContent>
           <div className="border rounded-lg overflow-hidden">
             <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead className="border-r p-0">
-                    <Button variant="ghost" className="w-full justify-start text-left font-semibold hover:bg-transparent px-4 py-2" onClick={() => handleSort('show_qbo_name', false)}>
-                      Show Name {renderSortIcon('show_qbo_name', false)}
+                    <Button variant="ghost" className="w-full justify-start text-left font-semibold hover:bg-transparent px-4 py-2" onClick={() => handleSort("show_qbo_name", false)}>
+                      Show Name {renderSortIcon("show_qbo_name", false)}
                     </Button>
                   </TableHead>
                   <TableHead className="border-r p-0">
-                    <Button variant="ghost" className="w-full justify-start text-left font-semibold hover:bg-transparent px-4 py-2" onClick={() => handleSort('vendor_qbo_name', false)}>
-                      Partner Name {renderSortIcon('vendor_qbo_name', false)}
+                    <Button variant="ghost" className="w-full justify-start text-left font-semibold hover:bg-transparent px-4 py-2" onClick={() => handleSort("vendor_qbo_name", false)}>
+                      Partner Name {renderSortIcon("vendor_qbo_name", false)}
                     </Button>
                   </TableHead>
                   <TableHead className="border-r p-0">
-                    <Button variant="ghost" className="w-full justify-start text-left font-semibold hover:bg-transparent px-4 py-2" onClick={() => handleSort('docnumber', false)}>
-                      Bill Number {renderSortIcon('docnumber', false)}
+                    <Button variant="ghost" className="w-full justify-start text-left font-semibold hover:bg-transparent px-4 py-2" onClick={() => handleSort("docnumber", false)}>
+                      Bill Number {renderSortIcon("docnumber", false)}
                     </Button>
                   </TableHead>
                   <TableHead className="border-r p-0">
-                    <Button variant="ghost" className="w-full justify-start text-left font-semibold hover:bg-transparent px-4 py-2" onClick={() => handleSort('txndate', false)}>
-                      Bill Date {renderSortIcon('txndate', false)}
+                    <Button variant="ghost" className="w-full justify-start text-left font-semibold hover:bg-transparent px-4 py-2" onClick={() => handleSort("txndate", false)}>
+                      Bill Date {renderSortIcon("txndate", false)}
                     </Button>
                   </TableHead>
                   <TableHead className="border-r p-0">
-                    <Button variant="ghost" className="w-full justify-end text-right font-semibold hover:bg-transparent px-4 py-2" onClick={() => handleSort('bill_amount', false)}>
-                      Bill Amount {renderSortIcon('bill_amount', false)}
+                    <Button variant="ghost" className="w-full justify-end text-right font-semibold hover:bg-transparent px-4 py-2" onClick={() => handleSort("bill_amount", false)}>
+                      Bill Amount {renderSortIcon("bill_amount", false)}
                     </Button>
                   </TableHead>
                   <TableHead className="border-r p-0">
-                    <Button variant="ghost" className="w-full justify-start text-left font-semibold hover:bg-transparent px-4 py-2" onClick={() => handleSort('linked_paymentid', false)}>
-                      Payment ID {renderSortIcon('linked_paymentid', false)}
+                    <Button variant="ghost" className="w-full justify-start text-left font-semibold hover:bg-transparent px-4 py-2" onClick={() => handleSort("linked_paymentid", false)}>
+                      Payment ID {renderSortIcon("linked_paymentid", false)}
                     </Button>
                   </TableHead>
                   <TableHead className="border-r p-0">
-                    <Button variant="ghost" className="w-full justify-start text-left font-semibold hover:bg-transparent px-4 py-2" onClick={() => handleSort('payment_date', false)}>
-                      Payment Date {renderSortIcon('payment_date', false)}
+                    <Button variant="ghost" className="w-full justify-start text-left font-semibold hover:bg-transparent px-4 py-2" onClick={() => handleSort("payment_date", false)}>
+                      Payment Date {renderSortIcon("payment_date", false)}
                     </Button>
                   </TableHead>
                   <TableHead className="border-r p-0">
-                    <Button variant="ghost" className="w-full justify-end text-right font-semibold hover:bg-transparent px-4 py-2" onClick={() => handleSort('paid_amount', false)}>
-                      Amount Paid {renderSortIcon('paid_amount', false)}
+                    <Button variant="ghost" className="w-full justify-end text-right font-semibold hover:bg-transparent px-4 py-2" onClick={() => handleSort("paid_amount", false)}>
+                      Amount Paid {renderSortIcon("paid_amount", false)}
                     </Button>
                   </TableHead>
                   <TableHead className="border-r p-0">
-                    <Button variant="ghost" className="w-full justify-end text-right font-semibold hover:bg-transparent px-4 py-2" onClick={() => handleSort('sum_of_related_bill_amts', false)}>
-                      Related Bills Sum {renderSortIcon('sum_of_related_bill_amts', false)}
+                    <Button variant="ghost" className="w-full justify-end text-right font-semibold hover:bg-transparent px-4 py-2" onClick={() => handleSort("sum_of_related_bill_amts", false)}>
+                      Related Bills Sum {renderSortIcon("sum_of_related_bill_amts", false)}
                     </Button>
                   </TableHead>
                   <TableHead className="p-0">
-                    <Button variant="ghost" className="w-full justify-end text-right font-semibold hover:bg-transparent px-4 py-2" onClick={() => handleSort('balance_billpayments', false)}>
-                      Balance {renderSortIcon('balance_billpayments', false)}
+                    <Button variant="ghost" className="w-full justify-end text-right font-semibold hover:bg-transparent px-4 py-2" onClick={() => handleSort("balance_billpayments", false)}>
+                      Balance {renderSortIcon("balance_billpayments", false)}
                     </Button>
                   </TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {sortedPartnerPayments.length > 0 ? sortedPartnerPayments.map((item) => (
-                  <TableRow key={item.id}>
-                    <TableCell className="font-medium border-r px-4 py-3">{item.show_qbo_name}</TableCell>
-                    <TableCell className="border-r px-4 py-3">{item.vendor_qbo_name}</TableCell>
-                    <TableCell className="border-r px-4 py-3">{item.docnumber}</TableCell>
-                    <TableCell className="border-r px-4 py-3">{formatDate(item.txndate)}</TableCell>
-                    <TableCell className="text-right font-mono border-r px-4 py-3">{formatCurrency(item.bill_amount)}</TableCell>
-                    <TableCell className="border-r px-4 py-3">{item.linked_paymentid || "-"}</TableCell>
-                    <TableCell className="border-r px-4 py-3">{formatDate(item.payment_date)}</TableCell>
-                    <TableCell className="text-right font-mono text-green-600 border-r px-4 py-3">{formatCurrency(item.paid_amount)}</TableCell>
-                    <TableCell className="text-right font-mono border-r px-4 py-3">{formatCurrency(item.sum_of_related_bill_amts)}</TableCell>
-                    <TableCell className="text-right font-mono px-4 py-3">{formatCurrency(item.balance_billpayments)}</TableCell>
-                  </TableRow>
-                )) : (
+                {paymentsSlice.length > 0 ? (
+                  paymentsSlice.map((item) => (
+                    <TableRow key={`${item.bill_id}-${item.docnumber}-${item.txndate}`}>
+                      <TableCell className="font-medium border-r px-4 py-3">{item.show_qbo_name}</TableCell>
+                      <TableCell className="border-r px-4 py-3">{item.vendor_qbo_name}</TableCell>
+                      <TableCell className="border-r px-4 py-3">{item.docnumber || "-"}</TableCell>
+                      <TableCell className="border-r px-4 py-3">{formatDate(item.txndate)}</TableCell>
+                      <TableCell className="text-right font-mono border-r px-4 py-3">{formatCurrency(item.bill_amount)}</TableCell>
+                      <TableCell className="border-r px-4 py-3">{item.linked_paymentid || "-"}</TableCell>
+                      <TableCell className="border-r px-4 py-3">{formatDate(item.payment_date)}</TableCell>
+                      <TableCell className="text-right font-mono text-green-600 border-r px-4 py-3">{formatCurrency(item.paid_amount)}</TableCell>
+                      <TableCell className="text-right font-mono border-r px-4 py-3">{formatCurrency(item.sum_of_related_bill_amts)}</TableCell>
+                      <TableCell className="text-right font-mono px-4 py-3">{formatCurrency(item.balance_billpayments)}</TableCell>
+                    </TableRow>
+                  ))
+                ) : (
                   <TableRow>
                     <TableCell colSpan={10} className="h-24 text-center">
                       No partner payment data found matching your criteria.
@@ -653,8 +647,182 @@ export default function RevenueLedger() {
               </TableBody>
             </Table>
           </div>
+
+          {/* Payments Pagination (bottom) */}
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mt-3">
+            <span className="text-xs text-muted-foreground">{rangeLabel(paymentsPageSafe, paymentsTotal)}</span>
+            <PaginationControls
+              page={paymentsPageSafe}
+              totalPages={paymentsTotalPages}
+              totalItems={paymentsTotal}
+              pageInput={paymentsPageInput}
+              setPage={setPaymentsPage}
+              setPageInput={setPaymentsPageInput}
+              onGo={tryJumpPayments}
+            />
+          </div>
         </CardContent>
       </Card>
     </div>
   )
+}
+
+/** ---------- Reusable pagination UI (used top-right and bottom) ---------- */
+function PaginationControls({
+  page,
+  totalPages,
+  totalItems,
+  pageInput,
+  setPage,
+  setPageInput,
+  onGo,
+  rangeText,
+}: {
+  page: number
+  totalPages: number
+  totalItems: number
+  pageInput: string
+  setPage: (n: number) => void
+  setPageInput: (s: string) => void
+  onGo: () => void
+  rangeText?: string
+}) {
+  return (
+    <div className="flex items-center gap-2">
+      {rangeText ? <span className="hidden sm:inline text-xs text-muted-foreground">{rangeText}</span> : null}
+      <Button variant="outline" size="sm" onClick={() => setPage(Math.max(1, page - 1))} disabled={page <= 1}>
+        <ChevronLeft className="h-4 w-4" />
+        Prev
+      </Button>
+      <span className="text-xs text-muted-foreground">
+        Page {page} / {totalPages}
+      </span>
+      <Button variant="outline" size="sm" onClick={() => setPage(Math.min(totalPages, page + 1))} disabled={page >= totalPages}>
+        Next
+        <ChevronRight className="h-4 w-4" />
+      </Button>
+      <div className="flex items-center gap-2 ml-2">
+        <Label htmlFor={`page-input-${rangeText ?? ""}`} className="text-xs text-muted-foreground">Go to page</Label>
+        <Input
+          id={`page-input-${rangeText ?? ""}`}
+          type="number"
+          min={1}
+          max={totalPages}
+          value={pageInput}
+          onChange={(e) => setPageInput(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") onGo()
+          }}
+          className="h-8 w-20"
+        />
+        <Button variant="outline" size="sm" onClick={onGo}>Go</Button>
+      </div>
+    </div>
+  )
+}
+
+/** ---------- Searchable Show Combobox ---------- */
+function ShowCombobox({
+  value,
+  onChange,
+  options,
+  placeholder = "Search…"
+}: {
+  value: string
+  onChange: (v: string) => void
+  options: string[]
+  placeholder?: string
+}) {
+  const [open, setOpen] = useState(false)
+
+  const labelFor = (v: string) => (v === "all" ? "All Shows" : v)
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button
+          variant="outline"
+          role="combobox"
+          aria-expanded={open}
+          className="w-full justify-between"
+        >
+          {value ? labelFor(value) : "Select show"}
+          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
+        <Command>
+          <CommandInput placeholder={placeholder} />
+          <CommandList>
+            <CommandEmpty>No shows found.</CommandEmpty>
+            <CommandGroup>
+              {options.map((opt) => (
+                <CommandItem
+                  key={opt}
+                  value={opt}
+                  onSelect={(currentValue) => {
+                    onChange(currentValue)
+                    setOpen(false)
+                  }}
+                  className="flex items-center gap-2"
+                >
+                  <Check className={cn("h-4 w-4", value === opt ? "opacity-100" : "opacity-0")} />
+                  <span>{labelFor(opt)}</span>
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          </CommandList>
+        </Command>
+      </PopoverContent>
+    </Popover>
+  )
+}
+
+// utils
+function num(n: number | null | undefined) {
+  if (n == null || Number.isNaN(n as any)) return 0
+  return Number(n)
+}
+async function readErr(res: Response, fallback: string) {
+  try {
+    const j = await res.json()
+    if (j?.detail) return typeof j.detail === "string" ? j.detail : JSON.stringify(j.detail)
+    return JSON.stringify(j)
+  } catch {
+    try {
+      return await res.text()
+    } catch {
+      return fallback
+    }
+  }
+}
+
+/**
+ * Robust date parser:
+ * - Accepts null/undefined and returns Invalid Date (so comparisons fail gracefully)
+ * - Supports "YYYY-MM-DD" and ISO datetimes "YYYY-MM-DDTHH:mm:ss(.sss)Z"
+ * - Applies start/end-of-day when requested
+ */
+function toDate(dateStr?: string | null, endOfDay = false) {
+  if (!dateStr || typeof dateStr !== "string") return new Date(NaN)
+
+  // If it's an ISO string, let Date parse it, then adjust to boundary if needed.
+  const isoTry = new Date(dateStr)
+  if (!isNaN(isoTry.getTime())) {
+    if (endOfDay) {
+      isoTry.setHours(23, 59, 59, 999)
+    } else {
+      isoTry.setHours(0, 0, 0, 0)
+    }
+    return isoTry
+  }
+
+  // Fallback for plain "YYYY-MM-DD" or odd cases
+  try {
+    const base = dateStr.includes("T") ? dateStr.split("T")[0] : dateStr
+    const [y, m, d] = base.split("-").map((x) => parseInt(x, 10))
+    return new Date(y, (m ?? 1) - 1, d ?? 1, endOfDay ? 23 : 0, endOfDay ? 59 : 0, endOfDay ? 59 : 0, endOfDay ? 999 : 0)
+  } catch {
+    return new Date(NaN)
+  }
 }
