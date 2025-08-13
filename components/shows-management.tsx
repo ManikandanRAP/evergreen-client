@@ -63,12 +63,12 @@ interface ShowFilters {
   hasNonEvergreenRevenue: string
   requiresPartnerLedgerAccess: string
   isOriginal: string
-  isActive: string
-  ageDemographic: string
+  is_active: string
+  age_demographic: string
   genderDemographic: string
   ownershipPercentage: string
   region: string
-  isUndersized: string
+  is_undersized: string
   showsPerYear: string
   averageLength: string
   adSlots: string
@@ -93,12 +93,12 @@ const initialFilters: ShowFilters = {
   hasNonEvergreenRevenue: "",
   requiresPartnerLedgerAccess: "",
   isOriginal: "",
-  isActive: "",
-  ageDemographic: "",
+  is_active: "",
+  age_demographic: "",
   genderDemographic: "",
   ownershipPercentage: "",
   region: "",
-  isUndersized: "",
+  is_undersized: "",
   showsPerYear: "",
   averageLength: "",
   adSlots: "",
@@ -248,8 +248,8 @@ export default function ShowsManagement() {
       show.revenue2025,
       show.isTentpole ? "Yes" : "No",
       show.isOriginal ? "Yes" : "No",
-      show.isActive ? "Yes" : "No",
-      show.ageDemographic,
+      show.is_active ? "Yes" : "No",
+      show.age_demographic,
       show.genderDemographic,
       show.brandedRevenueAmount,
       show.marketingRevenueAmount,
@@ -262,7 +262,7 @@ export default function ShowsManagement() {
       show.averageLength,
       show.primaryContactHost,
       show.primaryContactShow,
-      show.isUndersized ? "Yes" : "No",
+      show.is_undersized ? "Yes" : "No",
     ])
 
     const csvContent = [csvHeaders, ...csvData]
@@ -294,7 +294,7 @@ export default function ShowsManagement() {
           show.name,
           show.showType,
           show.selectType,
-          show.subnetwork,
+          show.subnetwork_id,
           show.genre_name,
           show.primaryContactHost,
           show.primaryContactShow,
@@ -306,7 +306,7 @@ export default function ShowsManagement() {
           show.showPrimaryContact?.phone,
           show.relationship,
           show.format,
-          show.ageDemographic,
+          show.age_demographic,
           show.genderDemographic,
         ]
 
@@ -344,9 +344,9 @@ export default function ShowsManagement() {
       )
         return false
       if (
-        filters.ageDemographic &&
-        filters.ageDemographic !== "all" &&
-        show.ageDemographic !== filters.ageDemographic
+        filters.age_demographic &&
+        filters.age_demographic !== "all" &&
+        show.age_demographic !== filters.age_demographic
       )
         return false
       if (
@@ -362,8 +362,8 @@ export default function ShowsManagement() {
       const booleanFilters: (keyof ShowFilters)[] = [
         "tentpole",
         "isOriginal",
-        "isActive",
-        "isUndersized",
+        "is_active",
+        "is_undersized",
         "hasSponsorshipRevenue",
         "hasNonEvergreenRevenue",
         "requiresPartnerLedgerAccess",
@@ -373,7 +373,7 @@ export default function ShowsManagement() {
       ]
       const showToFilterKeyMap: Record<string, keyof Show> = {
         tentpole: "isTentpole",
-        isUndersized: "isUndersized",
+        is_undersized: "is_undersized",
       }
 
       for (const key of booleanFilters) {
@@ -767,9 +767,9 @@ export default function ShowsManagement() {
                 <div className="space-y-2">
                   <Label>Age Demographic</Label>
                   <Select
-                    value={filters.ageDemographic}
+                    value={filters.age_demographic}
                     onValueChange={(value) =>
-                      setFilters((prev) => ({ ...prev, ageDemographic: value }))
+                      setFilters((prev) => ({ ...prev, age_demographic: value }))
                     }
                   >
                     <SelectTrigger>
@@ -849,9 +849,9 @@ export default function ShowsManagement() {
                 <div className="space-y-2">
                   <Label>Undersized Show</Label>
                   <Select
-                    value={filters.isUndersized}
+                    value={filters.is_undersized}
                     onValueChange={(value) =>
-                      setFilters((prev) => ({ ...prev, isUndersized: value }))
+                      setFilters((prev) => ({ ...prev, is_undersized: value }))
                     }
                   >
                     <SelectTrigger>
@@ -887,8 +887,8 @@ export default function ShowsManagement() {
                 <div className="space-y-2">
                   <Label>Show Status</Label>
                   <Select
-                    value={filters.isActive}
-                    onValueChange={(value) => setFilters((prev) => ({ ...prev, isActive: value }))}
+                    value={filters.is_active}
+                    onValueChange={(value) => setFilters((prev) => ({ ...prev, is_active: value }))}
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="All statuses" />
@@ -1136,12 +1136,12 @@ export default function ShowsManagement() {
                     </Badge>
                     <Badge
                       className={`text-xs border pointer-events-none ${
-                        show.isUndersized
+                        show.is_undersized
                           ? "bg-emerald-100 text-emerald-800 border-emerald-300 dark:bg-emerald-900/50 dark:text-emerald-300 dark:border-emerald-700"
                           : "bg-red-100 text-red-800 border-red-300 dark:bg-red-900/50 dark:text-red-300 dark:border-red-700"
                       }`}
                     >
-                      Undersized - {show.isUndersized ? "Yes" : "No"}
+                      Undersized - {show.is_undersized ? "Yes" : "No"}
                     </Badge>
                   </div>
                 </div>
@@ -1293,12 +1293,12 @@ export default function ShowsManagement() {
                           </Badge>
                           <Badge
                             className={`text-xs border pointer-events-none ${
-                              show.isUndersized
+                              show.is_undersized
                                 ? "bg-emerald-100 text-emerald-800 border-emerald-300 dark:bg-emerald-900/50 dark:text-emerald-300 dark:border-emerald-700"
                                 : "bg-red-100 text-red-800 border-red-300 dark:bg-red-900/50 dark:text-red-300 dark:border-red-700"
                             }`}
                           >
-                            Undersized - {show.isUndersized ? "Yes" : "No"}
+                            Undersized - {show.is_undersized ? "Yes" : "No"}
                           </Badge>
                         </div>
                       </td>

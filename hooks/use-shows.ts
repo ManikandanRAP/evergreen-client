@@ -44,61 +44,10 @@ export function useShows() {
 
   const createShow = async (showData: Partial<Show>): Promise<Show | null> => {
     try {
-      const apiCreateData: ShowUpdate = {
-        title: showData.name || "",
-        start_date: showData.start_date ? new Date(showData.start_date).toISOString() : null,
-        minimum_guarantee: showData.minimumGuarantee || 0,
-        subnetwork_id: showData.subnetwork_id || null,
-        media_type: showData.format === "Video" ? "video" : showData.format === "Audio" ? "audio" : "both",
-        tentpole: showData.isTentpole || false,
-        relationship_level: (showData.relationship?.toLowerCase() as "strong" | "medium" | "weak") || "medium",
-        show_type: (showData.showType as "Branded" | "Original" | "Partner") || "Original",
-        evergreen_ownership_pct: showData.ownershipPercentage || 0,
-        has_sponsorship_revenue: showData.hasSponsorshipRevenue || false,
-        has_non_evergreen_revenue: showData.hasNonEvergreenRevenue || false,
-        requires_partner_access: showData.requiresPartnerLedgerAccess || false,
-        has_branded_revenue: showData.hasBrandedRevenue || false,
-        has_marketing_revenue: showData.hasMarketingRevenue || false,
-        has_web_mgmt_revenue: showData.hasWebManagementRevenue || false,
-        genre_name: showData.genre_name || null,
-        is_original: showData.isOriginal || false,
-        shows_per_year: showData.showsPerYear || null,
-        latest_cpm_usd: showData.latestCPM || null,
-        ad_slots: showData.adSlots || null,
-        avg_show_length_mins: showData.averageLength || null,
-        revenue_2023: showData.revenue2023 || null,
-        revenue_2024: showData.revenue2024 || null,
-        revenue_2025: showData.revenue2025 || null,
-        show_host_contact: showData.primaryContactHost || null,
-        show_primary_contact: showData.primaryContactShow || null,
-        ageDemographic: showData.ageDemographic || null,
-        gender: showData.gender || null,
-        region: showData.region || null,
-        isActive: showData.isActive || false,
-        isUndersized: showData.isUndersized || false,
-        primary_education: showData.primary_education || null,
-        secondary_education: showData.secondary_education || null,
-        evergreen_production_staff_name: showData.evergreenProductionStaffName || null,
-        evergreen_production_staff_primary_contact: showData.evergreenProductionStaffPrimaryContact || null,
-        side_bonus_percent: showData.sideBonusPercent || 0,
-        youtube_ads_percent: showData.youtubeAdsPercent || 0,
-        subscriptions_percent: showData.subscriptionsPercent || 0,
-        standard_ads_percent: showData.standardAdsPercent || 0,
-        sponsorship_ad_fp_lead_percent: showData.sponsorshipAdFpLeadPercent || 0,
-        sponsorship_ad_partner_lead_percent: showData.sponsorshipAdPartnerLeadPercent || 0,
-        sponsorship_ad_partner_sold_percent: showData.sponsorshipAdPartnerSoldPercent || 0,
-        programmatic_ads_span_percent: showData.programmaticAdsSpanPercent || 0,
-        merchandise_percent: showData.merchandisePercent || 0,
-        branded_revenue_percent: showData.brandedRevenuePercent || 0,
-        marketing_services_revenue_percent: showData.marketingServicesRevenuePercent || 0,
-        direct_customer_hands_off_percent: showData.directCustomerHandsOffPercent || 0,
-        youtube_hands_off_percent: showData.youtubeHandsOffPercent || 0,
-        subscription_hands_off_percent: showData.subscriptionHandsOffPercent || 0,
-      }
+      // Pass the showData directly since create-show-dialog already formats it correctly
+      console.log("Creating show with data:", showData)
 
-      console.log("API Create Data:", apiCreateData)
-
-      const apiShow = await apiClient.createPodcast(apiCreateData)
+      const apiShow = await apiClient.createPodcast(showData as any)
       const legacyShow = convertApiShowToLegacy(apiShow)
 
       // Refresh the shows list
@@ -114,12 +63,13 @@ export function useShows() {
 
   const updateShow = async (showId: string, showData: Partial<Show>): Promise<Show | null> => {
     try {
+      // Convert legacy Show format to API format with snake_case field names
       const apiUpdateData: ShowUpdate = {
         title: showData.name || "",
         start_date: showData.start_date ? new Date(showData.start_date).toISOString() : null,
         minimum_guarantee: showData.minimumGuarantee || 0,
-        subnetwork_id: showData.subnetwork_id || null,
-        media_type: showData.format === "Video" ? "video" : showData.format === "Audio" ? "audio" : "both",
+        subnetwork_id: showData.subnetwork_id || "",
+        media_type: showData.format === "Video" ? "video" : showData.format === "Audio" ? "audio" : showData.format === "Both" ? "both" : null,
         tentpole: showData.isTentpole || false,
         relationship_level: (showData.relationship?.toLowerCase() as "strong" | "medium" | "weak") || "medium",
         show_type: (showData.showType as "Branded" | "Original" | "Partner") || "Original",
@@ -141,14 +91,13 @@ export function useShows() {
         revenue_2025: showData.revenue2025 || null,
         show_host_contact: showData.primaryContactHost || null,
         show_primary_contact: showData.primaryContactShow || null,
-        ageDemographic: showData.ageDemographic || null,
+        age_demographic: showData.age_demographic || "",
         region: showData.region || null,
-        isActive: showData.isActive || false,
-        isUndersized: showData.isUndersized || false,
+        is_active: showData.is_active || false,
+        is_undersized: showData.is_undersized || false,
         primary_education: showData.primary_education || null,
         secondary_education: showData.secondary_education || null,
         evergreen_production_staff_name: showData.evergreenProductionStaffName || null,
-        evergreen_production_staff_primary_contact: showData.evergreenProductionStaffPrimaryContact || null,
         side_bonus_percent: showData.sideBonusPercent || 0,
         youtube_ads_percent: showData.youtubeAdsPercent || 0,
         subscriptions_percent: showData.subscriptionsPercent || 0,
@@ -163,7 +112,6 @@ export function useShows() {
         direct_customer_hands_off_percent: showData.directCustomerHandsOffPercent || 0,
         youtube_hands_off_percent: showData.youtubeHandsOffPercent || 0,
         subscription_hands_off_percent: showData.subscriptionHandsOffPercent || 0,
-
       }
 
       const apiShow = await apiClient.updatePodcast(showId, apiUpdateData)

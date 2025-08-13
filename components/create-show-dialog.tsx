@@ -15,14 +15,15 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import { ArrowLeft, ArrowRight, Save, X, AlertCircle } from "lucide-react"
 import { cn } from "@/lib/utils"
 import type { Show } from "@/lib/show-types"
+import { ShowCreate, ShowUpdate } from "@/lib/api-client" // Import both types
 
 interface CreateShowDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   editingShow?: Show | null
   onShowUpdated?: () => void
-  createShow: (showData: Partial<Show>) => Promise<Show | null>
-  updateShow: (showId: string, showData: Partial<Show>) => Promise<Show | null>
+  createShow: (showData: Partial<ShowCreate>) => Promise<Show | null>
+  updateShow: (showId: string, showData: Partial<ShowUpdate>) => Promise<Show | null>
   existingShows: Show[]
 }
 
@@ -82,13 +83,13 @@ export interface ShowFormData {
   evergreenProductionStaffContact: string
 
   // Demographics
-  ageDemographic: "18-24" | "25-34" | "35-44" | "45-54" | "55+" | ""
+  age_demographic: "18-24" | "25-34" | "35-44" | "45-54" | "55+" | ""
   gender: string
   region: "Urban" | "Rural" | "Both" | ""
   primaryEducationDemographic: EducationLevel
   secondaryEducationDemographic: EducationLevel
-  isActive: boolean
-  isUndersized: boolean
+  is_active: boolean
+  is_undersized: boolean
 }
 
 interface FormErrors {
@@ -148,13 +149,13 @@ const initialFormData: ShowFormData = {
   evergreenProductionStaffContact: "",
 
   // Demographics
-  ageDemographic: "",
+  age_demographic: "",
   gender: "",
   region: "",
   primaryEducationDemographic: "",
   secondaryEducationDemographic: "",
-  isActive: true,
-  isUndersized: false,
+  is_active: true,
+  is_undersized: false,
 }
 
 const genre_names = [
@@ -180,7 +181,6 @@ const genre_names = [
   "Philosophy",
 ]
 
-// **CHANGE**: Only 'title' is now required.
 const requiredFields = {
   basic: ["title"],
   financial: [],
@@ -250,13 +250,13 @@ export default function CreateShowDialog({
         primaryContactHost: editingShow.primaryContactHost ?? "",
         primaryContactShow: editingShow.primaryContactShow ?? "",
         evergreenProductionStaffContact: editingShow.evergreenProductionStaffName ?? "",
-        ageDemographic: editingShow.ageDemographic ?? "",
+        age_demographic: editingShow.age_demographic ?? "",
         gender: editingShow.gender ?? "",
         region: (editingShow.region || "") as "Both" | "Urban" | "Rural",
         primaryEducationDemographic: (editingShow.primary_education || "") as EducationLevel,
         secondaryEducationDemographic: (editingShow.secondary_education || "") as EducationLevel,
-        isActive: !!editingShow.isActive,
-        isUndersized: !!editingShow.isUndersized,
+        is_active: !!editingShow.is_active,
+        is_undersized: !!editingShow.is_undersized,
       })
     } else {
       setFormData(initialFormData)
@@ -318,8 +318,6 @@ export default function CreateShowDialog({
   }
   
   const validateCurrentTab = (): boolean => {
-    // Since only title is required, we only need to validate it when moving from the first tab.
-    // All other fields are optional, so we don't need to block tab navigation for them.
     if (currentTab === 'basic') {
         const error = validateField('title', formData.title);
         if (error) {
@@ -327,7 +325,7 @@ export default function CreateShowDialog({
             return false;
         }
     }
-    setErrors({}); // Clear errors if validation passes
+    setErrors({});
     return true;
   }
 
@@ -379,62 +377,65 @@ export default function CreateShowDialog({
 
     setIsSubmitting(true)
 
-    const showData: Partial<Show> = {
-      name: formData.title,
-      minimumGuarantee: parseFloat(formData.minimumGuarantee || "0"),
-      format: formData.format || undefined,
-      isTentpole: formData.isTentpole,
-      relationship: formData.relationship || undefined,
-      showType: formData.showType || undefined,
-      ownershipPercentage: parseFloat(formData.ownershipPercentage || "0"),
-      hasSponsorshipRevenue: formData.hasSponsorshipRevenue,
-      hasNonEvergreenRevenue: formData.hasNonEvergreenRevenue,
-      requiresPartnerLedgerAccess: formData.requiresPartnerLedgerAccess,
-      hasBrandedRevenue: formData.hasBrandedRevenue,
-      hasMarketingRevenue: formData.hasMarketingRevenue,
-      hasWebManagementRevenue: formData.hasWebManagementRevenue,
+    // Convert form data to use exact field names that match your database schema
+    const showData: Partial<ShowCreate | ShowUpdate> = {
+      title: formData.title,
+      minimum_guarantee: parseFloat(formData.minimumGuarantee || "0") || undefined,
+      media_type: formData.format === "Video" ? "video" : formData.format === "Audio" ? "audio" : formData.format === "Both" ? "both" : undefined,
+      tentpole: formData.isTentpole,
+      relationship_level: formData.relationship === "Strong" ? "strong" : formData.relationship === "Medium" ? "medium" : formData.relationship === "Weak" ? "weak" : undefined,
+      show_type: formData.showType || undefined,
+      evergreen_ownership_pct: parseFloat(formData.ownershipPercentage || "0") || undefined,
+      has_sponsorship_revenue: formData.hasSponsorshipRevenue,
+      has_non_evergreen_revenue: formData.hasNonEvergreenRevenue,
+      requires_partner_access: formData.requiresPartnerLedgerAccess,
+      has_branded_revenue: formData.hasBrandedRevenue,
+      has_marketing_revenue: formData.hasMarketingRevenue,
+      has_web_mgmt_revenue: formData.hasWebManagementRevenue,
       genre_name: formData.genre_name || undefined,
-      isOriginal: formData.isOriginal,
-      showsPerYear: parseInt(formData.showsPerYear || "0"),
-      latestCPM: parseFloat(formData.latestCPM || "0"),
-      adSlots: parseInt(formData.adSlots || "0"),
-      averageLength: parseInt(formData.averageLength || "0"),
+      is_original: formData.isOriginal,
+      shows_per_year: parseInt(formData.showsPerYear || "0") || undefined,
+      latest_cpm_usd: parseFloat(formData.latestCPM || "0") || undefined,
+      ad_slots: parseInt(formData.adSlots || "0") || undefined,
+      avg_show_length_mins: parseInt(formData.averageLength || "0") || undefined,
       start_date: formData.start_date || undefined,
-      sideBonusPercent: parseFloat(formData.sideBonusPercent || "0"),
-      youtubeAdsPercent: parseFloat(formData.youtubeAdsPercent || "0"),
-      subscriptionsPercent: parseFloat(formData.subscriptionsPercent || "0"),
-      standardAdsPercent: parseFloat(formData.standardAdsPercent || "0"),
-      sponsorshipAdFpLeadPercent: parseFloat(formData.sponsorshipAdFpLeadPercent || "0"),
-      sponsorshipAdPartnerLeadPercent: parseFloat(formData.sponsorshipAdPartnerLeadPercent || "0"),
-      sponsorshipAdPartnerSoldPercent: parseFloat(formData.sponsorshipAdPartnerSoldPercent || "0"),
-      programmaticAdsSpanPercent: parseFloat(formData.programmaticAdsSpanPercent || "0"),
-      merchandisePercent: parseFloat(formData.merchandisePercent || "0"),
-      brandedRevenuePercent: parseFloat(formData.brandedRevenuePercent || "0"),
-      marketingServicesRevenuePercent: parseFloat(formData.marketingServicesRevenuePercent || "0"),
-      directCustomerHandsOffPercent: parseFloat(formData.directCustomerHandsOffPercent || "0"),
-      youtubeHandsOffPercent: parseFloat(formData.youtubeHandsOffPercent || "0"),
-      subscriptionHandsOffPercent: parseFloat(formData.subscriptionHandsOffPercent || "0"),
-      revenue2023: parseFloat(formData.revenue2023 || "0"),
-      revenue2024: parseFloat(formData.revenue2024 || "0"),
-      revenue2025: parseFloat(formData.revenue2025 || "0"),
-      evergreenProductionStaffName: formData.evergreenProductionStaffContact || undefined,
-      primaryContactHost: formData.primaryContactHost || undefined,
-      primaryContactShow: formData.primaryContactShow || undefined,
-      ageDemographic: formData.ageDemographic || undefined,
+      side_bonus_percent: parseFloat(formData.sideBonusPercent || "0") || undefined,
+      youtube_ads_percent: parseFloat(formData.youtubeAdsPercent || "0") || undefined,
+      subscriptions_percent: parseFloat(formData.subscriptionsPercent || "0") || undefined,
+      standard_ads_percent: parseFloat(formData.standardAdsPercent || "0") || undefined,
+      sponsorship_ad_fp_lead_percent: parseFloat(formData.sponsorshipAdFpLeadPercent || "0") || undefined,
+      sponsorship_ad_partner_lead_percent: parseFloat(formData.sponsorshipAdPartnerLeadPercent || "0") || undefined,
+      sponsorship_ad_partner_sold_percent: parseFloat(formData.sponsorshipAdPartnerSoldPercent || "0") || undefined,
+      programmatic_ads_span_percent: parseFloat(formData.programmaticAdsSpanPercent || "0") || undefined,
+      merchandise_percent: parseFloat(formData.merchandisePercent || "0") || undefined,
+      branded_revenue_percent: parseFloat(formData.brandedRevenuePercent || "0") || undefined,
+      marketing_services_revenue_percent: parseFloat(formData.marketingServicesRevenuePercent || "0") || undefined,
+      direct_customer_hands_off_percent: parseFloat(formData.directCustomerHandsOffPercent || "0") || undefined,
+      youtube_hands_off_percent: parseFloat(formData.youtubeHandsOffPercent || "0") || undefined,
+      subscription_hands_off_percent: parseFloat(formData.subscriptionHandsOffPercent || "0") || undefined,
+      revenue_2023: parseFloat(formData.revenue2023 || "0") || undefined,
+      revenue_2024: parseFloat(formData.revenue2024 || "0") || undefined,
+      revenue_2025: parseFloat(formData.revenue2025 || "0") || undefined,
+      evergreen_production_staff_name: formData.evergreenProductionStaffContact || undefined,
+      show_host_contact: formData.primaryContactHost || undefined,
+      show_primary_contact: formData.primaryContactShow || undefined,
+      age_demographic: formData.age_demographic || undefined,
       gender: formData.gender || undefined,
       region: formData.region || undefined,
       primary_education: formData.primaryEducationDemographic || undefined,
       secondary_education: formData.secondaryEducationDemographic || undefined,
       subnetwork_id: formData.subnetwork_id || undefined,
-      isActive: formData.isActive,
-      isUndersized: formData.isUndersized,
+      is_active: formData.is_active,      // camelCase to match your database
+      is_undersized: formData.is_undersized, // camelCase to match your database
     }
+
+    console.log("Show data being sent to API:", showData)
 
     try {
       if (isEditMode && editingShow?.id) {
-        await updateShow(editingShow.id, showData)
+        await updateShow(editingShow.id, showData as Partial<ShowUpdate>)
       } else {
-        await createShow(showData)
+        await createShow(showData as Partial<ShowCreate>)
       }
       onShowUpdated?.()
       onOpenChange(false)
@@ -457,7 +458,6 @@ export default function CreateShowDialog({
     if (tabId === 'basic') {
         return !validateField('title', formData.title);
     }
-    // All other tabs are always "complete" since their fields are optional.
     return true;
   }
 
@@ -1094,9 +1094,9 @@ export default function CreateShowDialog({
                     <div className="first:pt-2 space-y-2">
                       <Label>Age Demographic</Label>
                       <Select
-                        value={formData.ageDemographic}
+                        value={formData.age_demographic}
                         onValueChange={(value: "18-24" | "25-34" | "35-44" | "45-54" | "55+" | "") =>
-                          handleInputChange("ageDemographic", value)
+                          handleInputChange("age_demographic", value)
                         }
                       >
                         <SelectTrigger>
@@ -1194,19 +1194,19 @@ export default function CreateShowDialog({
                   <div className="flex gap-6 pt-4">
                     <div className="flex items-center space-x-2">
                       <Checkbox
-                        id="isActive"
-                        checked={formData.isActive}
-                        onCheckedChange={(checked) => handleInputChange("isActive", checked)}
+                        id="is_active"
+                        checked={formData.is_active}
+                        onCheckedChange={(checked) => handleInputChange("is_active", checked)}
                       />
-                      <Label htmlFor="isActive">Is Active</Label>
+                      <Label htmlFor="is_active">Is Active</Label>
                     </div>
                     <div className="flex items-center space-x-2">
                       <Checkbox
-                        id="isUndersized"
-                        checked={formData.isUndersized}
-                        onCheckedChange={(checked) => handleInputChange("isUndersized", checked)}
+                        id="is_undersized"
+                        checked={formData.is_undersized}
+                        onCheckedChange={(checked) => handleInputChange("is_undersized", checked)}
                       />
-                      <Label htmlFor="isUndersized">Is Undersized</Label>
+                      <Label htmlFor="is_undersized">Is Undersized</Label>
                     </div>
                   </div>
                 </CardContent>

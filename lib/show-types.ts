@@ -44,9 +44,9 @@ export interface Show {
   primaryContactShow: string
 
   // Demographics
-  ageDemographic: "18-24" | "25-34" | "35-44" | "45-54" | "55+" | "" | null
+  age_demographic: "18-24" | "25-34" | "35-44" | "45-54" | "55+" | "" | null
   gender: string | null
-  isUndersized: boolean | null
+  is_undersized: boolean | null
   primary_education: string | null
   secondary_education: string | null
   evergreenProductionStaffName?: string | null
@@ -71,8 +71,7 @@ export interface Show {
   hasBrandedRevenue: boolean
   hasMarketingRevenue: boolean
   hasWebManagementRevenue: boolean
-  genderDemographic: string | null
-  subnetwork: string | null
+  genderDemographic: string | null  
   avgShowLengthMins: number
   start_date: string
   sideBonusPercent:number
@@ -83,14 +82,14 @@ export interface Show {
   sponsorshipAdPartnerLeadPercent:number
   sponsorshipAdPartnerSoldPercent:number
   programmaticAdsSpanPercent:number
-  merchandisePercent:number
+  merchandePercent:number
   brandedRevenuePercent:number
   marketingServicesRevenuePercent:number
   directCustomerHandsOffPercent:number
   youtubeHandsOffPercent:number
   subscriptionHandsOffPercent:number
   region:string
-  isActive:boolean
+  is_active:boolean
 
 }
 
@@ -112,14 +111,7 @@ export function convertApiShowToLegacy(apiShow: ApiShow): Show {
   const formatMap: Record<string, "Video" | "Audio" | "Both"> = {
     video: "Video",
     audio: "Audio",
-    both: "Both", // Default to Video for "both"
-  }
-
-  // Map show types to select types
-  const selectTypeMap: Record<string, "Branded" | "Original" | "Partner"> = {
-    Branded: "Branded",
-    Original: "Original",
-    Partner: "Partner",
+    both: "Both",
   }
 
   return {
@@ -129,8 +121,7 @@ export function convertApiShowToLegacy(apiShow: ApiShow): Show {
     revenueSplit: { evergreen: apiShow.evergreen_ownership_pct || 0, partner: 100 - (apiShow.evergreen_ownership_pct || 0) },
     start_date: apiShow.start_date || new Date().toISOString(),
     showType: apiShow.show_type || "Original",
-    selectType: "Podcasts",
-    subnetwork_id: apiShow.subnetwork_id || "",
+    selectType: "Podcasts",    
     format: formatMap[apiShow.media_type || "audio"] || "Audio",
     relationship: relationshipMap[apiShow.relationship_level || "medium"] || "Medium",
     ageMonths,
@@ -154,18 +145,18 @@ export function convertApiShowToLegacy(apiShow: ApiShow): Show {
     averageLength: apiShow.avg_show_length_mins || 0,
     primaryContactHost: apiShow.show_host_contact || "",
     primaryContactShow: apiShow.show_primary_contact || "",
-    ageDemographic: apiShow.ageDemographic || null,
+    age_demographic: apiShow.age_demographic || null,
     gender: apiShow.gender || null,
-    isActive: apiShow.isActive || false,
-    isUndersized: apiShow.isUndersized || false,
+    is_active: apiShow.is_active || false,
+    is_undersized: apiShow.is_undersized || false,
     host: apiShow.show_host_contact ? { name: apiShow.show_host_contact, email: "", phone: "" } : undefined,
     showPrimaryContact: apiShow.show_primary_contact ? { name: apiShow.show_primary_contact, email: "", phone: "" } : undefined,
-    // demographics: { region: apiShow.region || "", primary_education: apiShow.primary_education || "", secondary_education: apiShow.secondary_education || "" },
+    demographics: { region: apiShow.region || "", primary_education: apiShow.primary_education || "", secondary_education: apiShow.secondary_education || "" },
     hasBrandedRevenue: apiShow.has_branded_revenue || false,
     hasMarketingRevenue: apiShow.has_marketing_revenue || false,
     hasWebManagementRevenue: apiShow.has_web_mgmt_revenue || false,
     genderDemographic: apiShow.gender || null,
-    subnetwork: apiShow.subnetwork_id || null,
+    subnetwork_id: apiShow.subnetwork_id || "",
     avgShowLengthMins: apiShow.avg_show_length_mins || 0,
     sideBonusPercent: apiShow.side_bonus_percent || 0,
     youtubeAdsPercent: apiShow.youtube_ads_percent || 0,
@@ -199,6 +190,7 @@ export function convertLegacyShowToApiCreate(legacyShow: Partial<Show>): any {
   const formatMap: Record<string, "video" | "audio" | "both"> = {
     Video: "video",
     Audio: "audio",
+    Both: "both",
   }
 
   const showTypeMap: Record<string, "Branded" | "Original" | "Partner"> = {
@@ -234,7 +226,7 @@ export function convertLegacyShowToApiCreate(legacyShow: Partial<Show>): any {
     revenue_2025: legacyShow.revenue2025 || null,
     show_host_contact: legacyShow.primaryContactHost || null,
     show_primary_contact: legacyShow.primaryContactShow || null,
-    ageDemographic:legacyShow.ageDemographic||null
+    age_demographic: legacyShow.age_demographic || null
   }
 }
 

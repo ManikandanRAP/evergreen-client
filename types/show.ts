@@ -41,8 +41,8 @@ export interface Show {
   primaryContactShow: string
 
   // Demographics
-  ageDemographic: "18-24" | "25-34" | "35-44" | "45-54" | "55+"
+  age_demographic: "18-24" | "25-34" | "35-44" | "45-54" | "55+"
   genderDemographic: "Male" | "Female" | "Others"
-  isActive: boolean
+  is_active: boolean
   isUndersized: boolean
 }

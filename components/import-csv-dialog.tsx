@@ -11,18 +11,27 @@ import { Download, Upload, Loader2, FileText, AlertCircle, BookOpen, CheckCircle
 import Papa from "papaparse"
 import { apiClient, ShowCreate } from "@/lib/api-client"
 
+// Map lowercased CSV show_type to canonical values
+const SHOW_TYPE_MAP: Record<string, "Original" | "Branded" | "Partner"> = {
+  original: "Original",
+  branded: "Branded",
+  partner: "Partner",
+};
+
+
 interface ImportCSVDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   onImportComplete: (result: { success: boolean, message: string, errors?: string[] }) => void
 }
 
+// These are the headers for the CSV file template - matching your exact database schema
 const CSV_HEADERS = [
-  "title", "show_type", "format", "relationship", "start_date", "minimum_guarantee",
-  "ownership_percentage", "genre_name", "shows_per_year", "primary_contact_show",
-  "age_demographic", "subnetwork_id", "is_tentpole", "is_original", "latest_cpm",
-  "revenue_2023", "revenue_2024", "revenue_2025", "ad_slots", "average_length_mins",
-  "gender", "region", "is_active", "is_undersized", "primary_contact_host",
+  "title", "show_type", "media_type", "relationship_level", "start_date", "minimum_guarantee",
+  "evergreen_ownership_pct", "genre_name", "shows_per_year", "show_primary_contact",
+  "age_demographic", "subnetwork_id", "tentpole", "is_original", "latest_cpm_usd",
+  "revenue_2023", "revenue_2024", "revenue_2025", "ad_slots", "avg_show_length_mins",
+  "gender", "region", "is_active", "is_undersized", "show_host_contact",
   "evergreen_production_staff_name", "side_bonus_percent", "youtube_ads_percent",
   "subscriptions_percent", "standard_ads_percent", "sponsorship_ad_fp_lead_percent",
   "sponsorship_ad_partner_lead_percent", "sponsorship_ad_partner_sold_percent",
@@ -31,7 +40,7 @@ const CSV_HEADERS = [
   "youtube_hands_off_percent", "subscription_hands_off_percent", "has_sponsorship_revenue",
   "has_non_evergreen_revenue", "requires_partner_access", "has_branded_revenue",
   "has_marketing_revenue", "has_web_mgmt_revenue", "primary_education",
-  "secondary_education", "qbo_show_name"
+  "secondary_education", "qbo_show_name", "qbo_show_id"
 ];
 
 export default function ImportCSVDialog({ open, onOpenChange, onImportComplete }: ImportCSVDialogProps) {
@@ -91,7 +100,6 @@ export default function ImportCSVDialog({ open, onOpenChange, onImportComplete }
   
   const handleDownloadGuide = () => {
     const link = document.createElement('a');
-    // This assumes the PDF is in your /public directory
     link.href = '/CSV Import Template Guide.pdf';
     link.setAttribute('download', 'CSV Import Template Guide.pdf');
     document.body.appendChild(link);
@@ -136,21 +144,39 @@ export default function ImportCSVDialog({ open, onOpenChange, onImportComplete }
                 validationErrors.push(`Row ${rowNum}: Invalid date format for 'start_date'. Expected YYYY-MM-DD.`);
             }
 
-            const enums = {
-                show_type: ["Original", "Branded", "Partner"],
-                format: ["Audio", "Video", "Both"],
-                relationship: ["Strong", "Medium", "Weak"],
-            };
+            // Case-insensitive enum validation
+            const mediaVal = (row.media_type ?? row.mediaType) !== undefined
+            ? String(row.media_type ?? row.mediaType).trim().toLowerCase()
+            : undefined;
 
-            for (const [key, values] of Object.entries(enums)) {
-                if (row[key] && !values.includes(row[key])) {
-                    validationErrors.push(`Row ${rowNum}: Invalid value for '${key}'. Must be one of: ${values.join(", ")}.`);
-                }
+            const relVal = (row.relationship_level ?? row.relationshipLevel) !== undefined
+            ? String(row.relationship_level ?? row.relationshipLevel).trim().toLowerCase()
+            : undefined;
+
+            const showTypeKey = (row.show_type ?? row.showType) !== undefined
+            ? String(row.show_type ?? row.showType).trim().toLowerCase()
+            : undefined;
+
+            if (row.media_type ?? row.mediaType) {
+            if (!["video", "audio", "both"].includes(mediaVal as string)) {
+              validationErrors.push(`Row ${rowNum}: Invalid value for 'media_type'. Must be one of: video, audio, both.`);
+            }
+            }
+            if (row.relationship_level ?? row.relationshipLevel) {
+            if (!["strong", "medium", "weak"].includes(relVal as string)) {
+              validationErrors.push(`Row ${rowNum}: Invalid value for 'relationship_level'. Must be one of: strong, medium, weak.`);
+            }
+            }
+            if (row.show_type ?? row.showType) {
+            if (!showTypeKey || !["original", "branded", "partner"].includes(showTypeKey)) {
+              validationErrors.push(`Row ${rowNum}: Invalid value for 'show_type'. Must be one of: Original, Branded, Partner.`);
+            }
             }
 
+
             const numericFields = [
-                "minimum_guarantee", "ownership_percentage", "latest_cpm", "revenue_2023", "revenue_2024", "revenue_2025",
-                "shows_per_year", "ad_slots", "average_length_mins", "side_bonus_percent", "youtube_ads_percent",
+                "minimum_guarantee", "evergreen_ownership_pct", "latest_cpm_usd", "revenue_2023", "revenue_2024", "revenue_2025",
+                "shows_per_year", "ad_slots", "avg_show_length_mins", "side_bonus_percent", "youtube_ads_percent",
                 "subscriptions_percent", "standard_ads_percent", "sponsorship_ad_fp_lead_percent",
                 "sponsorship_ad_partner_lead_percent", "sponsorship_ad_partner_sold_percent",
                 "programmatic_ads_span_percent", "merchandise_percent", "branded_revenue_percent",
@@ -162,7 +188,7 @@ export default function ImportCSVDialog({ open, onOpenChange, onImportComplete }
                 if (row[field] && isNaN(parseFloat(row[field]))) {
                     validationErrors.push(`Row ${rowNum}: Invalid number for '${field}'.`);
                 }
-                if (field.includes('_percent') || field === 'ownership_percentage') {
+                if (field.includes('_percent') || field === 'evergreen_ownership_pct') {
                     const val = parseFloat(row[field]);
                     if (!isNaN(val) && (val < 0 || val > 100)) {
                         validationErrors.push(`Row ${rowNum}: Value for '${field}' must be between 0 and 100.`);
@@ -172,56 +198,60 @@ export default function ImportCSVDialog({ open, onOpenChange, onImportComplete }
 
             if (validationErrors.length > 0) continue;
 
+            // Create ShowCreate object using snake_case field names that match database columns exactly
             const show: ShowCreate = {
                 title: row.title,
-                show_type: (row.show_type as "Branded" | "Original" | "Partner") || null,
-                media_type: row.format ? row.format.toLowerCase() : null,
-                relationship_level: row.relationship ? row.relationship.toLowerCase() : null,
-                start_date: row.start_date || null,
-                minimum_guarantee: row.minimum_guarantee ? parseFloat(row.minimum_guarantee) : null,
-                evergreen_ownership_pct: row.ownership_percentage ? parseFloat(row.ownership_percentage) : null,
-                genre_name: row.genre_name || null,
-                shows_per_year: row.shows_per_year ? parseInt(row.shows_per_year) : null,
-                show_primary_contact: row.primary_contact_show || null,
-                ageDemographic: row.age_demographic || null,
-                subnetwork_id: row.subnetwork_id || null,
-                tentpole: row.is_tentpole?.toLowerCase() === 'yes',
-                is_original: row.is_original?.toLowerCase() === 'yes',
-                latest_cpm_usd: row.latest_cpm ? parseFloat(row.latest_cpm) : null,
-                revenue_2023: row.revenue_2023 ? parseFloat(row.revenue_2023) : null,
-                revenue_2024: row.revenue_2024 ? parseFloat(row.revenue_2024) : null,
-                revenue_2025: row.revenue_2025 ? parseFloat(row.revenue_2025) : null,
-                ad_slots: row.ad_slots ? parseInt(row.ad_slots) : null,
-                avg_show_length_mins: row.average_length_mins ? parseInt(row.average_length_mins) : null,
-                gender: row.gender || null,
-                region: row.region || null,
-                isActive: row.is_active ? row.is_active.toLowerCase() !== 'no' : true,
-                isUndersized: row.is_undersized?.toLowerCase() === 'yes',
-                show_host_contact: row.primary_contact_host || null,
-                evergreen_production_staff_name: row.evergreen_production_staff_name || null,
-                side_bonus_percent: row.side_bonus_percent ? parseFloat(row.side_bonus_percent) : null,
-                youtube_ads_percent: row.youtube_ads_percent ? parseFloat(row.youtube_ads_percent) : null,
-                subscriptions_percent: row.subscriptions_percent ? parseFloat(row.subscriptions_percent) : null,
-                standard_ads_percent: row.standard_ads_percent ? parseFloat(row.standard_ads_percent) : null,
-                sponsorship_ad_fp_lead_percent: row.sponsorship_ad_fp_lead_percent ? parseFloat(row.sponsorship_ad_fp_lead_percent) : null,
-                sponsorship_ad_partner_lead_percent: row.sponsorship_ad_partner_lead_percent ? parseFloat(row.sponsorship_ad_partner_lead_percent) : null,
-                sponsorship_ad_partner_sold_percent: row.sponsorship_ad_partner_sold_percent ? parseFloat(row.sponsorship_ad_partner_sold_percent) : null,
-                programmatic_ads_span_percent: row.programmatic_ads_span_percent ? parseFloat(row.programmatic_ads_span_percent) : null,
-                merchandise_percent: row.merchandise_percent ? parseFloat(row.merchandise_percent) : null,
-                branded_revenue_percent: row.branded_revenue_percent ? parseFloat(row.branded_revenue_percent) : null,
-                marketing_services_revenue_percent: row.marketing_services_revenue_percent ? parseFloat(row.marketing_services_revenue_percent) : null,
-                direct_customer_hands_off_percent: row.direct_customer_hands_off_percent ? parseFloat(row.direct_customer_hands_off_percent) : null,
-                youtube_hands_off_percent: row.youtube_hands_off_percent ? parseFloat(row.youtube_hands_off_percent) : null,
-                subscription_hands_off_percent: row.subscription_hands_off_percent ? parseFloat(row.subscription_hands_off_percent) : null,
-                has_sponsorship_revenue: row.has_sponsorship_revenue?.toLowerCase() === 'yes',
-                has_non_evergreen_revenue: row.has_non_evergreen_revenue?.toLowerCase() === 'yes',
-                requires_partner_access: row.requires_partner_access?.toLowerCase() === 'yes',
-                has_branded_revenue: row.has_branded_revenue?.toLowerCase() === 'yes',
-                has_marketing_revenue: row.has_marketing_revenue?.toLowerCase() === 'yes',
-                has_web_mgmt_revenue: row.has_web_mgmt_revenue?.toLowerCase() === 'yes',
-                primary_education: row.primary_education || null,
-                secondary_education: row.secondary_education || null,
-                show_name_in_qbo: row.qbo_show_name || null,
+                // show_type: row.show_type || undefined,
+                // media_type: row.media_type || undefined,
+                // relationship_level: row.relationship_level || undefined,
+                show_type: showTypeKey ? SHOW_TYPE_MAP[showTypeKey] : undefined,
+                media_type: mediaVal ? (mediaVal as "video" | "audio" | "both") : undefined,
+                relationship_level: relVal ? (relVal as "strong" | "medium" | "weak") : undefined,            
+                start_date: row.start_date || undefined,
+                minimum_guarantee: row.minimum_guarantee ? parseFloat(row.minimum_guarantee) : undefined,
+                evergreen_ownership_pct: row.evergreen_ownership_pct ? parseFloat(row.evergreen_ownership_pct) : undefined,
+                genre_name: row.genre_name || undefined,
+                shows_per_year: row.shows_per_year ? parseInt(row.shows_per_year) : undefined,
+                show_primary_contact: row.show_primary_contact || undefined,
+                age_demographic: row.age_demographic || undefined,
+                subnetwork_id: row.subnetwork_id || undefined,
+                tentpole: row.tentpole?.toLowerCase() === 'yes' || row.tentpole?.toLowerCase() === 'true' || false,
+                is_original: row.is_original?.toLowerCase() === 'yes' || row.is_original?.toLowerCase() === 'true' || false,
+                latest_cpm_usd: row.latest_cpm_usd ? parseFloat(row.latest_cpm_usd) : undefined,
+                revenue_2023: row.revenue_2023 ? parseFloat(row.revenue_2023) : undefined,
+                revenue_2024: row.revenue_2024 ? parseFloat(row.revenue_2024) : undefined,
+                revenue_2025: row.revenue_2025 ? parseFloat(row.revenue_2025) : undefined,
+                ad_slots: row.ad_slots ? parseInt(row.ad_slots) : undefined,
+                avg_show_length_mins: row.avg_show_length_mins ? parseInt(row.avg_show_length_mins) : undefined,
+                gender: row.gender || undefined,
+                region: row.region || undefined,
+                is_active: row.isActive ? row.isActive.toLowerCase() !== 'no' && row.isActive.toLowerCase() !== 'false' : true,
+                is_undersized: row.isUndersized?.toLowerCase() === 'yes' || row.isUndersized?.toLowerCase() === 'true' || false,
+                show_host_contact: row.show_host_contact || undefined,
+                evergreen_production_staff_name: row.evergreen_production_staff_name || undefined,
+                side_bonus_percent: row.side_bonus_percent ? parseFloat(row.side_bonus_percent) : undefined,
+                youtube_ads_percent: row.youtube_ads_percent ? parseFloat(row.youtube_ads_percent) : undefined,
+                subscriptions_percent: row.subscriptions_percent ? parseFloat(row.subscriptions_percent) : undefined,
+                standard_ads_percent: row.standard_ads_percent ? parseFloat(row.standard_ads_percent) : undefined,
+                sponsorship_ad_fp_lead_percent: row.sponsorship_ad_fp_lead_percent ? parseFloat(row.sponsorship_ad_fp_lead_percent) : undefined,
+                sponsorship_ad_partner_lead_percent: row.sponsorship_ad_partner_lead_percent ? parseFloat(row.sponsorship_ad_partner_lead_percent) : undefined,
+                sponsorship_ad_partner_sold_percent: row.sponsorship_ad_partner_sold_percent ? parseFloat(row.sponsorship_ad_partner_sold_percent) : undefined,
+                programmatic_ads_span_percent: row.programmatic_ads_span_percent ? parseFloat(row.programmatic_ads_span_percent) : undefined,
+                merchandise_percent: row.merchandise_percent ? parseFloat(row.merchandise_percent) : undefined,
+                branded_revenue_percent: row.branded_revenue_percent ? parseFloat(row.branded_revenue_percent) : undefined,
+                marketing_services_revenue_percent: row.marketing_services_revenue_percent ? parseFloat(row.marketing_services_revenue_percent) : undefined,
+                direct_customer_hands_off_percent: row.direct_customer_hands_off_percent ? parseFloat(row.direct_customer_hands_off_percent) : undefined,
+                youtube_hands_off_percent: row.youtube_hands_off_percent ? parseFloat(row.youtube_hands_off_percent) : undefined,
+                subscription_hands_off_percent: row.subscription_hands_off_percent ? parseFloat(row.subscription_hands_off_percent) : undefined,
+                has_sponsorship_revenue: row.has_sponsorship_revenue?.toLowerCase() === 'yes' || row.has_sponsorship_revenue?.toLowerCase() === 'true' || false,
+                has_non_evergreen_revenue: row.has_non_evergreen_revenue?.toLowerCase() === 'yes' || row.has_non_evergreen_revenue?.toLowerCase() === 'true' || false,
+                requires_partner_access: row.requires_partner_access?.toLowerCase() === 'yes' || row.requires_partner_access?.toLowerCase() === 'true' || false,
+                has_branded_revenue: row.has_branded_revenue?.toLowerCase() === 'yes' || row.has_branded_revenue?.toLowerCase() === 'true' || false,
+                has_marketing_revenue: row.has_marketing_revenue?.toLowerCase() === 'yes' || row.has_marketing_revenue?.toLowerCase() === 'true' || false,
+                has_web_mgmt_revenue: row.has_web_mgmt_revenue?.toLowerCase() === 'yes' || row.has_web_mgmt_revenue?.toLowerCase() === 'true' || false,
+                primary_education: row.primary_education || undefined,
+                secondary_education: row.secondary_education || undefined,
+                qbo_show_name: row.qbo_show_name || undefined,
             };
             showsToCreate.push(show);
         }
@@ -234,6 +264,7 @@ export default function ImportCSVDialog({ open, onOpenChange, onImportComplete }
         }
 
         try {
+            console.log("CSV Import sending data to API:", JSON.stringify(showsToCreate, null, 2))
             const response = await apiClient.bulkCreatePodcasts(showsToCreate);
             onImportComplete({ 
                 success: response.failed === 0, 
@@ -241,6 +272,7 @@ export default function ImportCSVDialog({ open, onOpenChange, onImportComplete }
                 errors: response.errors
             });
         } catch (err: any) {
+            console.error("CSV Import error:", err)
             const errorMessage = err.response?.data?.detail?.message || err.message || "An unknown error occurred during import.";
             const errorList = err.response?.data?.detail?.errors || [];
             onImportComplete({ success: false, message: errorMessage, errors: errorList });

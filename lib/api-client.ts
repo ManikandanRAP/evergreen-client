@@ -21,165 +21,165 @@ interface User {
 
 interface Show {
   id: string;
-  title: string | null;
-  minimum_guarantee: number | null;
-  annual_usd: Record<string, any> | null;
-  subnetwork_id: string | null;
-  media_type: "video" | "audio" | "both" | null;
+  title: string;
+  minimum_guarantee: number;
+  annual_usd: Record<string, any>;
+  subnetwork_id: string;
+  media_type: "video" | "audio" | "both";
   tentpole: boolean;
-  relationship_level: "strong" | "medium" | "weak" | null;
-  show_type: "Branded" | "Original" | "Partner" | null;
-  evergreen_ownership_pct: number | null;
-  has_sponsorship_revenue: boolean | null;
-  has_non_evergreen_revenue: boolean | null;
-  requires_partner_access: boolean | null;
-  has_branded_revenue: boolean | null;
-  has_marketing_revenue: boolean | null;
-  has_web_mgmt_revenue: boolean | null;
-  genre_name: string | null;
-  is_original: boolean | null;
-  shows_per_year: number | null;
-  latest_cpm_usd: number | null;
-  ad_slots: number | null;
-  avg_show_length_mins: number | null;
-  start_date: string | null;
-  show_name_in_qbo: string | null;
-  side_bonus_percent: number | null;
-  youtube_ads_percent: number | null;
-  subscriptions_percent: number | null;
-  standard_ads_percent: number | null;
-  sponsorship_ad_fp_lead_percent: number | null;
-  sponsorship_ad_partner_lead_percent: number | null;
-  sponsorship_ad_partner_sold_percent: number | null;
-  programmatic_ads_span_percent: number | null;
-  merchandise_percent: number | null;
-  branded_revenue_percent: number | null;
-  marketing_services_revenue_percent: number | null;
-  direct_customer_hands_off_percent: number | null;
-  youtube_hands_off_percent: number | null;
-  subscription_hands_off_percent: number | null;
-  revenue_2023: number | null;
-  revenue_2024: number | null;
-  revenue_2025: number | null;
-  show_host_contact: string | null;
-  show_primary_contact: string | null;
-  ageDemographic: "18-24" | "25-34" | "35-44" | "45-54" | "55+" | "" | null;
-  region: string | null;
-  isUndersized: boolean | null;
-  gender: string | null;
-  isActive: boolean | null;
-  primary_education: string | null;
-  secondary_education: string | null;
-  evergreen_production_staff_name: string | null;
-  evergreen_production_staff_primary_contact: string | null;
+  relationship_level: "strong" | "medium" | "weak";
+  show_type: "Branded" | "Original" | "Partner";
+  evergreen_ownership_pct: number;
+  has_sponsorship_revenue: boolean;
+  has_non_evergreen_revenue: boolean;
+  requires_partner_access: boolean;
+  has_branded_revenue: boolean;
+  has_marketing_revenue: boolean;
+  has_web_mgmt_revenue: boolean;
+  genre_name: string;
+  is_original: boolean;
+  shows_per_year: number;
+  latest_cpm_usd: number;
+  ad_slots: number;
+  avg_show_length_mins: number;
+  start_date: string;
+  qbo_show_name: string;
+  side_bonus_percent: number;
+  youtube_ads_percent: number;
+  subscriptions_percent: number;
+  standard_ads_percent: number;
+  sponsorship_ad_fp_lead_percent: number;
+  sponsorship_ad_partner_lead_percent: number;
+  sponsorship_ad_partner_sold_percent: number;
+  programmatic_ads_span_percent: number;
+  merchandise_percent: number;
+  branded_revenue_percent: number;
+  marketing_services_revenue_percent: number;
+  direct_customer_hands_off_percent: number;
+  youtube_hands_off_percent: number;
+  subscription_hands_off_percent: number;
+  revenue_2023: number;
+  revenue_2024: number;
+  revenue_2025: number;
+  show_host_contact: string;
+  show_primary_contact: string;
+  age_demographic: "18-24" | "25-34" | "35-44" | "45-54" | "55+";
+  region: string;
+  is_undersized: boolean;  // camelCase to match your database
+  gender: string;
+  is_active: boolean;      // camelCase to match your database
+  primary_education: string;
+  secondary_education: string;
+  evergreen_production_staff_name: string;
+  qbo_show_id: string;
 }
 
 interface ShowCreate {
   title: string;
-  minimum_guarantee?: number | null;
-  annual_usd?: Record<string, any> | null;
-  subnetwork_id?: string | null;
-  media_type?: "video" | "audio" | "both" | null;
+  minimum_guarantee?: number;
+  annual_usd?: Record<string, any>;
+  subnetwork_id?: string;
+  media_type?: "video" | "audio" | "both";
   tentpole?: boolean;
-  relationship_level?: "strong" | "medium" | "weak" | null;
-  show_type?: "Branded" | "Original" | "Partner" | null;
-  evergreen_ownership_pct?: number | null;
-  has_sponsorship_revenue?: boolean | null;
-  has_non_evergreen_revenue?: boolean | null;
-  requires_partner_access?: boolean | null;
-  has_branded_revenue?: boolean | null;
-  has_marketing_revenue?: boolean | null;
-  has_web_mgmt_revenue?: boolean | null;
-  genre_name?: string | null;
+  relationship_level?: "strong" | "medium" | "weak";
+  show_type?: "Branded" | "Original" | "Partner";
+  evergreen_ownership_pct?: number;
+  has_sponsorship_revenue?: boolean;
+  has_non_evergreen_revenue?: boolean;
+  requires_partner_access?: boolean;
+  has_branded_revenue?: boolean;
+  has_marketing_revenue?: boolean;
+  has_web_mgmt_revenue?: boolean;
+  genre_name?: string;
   is_original?: boolean;
-  shows_per_year?: number | null;
-  latest_cpm_usd?: number | null;
-  ad_slots?: number | null;
-  avg_show_length_mins?: number | null;
-  start_date?: string | null;
-  show_name_in_qbo?: string | null;
-  side_bonus_percent?: number | null;
-  youtube_ads_percent?: number | null;
-  subscriptions_percent?: number | null;
-  standard_ads_percent?: number | null;
-  sponsorship_ad_fp_lead_percent?: number | null;
-  sponsorship_ad_partner_lead_percent?: number | null;
-  sponsorship_ad_partner_sold_percent?: number | null;
-  programmatic_ads_span_percent?: number | null;
-  merchandise_percent?: number | null;
-  branded_revenue_percent?: number | null;
-  marketing_services_revenue_percent?: number | null;
-  direct_customer_hands_off_percent?: number | null;
-  youtube_hands_off_percent?: number | null;
-  subscription_hands_off_percent?: number | null;
-  revenue_2023?: number | null;
-  revenue_2024?: number | null;
-  revenue_2025?: number | null;
-  evergreen_production_staff_name?: string | null;
-  show_host_contact?: string | null;
-  show_primary_contact?: string | null;
-  ageDemographic?: string | null;
-  isUndersized: boolean | null;
-  isActive: boolean | null;
-  primary_education?: string | null;
-  secondary_education?: string | null;
-  evergreen_production_staff_primary_contact?: string | null;
-  region?: string | null;
-  gender?: string | null;
+  shows_per_year?: number;
+  latest_cpm_usd?: number;
+  ad_slots?: number;
+  avg_show_length_mins?: number;
+  start_date?: string;
+  qbo_show_name?: string;
+  side_bonus_percent?: number;
+  youtube_ads_percent?: number;
+  subscriptions_percent?: number;
+  standard_ads_percent?: number;
+  sponsorship_ad_fp_lead_percent?: number;
+  sponsorship_ad_partner_lead_percent?: number;
+  sponsorship_ad_partner_sold_percent?: number;
+  programmatic_ads_span_percent?: number;
+  merchandise_percent?: number;
+  branded_revenue_percent?: number;
+  marketing_services_revenue_percent?: number;
+  direct_customer_hands_off_percent?: number;
+  youtube_hands_off_percent?: number;
+  subscription_hands_off_percent?: number;
+  revenue_2023?: number;
+  revenue_2024?: number;
+  revenue_2025?: number;
+  evergreen_production_staff_name?: string;
+  show_host_contact?: string;
+  show_primary_contact?: string;
+  age_range?: string;
+  isUndersized?: boolean;  // camelCase to match your database
+  isActive?: boolean;      // camelCase to match your database
+  primary_education?: string;
+  secondary_education?: string;
+  region?: string;
+  gender?: string;
+  qbo_show_id?: string;
 }
 
 interface ShowUpdate {
   title: string;
-  minimum_guarantee?: number | null;
-  annual_usd?: Record<string, any> | null;
-  subnetwork_id?: string | null;
-  media_type?: "video" | "audio" | "both" | null;
+  minimum_guarantee?: number;
+  annual_usd?: Record<string, any>;
+  subnetwork_id?: string;
+  media_type?: "video" | "audio" | "both";
   tentpole?: boolean;
-  relationship_level?: "strong" | "medium" | "weak" | null;
-  show_type?: "Branded" | "Original" | "Partner" | null;
-  evergreen_ownership_pct?: number | null;
-  has_sponsorship_revenue?: boolean | null;
-  has_non_evergreen_revenue?: boolean | null;
-  requires_partner_access?: boolean | null;
-  has_branded_revenue?: boolean | null;
-  has_marketing_revenue?: boolean | null;
-  has_web_mgmt_revenue?: boolean | null;
-  genre_name?: string | null;
+  relationship_level?: "strong" | "medium" | "weak";
+  show_type?: "Branded" | "Original" | "Partner";
+  evergreen_ownership_pct?: number;
+  has_sponsorship_revenue?: boolean;
+  has_non_evergreen_revenue?: boolean;
+  requires_partner_access?: boolean;
+  has_branded_revenue?: boolean;
+  has_marketing_revenue?: boolean;
+  has_web_mgmt_revenue?: boolean;
+  genre_name?: string;
   is_original?: boolean;
-  shows_per_year?: number | null;
-  latest_cpm_usd?: number | null;
-  ad_slots?: number | null;
-  avg_show_length_mins?: number | null;
-  start_date?: string | null;
-  show_name_in_qbo?: string | null;
-  side_bonus_percent?: number | null;
-  youtube_ads_percent?: number | null;
-  subscriptions_percent?: number | null;
-  standard_ads_percent?: number | null;
-  sponsorship_ad_fp_lead_percent?: number | null;
-  sponsorship_ad_partner_lead_percent?: number | null;
-  sponsorship_ad_partner_sold_percent?: number | null;
-  programmatic_ads_span_percent?: number | null;
-  merchandise_percent?: number | null;
-  branded_revenue_percent?: number | null;
-  marketing_services_revenue_percent?: number | null;
-  direct_customer_hands_off_percent?: number | null;
-  youtube_hands_off_percent?: number | null;
-  subscription_hands_off_percent?: number | null;
-  revenue_2023?: number | null;
-  revenue_2024?: number | null;
-  revenue_2025?: number | null;
-  evergreen_production_staff_name?: string | null;
-  show_host_contact?: string | null;
-  show_primary_contact?: string | null;
-  ageDemographic?: string | null;
-  isUndersized: boolean | null;
-  isActive: boolean | null;
-  primary_education?: string | null;
-  secondary_education?: string | null;
-  gender?: string | null;
-  region?: string | null;
-  evergreen_production_staff_primary_contact?: string | null;
+  shows_per_year?: number;
+  latest_cpm_usd?: number;
+  ad_slots?: number;
+  avg_show_length_mins?: number;
+  start_date?: string;
+  qbo_show_name?: string;
+  side_bonus_percent?: number;
+  youtube_ads_percent?: number;
+  subscriptions_percent?: number;
+  standard_ads_percent?: number;
+  sponsorship_ad_fp_lead_percent?: number;
+  sponsorship_ad_partner_lead_percent?: number;
+  sponsorship_ad_partner_sold_percent?: number;
+  programmatic_ads_span_percent?: number;
+  merchandise_percent?: number;
+  branded_revenue_percent?: number;
+  marketing_services_revenue_percent?: number;
+  direct_customer_hands_off_percent?: number;
+  youtube_hands_off_percent?: number;
+  subscription_hands_off_percent?: number;
+  revenue_2023?: number;
+  revenue_2024?: number;
+  revenue_2025?: number;
+  evergreen_production_staff_name?: string;
+  show_host_contact?: string;
+  show_primary_contact?: string;
+  age_demographic?: string;
+  is_undersized?: boolean;  // camelCase to match your database
+  is_active?: boolean;      // camelCase to match your database
+  primary_education?: string;
+  secondary_education?: string;
+  gender?: string;
+  region?: string;
+  qbo_show_id?: string;
 }
 
 interface PartnerCreate {
@@ -310,6 +310,7 @@ class ApiClient {
 
   async createPodcast(data: ShowCreate): Promise<Show> {
     try {
+      console.log("API Client sending data to backend:", JSON.stringify(data, null, 2))
       const newShow = await this.request<Show>("/podcasts", {
         method: "POST",
         body: JSON.stringify(data),
@@ -317,6 +318,7 @@ class ApiClient {
       toast.success("Show created successfully!")
       return newShow
     } catch (error: any) {
+      console.error("API Client error:", error)
       toast.error(error.message || "Failed to create show.")
       throw error
     }
@@ -325,6 +327,7 @@ class ApiClient {
   // --- UPDATED BULK CREATE METHOD ---
   async bulkCreatePodcasts(data: ShowCreate[]): Promise<BulkImportResponse> {
     try {
+      console.log("Bulk import sending data to backend:", JSON.stringify(data, null, 2))
       const response = await this.request<BulkImportResponse>("/podcasts/bulk-import", {
         method: "POST",
         body: JSON.stringify(data),
@@ -341,6 +344,7 @@ class ApiClient {
       
       return response;
     } catch (error: any) {
+      console.error("Bulk import error:", error)
       // This will now only catch true network/server errors
       toast.error(error.message || "An unexpected error occurred during the import process.");
       throw error;

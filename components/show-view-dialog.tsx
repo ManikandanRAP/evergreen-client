@@ -195,8 +195,8 @@ export default function ShowViewDialog({
   const statusFlags = [
     { label: "Tentpole", value: show.isTentpole },
     { label: "Original", value: show.isOriginal },
-    { label: "Active", value: show.isActive },
-    { label: "Undersized", value: show.isUndersized },
+    { label: "Active", value: show.is_active },
+    { label: "Undersized", value: show.is_undersized },
   ]
 
   const contractSplits = [
@@ -444,7 +444,7 @@ export default function ShowViewDialog({
                 </CardHeader>
                 <CardContent>
                   <div className="grid grid-cols-3 gap-4">
-                    <DetailItem label="Age" value={show.ageDemographic} />
+                    <DetailItem label="Age" value={show.age_demographic} />
                     <DetailItem label="Gender" value={show.gender} />
                     <DetailItem label="Region" value={show.region} />
                     <DetailItem label="Primary Education" value={show.primary_education} />
