@@ -118,9 +118,9 @@ interface ShowCreate {
   evergreen_production_staff_name?: string;
   show_host_contact?: string;
   show_primary_contact?: string;
-  age_range?: string;
-  isUndersized?: boolean;  // camelCase to match your database
-  isActive?: boolean;      // camelCase to match your database
+  age_demographic?: string;
+  is_undersized?: boolean;  // camelCase to match your database
+  is_active?: boolean;      // camelCase to match your database
   primary_education?: string;
   secondary_education?: string;
   region?: string;
