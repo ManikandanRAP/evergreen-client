@@ -61,7 +61,7 @@ interface ShowFilters {
   genre_name: string
   hasSponsorshipRevenue: string
   hasNonEvergreenRevenue: string
-  requiresPartnerLedgerAccess: string
+  rNRyjPaHonNcMjt7fM1UGG8gfxaD8AtZ6L: string
   isOriginal: string
   is_active: string
   age_demographic: string
@@ -91,7 +91,7 @@ const initialFilters: ShowFilters = {
   genre_name: "",
   hasSponsorshipRevenue: "",
   hasNonEvergreenRevenue: "",
-  requiresPartnerLedgerAccess: "",
+  rNRyjPaHonNcMjt7fM1UGG8gfxaD8AtZ6L: "",
   isOriginal: "",
   is_active: "",
   age_demographic: "",
@@ -257,7 +257,7 @@ export default function ShowsManagement() {
       show.latestCPM,
       show.hasSponsorshipRevenue ? "Yes" : "No",
       show.hasNonEvergreenRevenue ? "Yes" : "No",
-      show.requiresPartnerLedgerAccess ? "Yes" : "No",
+      show.rNRyjPaHonNcMjt7fM1UGG8gfxaD8AtZ6L ? "Yes" : "No",
       show.adSlots,
       show.averageLength,
       show.primaryContactHost,
@@ -366,7 +366,7 @@ export default function ShowsManagement() {
         "is_undersized",
         "hasSponsorshipRevenue",
         "hasNonEvergreenRevenue",
-        "requiresPartnerLedgerAccess",
+        "rNRyjPaHonNcMjt7fM1UGG8gfxaD8AtZ6L",
         "hasBrandedRevenue",
         "hasMarketingRevenue",
         "hasWebManagementRevenue",
@@ -412,6 +412,49 @@ export default function ShowsManagement() {
       return true
     })
   }, [shows, filters])
+
+  // --- Pagination ---
+  const PAGE_SIZE = 20
+  const [page, setPage] = useState(1)
+
+  const totalPages = useMemo(
+    () => Math.max(1, Math.ceil(filteredShows.length / PAGE_SIZE)),
+    [filteredShows.length]
+  )
+
+  useEffect(() => {
+    if (page > totalPages) setPage(1)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [totalPages])
+
+  const paginatedShows = useMemo(() => {
+    const start = (page - 1) * PAGE_SIZE
+    return filteredShows.slice(start, start + PAGE_SIZE)
+  }, [filteredShows, page])
+
+  const pageRangeStart = filteredShows.length === 0 ? 0 : (page - 1) * PAGE_SIZE + 1
+  const pageRangeEnd = Math.min(page * PAGE_SIZE, filteredShows.length)
+
+  const gotoFirst = () => setPage(1)
+  const gotoPrev = () => setPage((p) => Math.max(1, p - 1))
+  const gotoNext = () => setPage((p) => Math.min(totalPages, p + 1))
+  const gotoLast = () => setPage(totalPages)
+  const [pageInput, setPageInput] = useState<string>("")
+  const handleGoToPage = () => {
+    const n = parseInt(pageInput, 10)
+    if (!Number.isNaN(n)) {
+      const clamped = Math.min(Math.max(1, n), totalPages)
+      setPage(clamped)
+    }
+  }
+
+
+  // Reset to page 1 whenever filters change
+  useEffect(() => {
+    setPage(1)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [JSON.stringify(filters)])
+
 
   const viewingShow = viewingShowIndex !== null ? filteredShows[viewingShowIndex] : null
 
@@ -1097,10 +1140,48 @@ export default function ShowsManagement() {
         </div>
       )}
 
+      {/* Pagination (Top) */}
+      {filteredShows.length > 0 && (
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-4 bg-muted/30 rounded-lg mt-2">
+          <div className="text-sm text-muted-foreground">
+            Showing <span className="font-medium">{pageRangeStart}</span>–<span className="font-medium">{pageRangeEnd}</span> of{" "}
+            <span className="font-medium">{filteredShows.length}</span>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" onClick={gotoFirst} disabled={page === 1} className="bg-transparent">First</Button>
+            <Button variant="outline" size="sm" onClick={gotoPrev} disabled={page === 1} className="bg-transparent">Prev</Button>
+            <span className="text-sm text-muted-foreground px-2">
+              Page <span className="font-medium">{page}</span> of <span className="font-medium">{totalPages}</span>
+            </span>
+            <Button variant="outline" size="sm" onClick={gotoNext} disabled={page === totalPages} className="bg-transparent">Next</Button>
+            <Button variant="outline" size="sm" onClick={gotoLast} disabled={page === totalPages} className="bg-transparent">Last</Button>
+
+            <div className="flex items-center gap-2 ml-2">
+              <Label htmlFor="goto-page-top" className="text-sm text-muted-foreground">Go to</Label>
+              <Input
+                id="goto-page-top"
+                type="number"
+                min={1}
+                max={totalPages}
+                value={pageInput}
+                onChange={(e) => setPageInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") handleGoToPage()
+                }}
+                className="h-8 w-20"
+              />
+              <Button variant="outline" size="sm" onClick={handleGoToPage} className="bg-transparent">Go</Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+
       {/* Shows Display */}
       {viewMode === "cards" ? (
         <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-6">
-          {filteredShows.map((show) => (
+          {paginatedShows.map((show) => (
             <Card
               key={show.id}
               className={`evergreen-card transition-all duration-200 group flex flex-col h-full ${
@@ -1257,7 +1338,7 @@ export default function ShowsManagement() {
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredShows.map((show) => (
+                  {paginatedShows.map((show) => (
                     <tr
                       key={show.id}
                       className={`border-b hover:bg-accent/50 transition-colors ${
@@ -1374,7 +1455,46 @@ export default function ShowsManagement() {
         </Card>
       )}
 
-      <CreateShowDialog
+      
+      
+      {/* Pagination */}
+      {filteredShows.length > 0 && (
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-4 bg-muted/30 rounded-lg">
+          <div className="text-sm text-muted-foreground">
+            Showing <span className="font-medium">{pageRangeStart}</span>–<span className="font-medium">{pageRangeEnd}</span> of{" "}
+            <span className="font-medium">{filteredShows.length}</span>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" onClick={gotoFirst} disabled={page === 1} className="bg-transparent">First</Button>
+            <Button variant="outline" size="sm" onClick={gotoPrev} disabled={page === 1} className="bg-transparent">Prev</Button>
+            <span className="text-sm text-muted-foreground px-2">
+              Page <span className="font-medium">{page}</span> of <span className="font-medium">{totalPages}</span>
+            </span>
+            <Button variant="outline" size="sm" onClick={gotoNext} disabled={page === totalPages} className="bg-transparent">Next</Button>
+            <Button variant="outline" size="sm" onClick={gotoLast} disabled={page === totalPages} className="bg-transparent">Last</Button>
+
+            <div className="flex items-center gap-2 ml-2">
+              <Label htmlFor="goto-page-bottom" className="text-sm text-muted-foreground">Go to</Label>
+              <Input
+                id="goto-page-bottom"
+                type="number"
+                min={1}
+                max={totalPages}
+                value={pageInput}
+                onChange={(e) => setPageInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") handleGoToPage()
+                }}
+                className="h-8 w-20"
+              />
+              <Button variant="outline" size="sm" onClick={handleGoToPage} className="bg-transparent">Go</Button>
+            </div>
+          </div>
+        </div>
+      )}
+)}
+<CreateShowDialog
         open={isCreateDialogOpen}
         onOpenChange={setIsCreateDialogOpen}
         editingShow={editingShow}
