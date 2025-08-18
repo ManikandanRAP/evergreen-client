@@ -12,7 +12,7 @@ export interface Show {
   
 
   // Basic Info
-  showType: string
+  show_type: string
   selectType: "Podcasts" | "Video Series" | "Live Show" | "Interview Series"
   subnetwork_id: string
   format: "Video" | "Audio" | "Both"
@@ -120,7 +120,7 @@ export function convertApiShowToLegacy(apiShow: ApiShow): Show {
     partnerUsers: [],
     revenueSplit: { evergreen: apiShow.evergreen_ownership_pct || 0, partner: 100 - (apiShow.evergreen_ownership_pct || 0) },
     start_date: apiShow.start_date || new Date().toISOString(),
-    showType: apiShow.show_type || "Original",
+    show_type: apiShow.show_type || "Original",
     selectType: "Podcasts",    
     format: formatMap[apiShow.media_type || "audio"] || "Audio",
     relationship: relationshipMap[apiShow.relationship_level || "medium"] || "Medium",
@@ -206,7 +206,7 @@ export function convertLegacyShowToApiCreate(legacyShow: Partial<Show>): any {
     media_type: formatMap[legacyShow.format || "Audio"] || "audio",
     tentpole: legacyShow.isTentpole || false,
     relationship_level: relationshipMap[legacyShow.relationship || "Medium"] || "medium",
-    show_type: showTypeMap[legacyShow.showType || "Original"] || "Original",
+    show_type: showTypeMap[legacyShow.show_type || "Original"] || "Original",
     evergreen_ownership_pct: legacyShow.ownershipPercentage || 0,
     has_sponsorship_revenue: legacyShow.hasSponsorshipRevenue || false,
     has_non_evergreen_revenue: legacyShow.hasNonEvergreenRevenue || false,

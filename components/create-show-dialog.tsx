@@ -33,7 +33,7 @@ type EducationLevel = (typeof educationLevels)[number] | ""
 export interface ShowFormData {
   // Basic Info
   title: string
-  showType: "Branded" | "Original" | "Partner" | ""
+  show_type: "Branded" | "Original" | "Partner" | ""
   subnetwork_id: string
   format: "Video" | "Audio" | "Both" | ""
   relationship: "Strong" | "Medium" | "Weak" | ""
@@ -99,7 +99,7 @@ interface FormErrors {
 const initialFormData: ShowFormData = {
   // Basic Info
   title: "",
-  showType: "",
+  show_type: "",
   subnetwork_id: "",
   format: "",
   relationship: "",
@@ -207,10 +207,10 @@ export default function CreateShowDialog({
 
   useEffect(() => {
     if (editingShow) {
-      const showType = editingShow.showType || ""
+      const show_type = editingShow.show_type || ""
       setFormData({
         title: editingShow.name ?? "",
-        showType: showType as "" | "Branded" | "Original" | "Partner",
+        show_type: editingShow.show_type as "" | "Branded" | "Original" | "Partner",
         subnetwork_id: editingShow.subnetwork_id ?? "",
         format: editingShow.format ?? "",
         relationship: editingShow.relationship ?? "",
@@ -384,7 +384,7 @@ export default function CreateShowDialog({
       media_type: formData.format === "Video" ? "video" : formData.format === "Audio" ? "audio" : formData.format === "Both" ? "both" : undefined,
       tentpole: formData.isTentpole,
       relationship_level: formData.relationship === "Strong" ? "strong" : formData.relationship === "Medium" ? "medium" : formData.relationship === "Weak" ? "weak" : undefined,
-      show_type: formData.showType || undefined,
+      show_type: formData.show_ype || undefined,
       evergreen_ownership_pct: parseFloat(formData.ownershipPercentage || "0") || undefined,
       has_sponsorship_revenue: formData.hasSponsorshipRevenue,
       has_non_evergreen_revenue: formData.hasNonEvergreenRevenue,
@@ -539,13 +539,14 @@ export default function CreateShowDialog({
                           {getFieldError("title")}
                         </p>
                       )}
+                      
                     </div>
                     <div className="space-y-2">
                       <Label>Show Type</Label>
                       <Select
-                        value={formData.showType}
+                        value={formData.show_type}
                         onValueChange={(value: "Branded" | "Original" | "Partner" | "") =>
-                          handleInputChange("showType", value)
+                          handleInputChange("show_type", value)
                         }
                       >
                         <SelectTrigger>

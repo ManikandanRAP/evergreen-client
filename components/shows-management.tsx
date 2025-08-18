@@ -57,7 +57,7 @@ interface ShowFilters {
   format: string
   tentpole: string
   relationship: string
-  showType: string
+  show_type: string
   genre_name: string
   hasSponsorshipRevenue: string
   hasNonEvergreenRevenue: string
@@ -87,7 +87,7 @@ const initialFilters: ShowFilters = {
   format: "",
   tentpole: "",
   relationship: "",
-  showType: "",
+  show_type: "",
   genre_name: "",
   hasSponsorshipRevenue: "",
   hasNonEvergreenRevenue: "",
@@ -233,7 +233,7 @@ export default function ShowsManagement() {
 
     const csvData = showsToExport.map((show) => [
       show.name,
-      show.showType,
+      show.show_type,
       show.selectType,
       show.subnetwork_id,
       show.format,
@@ -292,7 +292,7 @@ export default function ShowsManagement() {
         const searchTerm = filters.search.toLowerCase()
         const searchableFields = [
           show.name,
-          show.showType,
+          show.show_type,
           show.selectType,
           show.subnetwork_id,
           show.genre_name,
@@ -332,9 +332,9 @@ export default function ShowsManagement() {
       )
         return false
       if (
-        filters.showType &&
-        filters.showType !== "all" &&
-        show.showType.toLowerCase() !== filters.showType
+        filters.show_type &&
+        filters.show_type !== "all" &&
+        show.show_type.toLowerCase() !== filters.show_type
       )
         return false
       if (
@@ -726,8 +726,8 @@ export default function ShowsManagement() {
                 <div className="space-y-2">
                   <Label>Show Type</Label>
                   <Select
-                    value={filters.showType}
-                    onValueChange={(value) => setFilters((prev) => ({ ...prev, showType: value }))}
+                    value={filters.show_type}
+                    onValueChange={(value) => setFilters((prev) => ({ ...prev, show_type: value }))}
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="All show types" />
@@ -1123,7 +1123,7 @@ export default function ShowsManagement() {
                   </div>
                   <div className="flex items-center gap-2 flex-wrap">
                     <Badge className="text-xs border bg-purple-100 text-purple-800 border-purple-300 dark:bg-purple-900/50 dark:text-purple-300 dark:border-purple-700 capitalize pointer-events-none">
-                      {show.showType}
+                      {show.show_type}
                     </Badge>
                     <Badge
                       className={`text-xs border pointer-events-none ${
@@ -1302,7 +1302,7 @@ export default function ShowsManagement() {
                           </Badge>
                         </div>
                       </td>
-                      <td className="p-2 capitalize">{show.showType}</td>
+                      <td className="p-2 capitalize">{show.show_type}</td>
                       <td className="p-2">{show.genre_name}</td>
                       <td className="p-2">{show.format}</td>
                       <td className="p-2">

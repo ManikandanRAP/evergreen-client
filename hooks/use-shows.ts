@@ -72,7 +72,7 @@ export function useShows() {
         media_type: showData.format === "Video" ? "video" : showData.format === "Audio" ? "audio" : showData.format === "Both" ? "both" : null,
         tentpole: showData.isTentpole || false,
         relationship_level: (showData.relationship?.toLowerCase() as "strong" | "medium" | "weak") || "medium",
-        show_type: (showData.showType as "Branded" | "Original" | "Partner") || "Original",
+        show_type: (showData.show_type as "Branded" | "Original" | "Partner") || "Original",
         evergreen_ownership_pct: showData.ownershipPercentage || 0,
         has_sponsorship_revenue: showData.hasSponsorshipRevenue || false,
         has_non_evergreen_revenue: showData.hasNonEvergreenRevenue || false,
