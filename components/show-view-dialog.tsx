@@ -292,7 +292,7 @@ export default function ShowViewDialog({
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="grid grid-cols-3 gap-x-6 gap-y-6">
-                  <DetailItem label="Show Type" value={show.showType} />
+                  <DetailItem label="Show Type" value={show.show_type} />
                   <DetailItem label="Format" value={show.format} />
                   <DetailItem label="Relationship" value={show.relationship} />
                   <DetailItem label="Subnetwork" value={show.subnetwork_id} />
