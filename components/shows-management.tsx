@@ -144,7 +144,6 @@ export default function ShowsManagement() {
   }
 
   const handleEditShow = (show: Show) => {
-    console.log("Editing show:", show)
     setEditingShow(show)
     setIsCreateDialogOpen(true)
   }
@@ -287,7 +286,6 @@ export default function ShowsManagement() {
 
   const filteredShows = useMemo(() => {
     return shows.filter((show) => {
-      // Enhanced multi-field search
       if (filters.search) {
         const searchTerm = filters.search.toLowerCase()
         const searchableFields = [
@@ -313,11 +311,9 @@ export default function ShowsManagement() {
         const matchesSearch = searchableFields.some(
           (field) => field && field.toString().toLowerCase().includes(searchTerm),
         )
-
         if (!matchesSearch) return false
       }
 
-      // --- Text & Dropdown Filters ---
       if (
         filters.subnetwork &&
         filters.subnetwork !== "all" &&
@@ -358,7 +354,6 @@ export default function ShowsManagement() {
       if (filters.region && filters.region !== "all" && show.region !== filters.region)
         return false
 
-      // --- Boolean (Yes/No) Filters ---
       const booleanFilters: (keyof ShowFilters)[] = [
         "tentpole",
         "isOriginal",
@@ -384,7 +379,6 @@ export default function ShowsManagement() {
         }
       }
 
-      // --- Numeric Filters ---
       const numericFilters: { filterKey: keyof ShowFilters; showKey: keyof Show }[] = [
         { filterKey: "minimumGuarantee", showKey: "minimumGuarantee" },
         { filterKey: "showsPerYear", showKey: "showsPerYear" },
@@ -403,7 +397,6 @@ export default function ShowsManagement() {
         }
       }
 
-      // --- Ownership Percentage Filter ---
       if (filters.ownershipPercentage && filters.ownershipPercentage !== "all") {
         const ownership = Number.parseInt(filters.ownershipPercentage)
         if (show.ownershipPercentage !== ownership) return false
@@ -416,6 +409,8 @@ export default function ShowsManagement() {
   // --- Pagination ---
   const PAGE_SIZE = 20
   const [page, setPage] = useState(1)
+  const [gotoInput, setGotoInput] = useState<string>("")
+  const [gotoInputBottom, setGotoInputBottom] = useState<string>("")
 
   const totalPages = useMemo(
     () => Math.max(1, Math.ceil(filteredShows.length / PAGE_SIZE)),
@@ -424,8 +419,7 @@ export default function ShowsManagement() {
 
   useEffect(() => {
     if (page > totalPages) setPage(1)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [totalPages])
+  }, [totalPages, page])
 
   const paginatedShows = useMemo(() => {
     const start = (page - 1) * PAGE_SIZE
@@ -439,30 +433,34 @@ export default function ShowsManagement() {
   const gotoPrev = () => setPage((p) => Math.max(1, p - 1))
   const gotoNext = () => setPage((p) => Math.min(totalPages, p + 1))
   const gotoLast = () => setPage(totalPages)
-  const [pageInput, setPageInput] = useState<string>("")
-  const handleGoToPage = () => {
-    const n = parseInt(pageInput, 10)
-    if (!Number.isNaN(n)) {
+
+  const handleGoto = () => {
+    const n = parseInt(gotoInput, 10)
+    if (!isNaN(n)) {
       const clamped = Math.min(Math.max(1, n), totalPages)
       setPage(clamped)
     }
+    setGotoInput("")
   }
-
+  const handleGotoBottom = () => {
+    const n = parseInt(gotoInputBottom, 10)
+    if (!isNaN(n)) {
+      const clamped = Math.min(Math.max(1, n), totalPages)
+      setPage(clamped)
+    }
+    setGotoInputBottom("")
+  }
 
   // Reset to page 1 whenever filters change
   useEffect(() => {
     setPage(1)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [JSON.stringify(filters)])
-
 
   const viewingShow = viewingShowIndex !== null ? filteredShows[viewingShowIndex] : null
 
   const handleNavigate = (direction: "next" | "previous") => {
     if (viewingShowIndex === null) return
-
     const newIndex = direction === "next" ? viewingShowIndex + 1 : viewingShowIndex - 1
-
     if (newIndex >= 0 && newIndex < filteredShows.length) {
       setViewingShowIndex(newIndex)
     }
@@ -549,6 +547,7 @@ export default function ShowsManagement() {
 
   return (
     <div className="space-y-6">
+      {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold bg-gradient-to-r from-emerald-600 to-cyan-600 bg-clip-text text-transparent">
@@ -609,6 +608,7 @@ export default function ShowsManagement() {
         </div>
       </div>
 
+      {/* Import result */}
       {importResult && (
         <Alert variant={importResult.success ? "default" : "destructive"} className="relative">
           <div className="flex items-start gap-2">
@@ -684,7 +684,7 @@ export default function ShowsManagement() {
                   />
                 </div>
 
-                {/* --- Main Dropdowns --- */}
+                {/* Main Dropdowns */}
                 <div className="space-y-2">
                   <Label>Format</Label>
                   <Select
@@ -806,7 +806,7 @@ export default function ShowsManagement() {
                   </Select>
                 </div>
 
-                {/* --- Demographics --- */}
+                {/* Demographics */}
                 <div className="space-y-2">
                   <Label>Age Demographic</Label>
                   <Select
@@ -871,7 +871,7 @@ export default function ShowsManagement() {
                   </Select>
                 </div>
 
-                {/* --- Boolean Statuses --- */}
+                {/* Boolean Statuses */}
                 <div className="space-y-2">
                   <Label>Tentpole Show</Label>
                   <Select
@@ -944,7 +944,7 @@ export default function ShowsManagement() {
                   </Select>
                 </div>
 
-                {/* --- Revenue Flags --- */}
+                {/* Revenue Flags */}
                 <div className="space-y-2">
                   <Label>Has Branded Revenue</Label>
                   <Select
@@ -1021,7 +1021,7 @@ export default function ShowsManagement() {
                   </Select>
                 </div>
 
-                {/* --- Numeric Inputs --- */}
+                {/* Numeric Inputs */}
                 <div className="space-y-2">
                   <Label>Min. Guarantee ($)</Label>
                   <Input
@@ -1115,10 +1115,11 @@ export default function ShowsManagement() {
         </Collapsible>
       </Card>
 
-      {/* Selection Controls */}
+      {/* TOP TOOLBAR: Selection (left) + Pagination (right) */}
       {filteredShows.length > 0 && (
-        <div className="flex items-center justify-between p-4 bg-muted/30 rounded-lg">
-          <div className="flex items-center gap-4">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between p-4 bg-muted/30 rounded-lg">
+          {/* Left: selection controls */}
+          <div className="flex items-center gap-3">
             <Button
               variant="outline"
               size="sm"
@@ -1129,54 +1130,57 @@ export default function ShowsManagement() {
               {selectedShows.size === filteredShows.length ? "Deselect All" : "Select All"}
             </Button>
             <span className="text-sm text-muted-foreground">
-              {selectedShows.size} of {filteredShows.length} shows selected
+              {selectedShows.size} selected
             </span>
-          </div>
-          {selectedShows.size > 0 && (
-            <Button variant="outline" size="sm" onClick={() => setSelectedShows(new Set())}>
-              Clear Selection
-            </Button>
-          )}
-        </div>
-      )}
-
-      {/* Pagination (Top) */}
-      {filteredShows.length > 0 && (
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-4 bg-muted/30 rounded-lg mt-2">
-          <div className="text-sm text-muted-foreground">
-            Showing <span className="font-medium">{pageRangeStart}</span>–<span className="font-medium">{pageRangeEnd}</span> of{" "}
-            <span className="font-medium">{filteredShows.length}</span>
+            {selectedShows.size > 0 && (
+              <Button variant="outline" size="sm" onClick={() => setSelectedShows(new Set())}>
+                Clear Selection
+              </Button>
+            )}
           </div>
 
-          <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" onClick={gotoFirst} disabled={page === 1} className="bg-transparent">First</Button>
-            <Button variant="outline" size="sm" onClick={gotoPrev} disabled={page === 1} className="bg-transparent">Prev</Button>
-            <span className="text-sm text-muted-foreground px-2">
-              Page <span className="font-medium">{page}</span> of <span className="font-medium">{totalPages}</span>
-            </span>
-            <Button variant="outline" size="sm" onClick={gotoNext} disabled={page === totalPages} className="bg-transparent">Next</Button>
-            <Button variant="outline" size="sm" onClick={gotoLast} disabled={page === totalPages} className="bg-transparent">Last</Button>
-
-            <div className="flex items-center gap-2 ml-2">
-              <Label htmlFor="goto-page-top" className="text-sm text-muted-foreground">Go to</Label>
+          {/* Right: pagination controls */}
+          <div className="flex items-center gap-3">
+            <div className="text-sm text-muted-foreground hidden sm:block">
+              Showing <span className="font-medium">{pageRangeStart}</span>–<span className="font-medium">{pageRangeEnd}</span> of{" "}
+              <span className="font-medium">{filteredShows.length}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Button variant="outline" size="sm" onClick={gotoFirst} disabled={page === 1} className="bg-transparent">
+                First
+              </Button>
+              <Button variant="outline" size="sm" onClick={gotoPrev} disabled={page === 1} className="bg-transparent">
+                Prev
+              </Button>
+              <span className="text-sm text-muted-foreground px-1">
+                Page <span className="font-medium">{page}</span> of <span className="font-medium">{totalPages}</span>
+              </span>
+              <Button variant="outline" size="sm" onClick={gotoNext} disabled={page === totalPages} className="bg-transparent">
+                Next
+              </Button>
+              <Button variant="outline" size="sm" onClick={gotoLast} disabled={page === totalPages} className="bg-transparent">
+                Last
+              </Button>
+            </div>
+            {/* Go to page */}
+            <div className="flex items-center gap-2">
+              <Label htmlFor="goto" className="text-sm text-muted-foreground">Go to</Label>
               <Input
-                id="goto-page-top"
-                type="number"
-                min={1}
-                max={totalPages}
-                value={pageInput}
-                onChange={(e) => setPageInput(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") handleGoToPage()
-                }}
+                id="goto"
+                inputMode="numeric"
+                pattern="[0-9]*"
+                value={gotoInput}
+                onChange={(e) => setGotoInput(e.target.value)}
+                placeholder="Page #"
                 className="h-8 w-20"
               />
-              <Button variant="outline" size="sm" onClick={handleGoToPage} className="bg-transparent">Go</Button>
+              <Button variant="outline" size="sm" onClick={handleGoto} className="bg-transparent">
+                Go
+              </Button>
             </div>
           </div>
         </div>
       )}
-
 
       {/* Shows Display */}
       {viewMode === "cards" ? (
@@ -1455,46 +1459,75 @@ export default function ShowsManagement() {
         </Card>
       )}
 
-      
-      
-      {/* Pagination */}
+      {/* BOTTOM TOOLBAR: Selection (left) + Pagination (right) */}
       {filteredShows.length > 0 && (
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-4 bg-muted/30 rounded-lg">
-          <div className="text-sm text-muted-foreground">
-            Showing <span className="font-medium">{pageRangeStart}</span>–<span className="font-medium">{pageRangeEnd}</span> of{" "}
-            <span className="font-medium">{filteredShows.length}</span>
+          {/* Left: selection controls */}
+          <div className="flex items-center gap-3">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleSelectAll}
+              className="flex items-center gap-2 bg-transparent"
+            >
+              <Check className="h-4 w-4" />
+              {selectedShows.size === filteredShows.length ? "Deselect All" : "Select All"}
+            </Button>
+            <span className="text-sm text-muted-foreground">
+              {selectedShows.size} selected
+            </span>
+            {selectedShows.size > 0 && (
+              <Button variant="outline" size="sm" onClick={() => setSelectedShows(new Set())}>
+                Clear Selection
+              </Button>
+            )}
           </div>
 
-          <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" onClick={gotoFirst} disabled={page === 1} className="bg-transparent">First</Button>
-            <Button variant="outline" size="sm" onClick={gotoPrev} disabled={page === 1} className="bg-transparent">Prev</Button>
-            <span className="text-sm text-muted-foreground px-2">
-              Page <span className="font-medium">{page}</span> of <span className="font-medium">{totalPages}</span>
-            </span>
-            <Button variant="outline" size="sm" onClick={gotoNext} disabled={page === totalPages} className="bg-transparent">Next</Button>
-            <Button variant="outline" size="sm" onClick={gotoLast} disabled={page === totalPages} className="bg-transparent">Last</Button>
-
-            <div className="flex items-center gap-2 ml-2">
-              <Label htmlFor="goto-page-bottom" className="text-sm text-muted-foreground">Go to</Label>
+          {/* Right: pagination controls */}
+          <div className="flex items-center gap-3">
+            <div className="text-sm text-muted-foreground hidden sm:block">
+              Showing <span className="font-medium">{pageRangeStart}</span>–<span className="font-medium">{pageRangeEnd}</span> of{" "}
+              <span className="font-medium">{filteredShows.length}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Button variant="outline" size="sm" onClick={gotoFirst} disabled={page === 1} className="bg-transparent">
+                First
+              </Button>
+              <Button variant="outline" size="sm" onClick={gotoPrev} disabled={page === 1} className="bg-transparent">
+                Prev
+              </Button>
+              <span className="text-sm text-muted-foreground px-1">
+                Page <span className="font-medium">{page}</span> of <span className="font-medium">{totalPages}</span>
+              </span>
+              <Button variant="outline" size="sm" onClick={gotoNext} disabled={page === totalPages} className="bg-transparent">
+                Next
+              </Button>
+              <Button variant="outline" size="sm" onClick={gotoLast} disabled={page === totalPages} className="bg-transparent">
+                Last
+              </Button>
+            </div>
+            {/* Go to page */}
+            <div className="flex items-center gap-2">
+              <Label htmlFor="goto-bottom" className="text-sm text-muted-foreground">Go to</Label>
               <Input
-                id="goto-page-bottom"
-                type="number"
-                min={1}
-                max={totalPages}
-                value={pageInput}
-                onChange={(e) => setPageInput(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") handleGoToPage()
-                }}
+                id="goto-bottom"
+                inputMode="numeric"
+                pattern="[0-9]*"
+                value={gotoInputBottom}
+                onChange={(e) => setGotoInputBottom(e.target.value)}
+                placeholder="Page #"
                 className="h-8 w-20"
               />
-              <Button variant="outline" size="sm" onClick={handleGoToPage} className="bg-transparent">Go</Button>
+              <Button variant="outline" size="sm" onClick={handleGotoBottom} className="bg-transparent">
+                Go
+              </Button>
             </div>
           </div>
         </div>
       )}
 
-<CreateShowDialog
+      {/* Dialogs */}
+      <CreateShowDialog
         open={isCreateDialogOpen}
         onOpenChange={setIsCreateDialogOpen}
         editingShow={editingShow}
