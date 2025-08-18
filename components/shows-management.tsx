@@ -1493,7 +1493,7 @@ export default function ShowsManagement() {
           </div>
         </div>
       )}
-)}
+
 <CreateShowDialog
         open={isCreateDialogOpen}
         onOpenChange={setIsCreateDialogOpen}
