@@ -19,7 +19,8 @@ import {
   ChevronLeft,
   ChevronRight,
   ChevronsUpDown,
-  Check
+  Check,
+  RotateCcw, // <-- added
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
@@ -104,6 +105,13 @@ export default function RevenueLedger() {
   const [paymentsPage, setPaymentsPage] = useState<number>(1)
   const [revenuePageInput, setRevenuePageInput] = useState<string>("1")
   const [paymentsPageInput, setPaymentsPageInput] = useState<string>("1")
+
+  // --- NEW: clear all filters action (matches Shows page) ---
+  const handleClearFilters = () => {
+    setSelectedShow("all")
+    setDateFrom("")
+    setDateTo("")
+  }
 
   // Fetch (auth-gated)
   useEffect(() => {
@@ -410,6 +418,14 @@ export default function RevenueLedger() {
                   <Label>To Date</Label>
                   <Input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} />
                 </div>
+              </div>
+
+              {/* NEW: Clear All Filters button (same pattern as Shows page) */}
+              <div className="flex justify-end pt-4">
+                <Button variant="ghost" onClick={handleClearFilters}>
+                  <RotateCcw className="mr-2 h-4 w-4" />
+                  Clear All Filters
+                </Button>
               </div>
             </CardContent>
           </CollapsibleContent>
@@ -764,10 +780,14 @@ function ShowCombobox({
                     onChange(currentValue)
                     setOpen(false)
                   }}
-                  className="flex items-center gap-2"
                 >
-                  <Check className={cn("h-4 w-4", value === opt ? "opacity-100" : "opacity-0")} />
-                  <span>{labelFor(opt)}</span>
+                  <Check
+                    className={cn(
+                      "mr-2 h-4 w-4",
+                      value === opt ? "opacity-100" : "opacity-0"
+                    )}
+                  />
+                  {labelFor(opt)}
                 </CommandItem>
               ))}
             </CommandGroup>
@@ -778,51 +798,30 @@ function ShowCombobox({
   )
 }
 
-// utils
-function num(n: number | null | undefined) {
-  if (n == null || Number.isNaN(n as any)) return 0
-  return Number(n)
-}
-async function readErr(res: Response, fallback: string) {
-  try {
-    const j = await res.json()
-    if (j?.detail) return typeof j.detail === "string" ? j.detail : JSON.stringify(j.detail)
-    return JSON.stringify(j)
-  } catch {
-    try {
-      return await res.text()
-    } catch {
-      return fallback
-    }
-  }
+/** ---------- Small utils ---------- */
+function num(v: any): number {
+  if (typeof v === "number") return v
+  const n = Number(v)
+  return Number.isFinite(n) ? n : 0
 }
 
-/**
- * Robust date parser:
- * - Accepts null/undefined and returns Invalid Date (so comparisons fail gracefully)
- * - Supports "YYYY-MM-DD" and ISO datetimes "YYYY-MM-DDTHH:mm:ss(.sss)Z"
- * - Applies start/end-of-day when requested
- */
-function toDate(dateStr?: string | null, endOfDay = false) {
-  if (!dateStr || typeof dateStr !== "string") return new Date(NaN)
-
-  // If it's an ISO string, let Date parse it, then adjust to boundary if needed.
-  const isoTry = new Date(dateStr)
-  if (!isNaN(isoTry.getTime())) {
-    if (endOfDay) {
-      isoTry.setHours(23, 59, 59, 999)
-    } else {
-      isoTry.setHours(0, 0, 0, 0)
-    }
-    return isoTry
+function toDate(dateStr: string | null, endOfDay = false): Date {
+  if (!dateStr) return new Date("1900-01-01T00:00:00Z")
+  // Accept "YYYY-MM-DD" or anything parsable by Date
+  if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+    const [y, m, d] = dateStr.split("-").map((x) => parseInt(x, 10))
+    return endOfDay ? new Date(y, m - 1, d, 23, 59, 59, 999) : new Date(y, m - 1, d)
   }
+  const d = new Date(dateStr)
+  if (endOfDay) d.setHours(23, 59, 59, 999)
+  return d
+}
 
-  // Fallback for plain "YYYY-MM-DD" or odd cases
+async function readErr(res: Response, prefix = "Request failed") {
   try {
-    const base = dateStr.includes("T") ? dateStr.split("T")[0] : dateStr
-    const [y, m, d] = base.split("-").map((x) => parseInt(x, 10))
-    return new Date(y, (m ?? 1) - 1, d ?? 1, endOfDay ? 23 : 0, endOfDay ? 59 : 0, endOfDay ? 59 : 0, endOfDay ? 999 : 0)
+    const text = await res.text()
+    return `${prefix}: ${res.status} ${res.statusText}${text ? ` - ${text}` : ""}`
   } catch {
-    return new Date(NaN)
+    return `${prefix}: ${res.status} ${res.statusText}`
   }
 }
