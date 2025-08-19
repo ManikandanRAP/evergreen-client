@@ -377,15 +377,27 @@ export default function CreateShowDialog({
 
     setIsSubmitting(true)
 
+    const toFloatOrUndef = (s: string | null | undefined) => {
+      if (s === "" || s === undefined || s === null) return undefined
+      const n = parseFloat(s as string)
+      return Number.isFinite(n) ? n : undefined
+    }
+    const toIntOrUndef = (s: string | null | undefined) => {
+      if (s === "" || s === undefined || s === null) return undefined
+      const n = parseInt(s as string, 10)
+      return Number.isFinite(n) ? n : undefined
+    }
+
+
     // Convert form data to use exact field names that match your database schema
     const showData: Partial<ShowCreate | ShowUpdate> = {
       title: formData.title,
-      minimum_guarantee: parseFloat(formData.minimumGuarantee || "0") || undefined,
+      minimum_guarantee: toFloatOrUndef(formData.minimumGuarantee),
       media_type: formData.format === "Video" ? "video" : formData.format === "Audio" ? "audio" : formData.format === "Both" ? "both" : undefined,
       tentpole: formData.isTentpole,
       relationship_level: formData.relationship === "Strong" ? "strong" : formData.relationship === "Medium" ? "medium" : formData.relationship === "Weak" ? "weak" : undefined,
-      show_type: formData.show_ype || undefined,
-      evergreen_ownership_pct: parseFloat(formData.ownershipPercentage || "0") || undefined,
+      show_type: formData.show_type || undefined,
+      evergreen_ownership_pct: toFloatOrUndef(formData.ownershipPercentage),
       has_sponsorship_revenue: formData.hasSponsorshipRevenue,
       has_non_evergreen_revenue: formData.hasNonEvergreenRevenue,
       requires_partner_access: formData.requiresPartnerLedgerAccess,
@@ -394,28 +406,28 @@ export default function CreateShowDialog({
       has_web_mgmt_revenue: formData.hasWebManagementRevenue,
       genre_name: formData.genre_name || undefined,
       is_original: formData.isOriginal,
-      shows_per_year: parseInt(formData.showsPerYear || "0") || undefined,
-      latest_cpm_usd: parseFloat(formData.latestCPM || "0") || undefined,
-      ad_slots: parseInt(formData.adSlots || "0") || undefined,
-      avg_show_length_mins: parseInt(formData.averageLength || "0") || undefined,
+      shows_per_year: toIntOrUndef(formData.showsPerYear),
+      latest_cpm_usd: toFloatOrUndef(formData.latestCPM),
+      ad_slots: toIntOrUndef(formData.adSlots),
+      avg_show_length_mins: toIntOrUndef(formData.averageLength),
       start_date: formData.start_date || undefined,
-      side_bonus_percent: parseFloat(formData.sideBonusPercent || "0") || undefined,
-      youtube_ads_percent: parseFloat(formData.youtubeAdsPercent || "0") || undefined,
-      subscriptions_percent: parseFloat(formData.subscriptionsPercent || "0") || undefined,
-      standard_ads_percent: parseFloat(formData.standardAdsPercent || "0") || undefined,
-      sponsorship_ad_fp_lead_percent: parseFloat(formData.sponsorshipAdFpLeadPercent || "0") || undefined,
-      sponsorship_ad_partner_lead_percent: parseFloat(formData.sponsorshipAdPartnerLeadPercent || "0") || undefined,
-      sponsorship_ad_partner_sold_percent: parseFloat(formData.sponsorshipAdPartnerSoldPercent || "0") || undefined,
-      programmatic_ads_span_percent: parseFloat(formData.programmaticAdsSpanPercent || "0") || undefined,
-      merchandise_percent: parseFloat(formData.merchandisePercent || "0") || undefined,
-      branded_revenue_percent: parseFloat(formData.brandedRevenuePercent || "0") || undefined,
-      marketing_services_revenue_percent: parseFloat(formData.marketingServicesRevenuePercent || "0") || undefined,
-      direct_customer_hands_off_percent: parseFloat(formData.directCustomerHandsOffPercent || "0") || undefined,
-      youtube_hands_off_percent: parseFloat(formData.youtubeHandsOffPercent || "0") || undefined,
-      subscription_hands_off_percent: parseFloat(formData.subscriptionHandsOffPercent || "0") || undefined,
-      revenue_2023: parseFloat(formData.revenue2023 || "0") || undefined,
-      revenue_2024: parseFloat(formData.revenue2024 || "0") || undefined,
-      revenue_2025: parseFloat(formData.revenue2025 || "0") || undefined,
+      side_bonus_percent: toFloatOrUndef(formData.sideBonusPercent),
+      youtube_ads_percent: toFloatOrUndef(formData.youtubeAdsPercent),
+      subscriptions_percent: toFloatOrUndef(formData.subscriptionsPercent),
+      standard_ads_percent: toFloatOrUndef(formData.standardAdsPercent),
+      sponsorship_ad_fp_lead_percent: toFloatOrUndef(formData.sponsorshipAdFpLeadPercent),
+      sponsorship_ad_partner_lead_percent: toFloatOrUndef(formData.sponsorshipAdPartnerLeadPercent),
+      sponsorship_ad_partner_sold_percent: toFloatOrUndef(formData.sponsorshipAdPartnerSoldPercent),
+      programmatic_ads_span_percent: toFloatOrUndef(formData.programmaticAdsSpanPercent),
+      merchandise_percent: toFloatOrUndef(formData.merchandisePercent),
+      branded_revenue_percent: toFloatOrUndef(formData.brandedRevenuePercent),
+      marketing_services_revenue_percent: toFloatOrUndef(formData.marketingServicesRevenuePercent),
+      direct_customer_hands_off_percent: toFloatOrUndef(formData.directCustomerHandsOffPercent),
+      youtube_hands_off_percent: toFloatOrUndef(formData.youtubeHandsOffPercent),
+      subscription_hands_off_percent: toFloatOrUndef(formData.subscriptionHandsOffPercent),
+      revenue_2023: toFloatOrUndef(formData.revenue2023),
+      revenue_2024: toFloatOrUndef(formData.revenue2024),
+      revenue_2025: toFloatOrUndef(formData.revenue2025),
       evergreen_production_staff_name: formData.evergreenProductionStaffContact || undefined,
       show_host_contact: formData.primaryContactHost || undefined,
       show_primary_contact: formData.primaryContactShow || undefined,

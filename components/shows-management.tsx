@@ -61,7 +61,7 @@ interface ShowFilters {
   genre_name: string
   hasSponsorshipRevenue: string
   hasNonEvergreenRevenue: string
-  rNRyjPaHonNcMjt7fM1UGG8gfxaD8AtZ6L: string
+  requiresPartnerLedgerAccess: string
   isOriginal: string
   is_active: string
   age_demographic: string
@@ -91,7 +91,7 @@ const initialFilters: ShowFilters = {
   genre_name: "",
   hasSponsorshipRevenue: "",
   hasNonEvergreenRevenue: "",
-  rNRyjPaHonNcMjt7fM1UGG8gfxaD8AtZ6L: "",
+  requiresPartnerLedgerAccess: "",
   isOriginal: "",
   is_active: "",
   age_demographic: "",
@@ -256,7 +256,7 @@ export default function ShowsManagement() {
       show.latestCPM,
       show.hasSponsorshipRevenue ? "Yes" : "No",
       show.hasNonEvergreenRevenue ? "Yes" : "No",
-      show.rNRyjPaHonNcMjt7fM1UGG8gfxaD8AtZ6L ? "Yes" : "No",
+      show.requiresPartnerLedgerAccess ? "Yes" : "No",
       show.adSlots,
       show.averageLength,
       show.primaryContactHost,
@@ -361,7 +361,7 @@ export default function ShowsManagement() {
         "is_undersized",
         "hasSponsorshipRevenue",
         "hasNonEvergreenRevenue",
-        "rNRyjPaHonNcMjt7fM1UGG8gfxaD8AtZ6L",
+        "requiresPartnerLedgerAccess",
         "hasBrandedRevenue",
         "hasMarketingRevenue",
         "hasWebManagementRevenue",
