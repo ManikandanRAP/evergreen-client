@@ -140,9 +140,9 @@ export default function ImportCSVDialog({ open, onOpenChange, onImportComplete }
                 continue;
             }
             
-            if (row.start_date && !/^\d{4}-\d{2}-\d{2}$/.test(row.start_date)) {
-                validationErrors.push(`Row ${rowNum}: Invalid date format for 'start_date'. Expected YYYY-MM-DD.`);
-            }
+            // if (row.start_date && !/^\d{4}-\d{2}-\d{2}$/.test(row.start_date)) {
+            //     validationErrors.push(`Row ${rowNum}: Invalid date format for 'start_date'. Expected YYYY-MM-DD.`);
+            // }
 
             // Case-insensitive enum validation
             const mediaVal = (row.media_type ?? row.mediaType) !== undefined
