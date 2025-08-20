@@ -202,7 +202,7 @@ export default function VendorSplitManagement() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Vendor and Split Updates</CardTitle>
+        <CardTitle>View and Update Existing Vendor Split Percentage</CardTitle>
         <CardDescription>Select shows and vendors to view and update split configurations.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
