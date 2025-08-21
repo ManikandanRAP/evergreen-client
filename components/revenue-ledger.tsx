@@ -27,7 +27,6 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
 
-// Combobox (shadcn/ui)
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import {
   Command,
@@ -106,14 +105,12 @@ export default function RevenueLedger() {
   const [revenuePageInput, setRevenuePageInput] = useState<string>("1")
   const [paymentsPageInput, setPaymentsPageInput] = useState<string>("1")
 
-  // --- NEW: clear all filters action (matches Shows page) ---
   const handleClearFilters = () => {
     setSelectedShow("all")
     setDateFrom("")
     setDateTo("")
   }
 
-  // Fetch (auth-gated)
   useEffect(() => {
     if (loading) return
     if (!token) {
@@ -154,7 +151,6 @@ export default function RevenueLedger() {
     }
   }, [loading, token])
 
-  // Shows list from fetched data
   const availableShows = useMemo(() => {
     const set = new Set<string>()
     for (const r of ledger) if (r.invoice_classref_name) set.add(r.invoice_classref_name)
@@ -162,7 +158,6 @@ export default function RevenueLedger() {
     return Array.from(set).sort((a, b) => a.localeCompare(b))
   }, [ledger, payouts])
 
-  // Filters
   const filteredRevenueData = useMemo(() => {
     let filtered = ledger
     if (selectedShow !== "all") filtered = filtered.filter((i) => i.invoice_classref_name === selectedShow)
@@ -194,15 +189,9 @@ export default function RevenueLedger() {
     return filtered
   }, [payouts, selectedShow, dateFrom, dateTo])
 
-  // Reset pages when datasets change (filters)
-  useEffect(() => {
-    setRevenuePage(1)
-  }, [selectedShow, dateFrom, dateTo, ledger])
-  useEffect(() => {
-    setPaymentsPage(1)
-  }, [selectedShow, dateFrom, dateTo, payouts])
+  useEffect(() => setRevenuePage(1), [selectedShow, dateFrom, dateTo, ledger])
+  useEffect(() => setPaymentsPage(1), [selectedShow, dateFrom, dateTo, payouts])
 
-  // Sorting
   const sortData = <T extends Record<string, any>>(data: T[], cfg: SortConfig): T[] => {
     if (!cfg.direction || !cfg.key) return data
     return [...data].sort((a, b) => {
@@ -236,15 +225,9 @@ export default function RevenueLedger() {
   const sortedRevenueData = useMemo(() => sortData(filteredRevenueData, revenueSortConfig), [filteredRevenueData, revenueSortConfig])
   const sortedPartnerPayments = useMemo(() => sortData(filteredPartnerPayments, paymentsSortConfig), [filteredPartnerPayments, paymentsSortConfig])
 
-  // Reset page to 1 when sorting changes
-  useEffect(() => {
-    setRevenuePage(1)
-  }, [revenueSortConfig])
-  useEffect(() => {
-    setPaymentsPage(1)
-  }, [paymentsSortConfig])
+  useEffect(() => setRevenuePage(1), [revenueSortConfig])
+  useEffect(() => setPaymentsPage(1), [paymentsSortConfig])
 
-  // Pagination slices
   const revenueTotal = sortedRevenueData.length
   const revenueTotalPages = Math.max(1, Math.ceil(revenueTotal / PAGE_SIZE))
   const revenuePageSafe = Math.min(Math.max(1, revenuePage), revenueTotalPages)
@@ -261,11 +244,9 @@ export default function RevenueLedger() {
     return sortedPartnerPayments.slice(start, start + PAGE_SIZE)
   }, [sortedPartnerPayments, paymentsPageSafe])
 
-  // sync inputs
   useEffect(() => setRevenuePageInput(String(revenuePageSafe)), [revenuePageSafe])
   useEffect(() => setPaymentsPageInput(String(paymentsPageSafe)), [paymentsPageSafe])
 
-  // Summary
   const summaryData = useMemo(() => {
     const totalNetRevenue = filteredRevenueData.reduce((s, i) => s + num(i.payment_amount), 0)
     const totalPartnerCompensation = filteredRevenueData.reduce((s, i) => s + num(i.partner_compensation), 0)
@@ -280,7 +261,6 @@ export default function RevenueLedger() {
     return { totalNetRevenue, totalPartnerCompensation, totalPaymentsMade }
   }, [filteredRevenueData, filteredPartnerPayments])
 
-  // helpers
   const formatCurrency = (v: number | null | undefined) =>
     new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(num(v))
   const formatDate = (s: string | null) => (s ? toDate(s).toLocaleDateString() : "-")
@@ -304,7 +284,6 @@ export default function RevenueLedger() {
   const tryJumpRevenue = () => setRevenuePage(clamp(parseInt(revenuePageInput, 10), 1, revenueTotalPages))
   const tryJumpPayments = () => setPaymentsPage(clamp(parseInt(paymentsPageInput, 10), 1, paymentsTotalPages))
 
-  // Auth gating
   if (loading) {
     return (
       <div className="p-6 flex items-center gap-2 text-sm text-muted-foreground">
@@ -398,7 +377,6 @@ export default function RevenueLedger() {
           <CollapsibleContent>
             <CardContent className="pt-4">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {/* Show Combobox */}
                 <div className="space-y-2">
                   <Label>Show Name</Label>
                   <ShowCombobox
@@ -420,7 +398,6 @@ export default function RevenueLedger() {
                 </div>
               </div>
 
-              {/* NEW: Clear All Filters button (same pattern as Shows page) */}
               <div className="flex justify-end pt-4">
                 <Button variant="ghost" onClick={handleClearFilters}>
                   <RotateCcw className="mr-2 h-4 w-4" />
@@ -447,7 +424,6 @@ export default function RevenueLedger() {
             <CardTitle>Revenue</CardTitle>
             <CardDescription>Transactions between Evergreen and Ad Agencies</CardDescription>
           </div>
-          {/* TOP RIGHT: Pagination controls */}
           <PaginationControls
             page={revenuePageSafe}
             totalPages={revenueTotalPages}
@@ -462,19 +438,19 @@ export default function RevenueLedger() {
 
         <CardContent>
           <div className="border rounded-lg overflow-hidden">
-            <Table>
-              {/* Colgroup: sets the Description column width */}
+            {/* table-fixed + colgroup -> enforces widths */}
+            <Table className="table-fixed min-w-[1880px]">  {/* ensures no squeeze */}
               <colgroup>
-                <col /> {/* Show Name */}
-                <col /> {/* Customer */}
-                <col className="w-[28rem]" /> {/* Description */}
-                <col /> {/* Invoice Date */}
-                <col /> {/* Payment Amt */}
-                <col /> {/* Comp Type */}
-                <col /> {/* % Evergreen */}
-                <col /> {/* Evergreen Comp */}
-                <col /> {/* % Partner */}
-                <col /> {/* Partner Comp */}
+                <col className="w-[150px]" /> {/* Show Name */}
+                <col className="w-[150px]" /> {/* Customer */}
+                <col className="w-[250px]" /> {/* Description */}
+                <col className="w-[120px]" /> {/* Invoice Date */}
+                <col className="w-[120px]" /> {/* Payment Amt */}
+                <col className="w-[120px]" /> {/* Comp Type */}
+                <col className="w-[120px]" /> {/* % Evergreen */}
+                <col className="w-[140px]" /> {/* Evergreen Comp */}
+                <col className="w-[100px]" /> {/* % Partner */}
+                <col className="w-[120px]" /> {/* Partner Comp */}
               </colgroup>
 
               <TableHeader>
@@ -531,16 +507,19 @@ export default function RevenueLedger() {
                   </TableHead>
                 </TableRow>
               </TableHeader>
+
               <TableBody>
                 {revenueSlice.length > 0 ? (
                   revenueSlice.map((item) => (
                     <TableRow key={`${item.payment_id}-${item.invoice_doc_number}-${item.invoice_date}`}>
                       <TableCell className="font-medium border-r px-4 py-3">{item.invoice_classref_name}</TableCell>
                       <TableCell className="border-r px-4 py-3">{item.customer}</TableCell>
-                      {/* Description column: wrap text */}
+
+                      {/* Description: wrap long text */}
                       <TableCell className="border-r px-4 py-3 whitespace-normal break-words">
                         {item.invoice_description}
                       </TableCell>
+
                       <TableCell className="border-r px-4 py-3">{formatDate(item.invoice_date)}</TableCell>
                       <TableCell className="text-right font-mono border-r px-4 py-3">{formatCurrency(item.payment_amount)}</TableCell>
                       <TableCell className="border-r px-4 py-3">{item.invoice_itemrefname || "-"}</TableCell>
@@ -561,7 +540,6 @@ export default function RevenueLedger() {
             </Table>
           </div>
 
-          {/* Revenue Pagination (bottom) */}
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mt-3">
             <span className="text-xs text-muted-foreground">{rangeLabel(revenuePageSafe, revenueTotal)}</span>
             <PaginationControls
@@ -577,14 +555,13 @@ export default function RevenueLedger() {
         </CardContent>
       </Card>
 
-      {/* Partner Payments */}
+      {/* Partner Payments (unchanged layout) */}
       <Card className={cn(fetching ? "opacity-60" : "")}>
         <CardHeader className="flex-row items-start justify-between space-y-0">
           <div>
             <CardTitle>Partner Payments</CardTitle>
             <CardDescription>Transactions between Evergreen and Partners</CardDescription>
           </div>
-          {/* TOP RIGHT: Pagination controls */}
           <PaginationControls
             page={paymentsPageSafe}
             totalPages={paymentsTotalPages}
@@ -598,7 +575,7 @@ export default function RevenueLedger() {
         </CardHeader>
 
         <CardContent>
-          <div className="border rounded-lg overflow-hidden">
+          <div className="border rounded-lg overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -681,7 +658,6 @@ export default function RevenueLedger() {
             </Table>
           </div>
 
-          {/* Payments Pagination (bottom) */}
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mt-3">
             <span className="text-xs text-muted-foreground">{rangeLabel(paymentsPageSafe, paymentsTotal)}</span>
             <PaginationControls
@@ -700,7 +676,6 @@ export default function RevenueLedger() {
   )
 }
 
-/** ---------- Reusable pagination UI (used top-right and bottom) ---------- */
 function PaginationControls({
   page,
   totalPages,
@@ -754,7 +729,6 @@ function PaginationControls({
   )
 }
 
-/** ---------- Searchable Show Combobox ---------- */
 function ShowCombobox({
   value,
   onChange,
@@ -773,12 +747,7 @@ function ShowCombobox({
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <Button
-          variant="outline"
-          role="combobox"
-          aria-expanded={open}
-          className="w-full justify-between"
-        >
+        <Button variant="outline" role="combobox" aria-expanded={open} className="w-full justify-between">
           {value ? labelFor(value) : "Select show"}
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
@@ -798,12 +767,7 @@ function ShowCombobox({
                     setOpen(false)
                   }}
                 >
-                  <Check
-                    className={cn(
-                      "mr-2 h-4 w-4",
-                      value === opt ? "opacity-100" : "opacity-0"
-                    )}
-                  />
+                  <Check className={cn("mr-2 h-4 w-4", value === opt ? "opacity-100" : "opacity-0")} />
                   {labelFor(opt)}
                 </CommandItem>
               ))}
@@ -815,7 +779,6 @@ function ShowCombobox({
   )
 }
 
-/** ---------- Small utils ---------- */
 function num(v: any): number {
   if (typeof v === "number") return v
   const n = Number(v)
@@ -824,7 +787,6 @@ function num(v: any): number {
 
 function toDate(dateStr: string | null, endOfDay = false): Date {
   if (!dateStr) return new Date("1900-01-01T00:00:00Z")
-  // Accept "YYYY-MM-DD" or anything parsable by Date
   if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
     const [y, m, d] = dateStr.split("-").map((x) => parseInt(x, 10))
     return endOfDay ? new Date(y, m - 1, d, 23, 59, 59, 999) : new Date(y, m - 1, d)
