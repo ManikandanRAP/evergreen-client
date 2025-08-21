@@ -439,19 +439,20 @@ export default function RevenueLedger() {
         <CardContent>
           <div className="border rounded-lg overflow-hidden">
             {/* table-fixed + colgroup -> enforces widths */}
-            <Table className="table-fixed min-w-[1880px]">  {/* ensures no squeeze */}
+            <Table className="table-fixed min-w-[1880px]">
               <colgroup>
-                <col className="w-[150px]" /> {/* Show Name */}
-                <col className="w-[150px]" /> {/* Customer */}
-                <col className="w-[250px]" /> {/* Description */}
-                <col className="w-[120px]" /> {/* Invoice Date */}
-                <col className="w-[120px]" /> {/* Payment Amt */}
-                <col className="w-[120px]" /> {/* Comp Type */}
-                <col className="w-[120px]" /> {/* % Evergreen */}
-                <col className="w-[140px]" /> {/* Evergreen Comp */}
-                <col className="w-[100px]" /> {/* % Partner */}
-                <col className="w-[120px]" /> {/* Partner Comp */}
+                <col className="w-[150px]" />
+                <col className="w-[150px]" />
+                <col className="w-[250px]" />
+                <col className="w-[120px]" />
+                <col className="w-[120px]" />
+                <col className="w-[120px]" />
+                <col className="w-[120px]" />
+                <col className="w-[140px]" />
+                <col className="w-[100px]" />
+                <col className="w-[120px]" />
               </colgroup>
+              {/* ...thead / tbody... */}
 
               <TableHeader>
                 <TableRow>
