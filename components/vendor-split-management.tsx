@@ -74,6 +74,8 @@ export default function VendorSplitManagement() {
   const [isCatalogShowsPopoverOpen, setIsCatalogShowsPopoverOpen] = useState(false)
   const [isCatalogVendorsPopoverOpen, setIsCatalogVendorsPopoverOpen] = useState(false)
   const [isMappingOpen, setIsMappingOpen] = useState(false)
+  const [isUpdatingOpen, setIsUpdatingOpen] = useState(false)
+
   const [newMappedSplit, setNewMappedSplit] = useState({ adPercent: "", programmaticPercent: "", effectiveDate: "" })
   const [mapErrors, setMapErrors] = useState<Record<string, string>>({})
   const [isLoadingCatalog, setIsLoadingCatalog] = useState({ shows: false, vendors: false, save: false })
@@ -146,6 +148,7 @@ export default function VendorSplitManagement() {
       const data = await response.json()
       setSplits(data)
       setShowSplitsTable(true)
+      setIsUpdatingOpen(true)
     } catch (error) {
       toast({ title: "Error", description: "Could not load splits.", variant: "destructive" })
     } finally {
@@ -170,6 +173,7 @@ export default function VendorSplitManagement() {
   const handleCancelExistingSplit = () => {
     setNewSplit({ adPercent: "", programmaticPercent: "", effectiveDate: "" })
     setErrors({})
+    setIsUpdatingOpen(false)
   }
 
   const handleSaveSplit = async (e: React.FormEvent) => {
@@ -415,38 +419,40 @@ export default function VendorSplitManagement() {
                   </TableBody>
                 </Table>
               </div>
-              <div className="border-t pt-6">
-                <h3 className="text-lg font-semibold mb-4">Update New Split</h3>
-                <form onSubmit={handleSaveSplit} className="space-y-4">
-                  <div className="grid gap-4 md:grid-cols-3">
-                    <div className="space-y-2">
-                      <Label htmlFor="ad-percent">AD %</Label>
-                      <Input id="ad-percent" type="number" min="0" max="100" step="0.01" placeholder="e.g., 60.5" value={newSplit.adPercent} onChange={(e) => handleInputChange("adPercent", e.target.value)} />
-                      {errors.adPercent && <p className="text-sm text-red-500">{errors.adPercent}</p>}
+              {isUpdatingOpen && (
+                <div className="border-t pt-6">
+                  <h3 className="text-lg font-semibold mb-4">Update New Split</h3>
+                  <form onSubmit={handleSaveSplit} className="space-y-4">
+                    <div className="grid gap-4 md:grid-cols-3">
+                      <div className="space-y-2">
+                        <Label htmlFor="ad-percent">AD %</Label>
+                        <Input id="ad-percent" type="number" min="0" max="100" step="0.01" placeholder="e.g., 60.5" value={newSplit.adPercent} onChange={(e) => handleInputChange("adPercent", e.target.value)} />
+                        {errors.adPercent && <p className="text-sm text-red-500">{errors.adPercent}</p>}
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="programmatic-percent">Programmatic %</Label>
+                        <Input id="programmatic-percent" type="number" min="0" max="100" step="0.01" placeholder="e.g., 39.5" value={newSplit.programmaticPercent} onChange={(e) => handleInputChange("programmaticPercent", e.target.value)} />
+                        {errors.programmaticPercent && <p className="text-sm text-red-500">{errors.programmaticPercent}</p>}
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="effective-date">Effective Date</Label>
+                        <Input id="effective-date" type="date" value={newSplit.effectiveDate} onChange={(e) => handleInputChange("effectiveDate", e.target.value)} />
+                        {errors.effectiveDate && <p className="text-sm text-red-500">{errors.effectiveDate}</p>}
+                      </div>
                     </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="programmatic-percent">Programmatic %</Label>
-                      <Input id="programmatic-percent" type="number" min="0" max="100" step="0.01" placeholder="e.g., 39.5" value={newSplit.programmaticPercent} onChange={(e) => handleInputChange("programmaticPercent", e.target.value)} />
-                      {errors.programmaticPercent && <p className="text-sm text-red-500">{errors.programmaticPercent}</p>}
+                    {/* UPDATED: right-aligned Save + Cancel (first section) */}
+                    <div className="flex justify-end gap-3">
+                      <Button type="submit" disabled={isLoadingSave}>
+                        {isLoadingSave && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                        Save Split
+                      </Button>
+                      <Button type="button" variant="outline" onClick={handleCancelExistingSplit}>
+                        Cancel
+                      </Button>
                     </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="effective-date">Effective Date</Label>
-                      <Input id="effective-date" type="date" value={newSplit.effectiveDate} onChange={(e) => handleInputChange("effectiveDate", e.target.value)} />
-                      {errors.effectiveDate && <p className="text-sm text-red-500">{errors.effectiveDate}</p>}
-                    </div>
-                  </div>
-                  {/* UPDATED: right-aligned Save + Cancel (first section) */}
-                  <div className="flex justify-end gap-3">
-                    <Button type="submit" disabled={isLoadingSave}>
-                      {isLoadingSave && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                      Save Split
-                    </Button>
-                    <Button type="button" variant="outline" onClick={handleCancelExistingSplit}>
-                      Cancel
-                    </Button>
-                  </div>
-                </form>
-              </div>
+                  </form>
+                </div>
+              )}
             </div>
           )}
         </CardContent>
