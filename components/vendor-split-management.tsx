@@ -379,7 +379,7 @@ export default function VendorSplitManagement() {
             <div className="flex items-end">
               <Button onClick={handleViewSplits} disabled={isLoadingSplits || !selectedShow || !selectedVendor} className="w-full">
                 {isLoadingSplits ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Eye className="mr-2 h-4 w-4" />}
-                View Splits
+                View and Update Splits
               </Button>
             </div>
           </div>
