@@ -475,7 +475,7 @@ export default function RevenueLedger() {
                       Customer {renderSortIcon("customer", true)}
                     </Button>
                   </TableHead>
-                  <TableHead className="border-r p-0">
+                  <TableHead className="max-w-2xl border-r p-0">
                     <Button variant="ghost" className="w-full justify-start text-left font-semibold hover:bg-transparent px-4 py-2" onClick={() => handleSort("invoice_description", true)}>
                       Description {renderSortIcon("invoice_description", true)}
                     </Button>
