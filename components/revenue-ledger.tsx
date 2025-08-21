@@ -20,7 +20,7 @@ import {
   ChevronRight,
   ChevronsUpDown,
   Check,
-  RotateCcw, // <-- added
+  RotateCcw,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
@@ -49,7 +49,7 @@ type LedgerItem = {
   payment_amount: number | null
   invoice_amount: number | null
   pending_payments: number | null
-  invoice_date: string | null // <-- can be null from backend
+  invoice_date: string | null
   invoice_description: string
   invoice_classref_name: string
   invoice_classref_value: string | null
@@ -58,8 +58,8 @@ type LedgerItem = {
   split_evergreen_pct_programmatic?: number | null
   effective_date?: string | null
   vendor_qbo_id?: number | null
-  evergreen_percentage?: number | null // fraction (e.g., 0.7)
-  partner_percentage?: number | null   // fraction
+  evergreen_percentage?: number | null
+  partner_percentage?: number | null
   evergreen_compensation?: number | null
   partner_compensation?: number | null
 }
@@ -168,7 +168,7 @@ export default function RevenueLedger() {
     if (selectedShow !== "all") filtered = filtered.filter((i) => i.invoice_classref_name === selectedShow)
     if (dateFrom || dateTo) {
       filtered = filtered.filter((i) => {
-        const d = toDate(i.invoice_date) // <-- safe now
+        const d = toDate(i.invoice_date)
         const from = dateFrom ? toDate(dateFrom) : new Date("1900-01-01")
         const to = dateTo ? toDate(dateTo, true) : new Date("2100-12-31")
         return d >= from && d <= to
@@ -463,6 +463,20 @@ export default function RevenueLedger() {
         <CardContent>
           <div className="border rounded-lg overflow-hidden">
             <Table>
+              {/* Colgroup: sets the Description column width */}
+              <colgroup>
+                <col /> {/* Show Name */}
+                <col /> {/* Customer */}
+                <col className="w-[28rem]" /> {/* Description */}
+                <col /> {/* Invoice Date */}
+                <col /> {/* Payment Amt */}
+                <col /> {/* Comp Type */}
+                <col /> {/* % Evergreen */}
+                <col /> {/* Evergreen Comp */}
+                <col /> {/* % Partner */}
+                <col /> {/* Partner Comp */}
+              </colgroup>
+
               <TableHeader>
                 <TableRow>
                   <TableHead className="border-r p-0">
@@ -475,7 +489,7 @@ export default function RevenueLedger() {
                       Customer {renderSortIcon("customer", true)}
                     </Button>
                   </TableHead>
-                  <TableHead className="w-[28rem] border-r p-0">
+                  <TableHead className="border-r p-0">
                     <Button variant="ghost" className="w-full justify-start text-left font-semibold hover:bg-transparent px-4 py-2" onClick={() => handleSort("invoice_description", true)}>
                       Description {renderSortIcon("invoice_description", true)}
                     </Button>
@@ -523,7 +537,10 @@ export default function RevenueLedger() {
                     <TableRow key={`${item.payment_id}-${item.invoice_doc_number}-${item.invoice_date}`}>
                       <TableCell className="font-medium border-r px-4 py-3">{item.invoice_classref_name}</TableCell>
                       <TableCell className="border-r px-4 py-3">{item.customer}</TableCell>
-                      <TableCell className="w-[28rem] border-r px-4 py-3">{item.invoice_description}</TableCell>
+                      {/* Description column: wrap text */}
+                      <TableCell className="border-r px-4 py-3 whitespace-normal break-words">
+                        {item.invoice_description}
+                      </TableCell>
                       <TableCell className="border-r px-4 py-3">{formatDate(item.invoice_date)}</TableCell>
                       <TableCell className="text-right font-mono border-r px-4 py-3">{formatCurrency(item.payment_amount)}</TableCell>
                       <TableCell className="border-r px-4 py-3">{item.invoice_itemrefname || "-"}</TableCell>
