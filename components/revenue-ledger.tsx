@@ -523,7 +523,7 @@ export default function RevenueLedger() {
                     <TableRow key={`${item.payment_id}-${item.invoice_doc_number}-${item.invoice_date}`}>
                       <TableCell className="font-medium border-r px-4 py-3">{item.invoice_classref_name}</TableCell>
                       <TableCell className="border-r px-4 py-3">{item.customer}</TableCell>
-                      <TableCell className="max-w-xs truncate border-r px-4 py-3">{item.invoice_description}</TableCell>
+                      <TableCell className="max-w-xs border-r px-4 py-3">{item.invoice_description}</TableCell>
                       <TableCell className="border-r px-4 py-3">{formatDate(item.invoice_date)}</TableCell>
                       <TableCell className="text-right font-mono border-r px-4 py-3">{formatCurrency(item.payment_amount)}</TableCell>
                       <TableCell className="border-r px-4 py-3">{item.invoice_itemrefname || "-"}</TableCell>
