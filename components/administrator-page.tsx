@@ -62,9 +62,9 @@ export default function AdministratorPage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Users className="h-5 w-5" />
-              Edit Users
+              User Management
             </CardTitle>
-            <CardDescription>View, edit, and delete existing users (with confirmation).</CardDescription>
+            <CardDescription>View, edit, and delete existing users.</CardDescription>
           </CardHeader>
           <CardContent>
             <Button onClick={() => setShowEditUsersPage(true)} className="w-full" disabled={isEditUsersDisabled}>
@@ -73,7 +73,7 @@ export default function AdministratorPage() {
               ) : (
                 <Users className="mr-2 h-4 w-4" />
               )}
-              Open Edit Users
+              View Users List
             </Button>
             {isEditUsersDisabled && (
               <p className="text-xs text-center text-muted-foreground mt-2">Waiting for authentication...</p>
