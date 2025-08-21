@@ -475,7 +475,7 @@ export default function RevenueLedger() {
                       Customer {renderSortIcon("customer", true)}
                     </Button>
                   </TableHead>
-                  <TableHead className="max-w-2xl border-r p-0">
+                  <TableHead className="w-[28rem] border-r p-0">
                     <Button variant="ghost" className="w-full justify-start text-left font-semibold hover:bg-transparent px-4 py-2" onClick={() => handleSort("invoice_description", true)}>
                       Description {renderSortIcon("invoice_description", true)}
                     </Button>
@@ -523,7 +523,7 @@ export default function RevenueLedger() {
                     <TableRow key={`${item.payment_id}-${item.invoice_doc_number}-${item.invoice_date}`}>
                       <TableCell className="font-medium border-r px-4 py-3">{item.invoice_classref_name}</TableCell>
                       <TableCell className="border-r px-4 py-3">{item.customer}</TableCell>
-                      <TableCell className="max-w-2xl border-r px-4 py-3">{item.invoice_description}</TableCell>
+                      <TableCell className="w-[28rem] border-r px-4 py-3">{item.invoice_description}</TableCell>
                       <TableCell className="border-r px-4 py-3">{formatDate(item.invoice_date)}</TableCell>
                       <TableCell className="text-right font-mono border-r px-4 py-3">{formatCurrency(item.payment_amount)}</TableCell>
                       <TableCell className="border-r px-4 py-3">{item.invoice_itemrefname || "-"}</TableCell>
