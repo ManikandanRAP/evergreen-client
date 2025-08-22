@@ -31,7 +31,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import { Card } from "@/components/ui/card"
-import { Check, ChevronsUpDown, Loader2, Pencil, Trash2, ArrowLeft } from "lucide-react"
+import { Check, ChevronsUpDown, Loader2, Pencil, Trash2, ArrowLeft, Eye, EyeOff } from "lucide-react"
 import clsx from "clsx"
 import { useToast } from "@/hooks/use-toast"
 import { useAuth } from "@/lib/auth-context"
@@ -81,6 +81,8 @@ export default function EditUserPage({ onBack }: EditUserPageProps) {
   const [deleting, setDeleting] = useState(false)
   const [toDelete, setToDelete] = useState<UserRow | null>(null)
 
+  const [showPassword, setShowPassword] = useState(false)
+
   const isPartner = useMemo(() => (form.role || "").toLowerCase() === "partner", [form.role])
 
   // Load users & vendors on mount
@@ -119,6 +121,7 @@ export default function EditUserPage({ onBack }: EditUserPageProps) {
       password: "",
       mapped_vendor_qbo_id: u.mapped_vendor_qbo_id ?? null,
     })
+    setShowPassword(false)
   }
 
   async function saveEdits() {
@@ -127,16 +130,44 @@ export default function EditUserPage({ onBack }: EditUserPageProps) {
     try {
       // only send changed fields
       const payload: any = {}
-      if (form.name !== (editing.name ?? "")) payload.name = form.name
-      if (form.email !== editing.email) payload.email = form.email
-      if (form.password && form.password.trim().length > 0) payload.password = form.password
+      const changed: string[] = []
+
+      if (form.name !== (editing.name ?? "")) {
+        payload.name = form.name
+        changed.push(`name → “${form.name || "—"}”`)
+      }
+      if (form.email !== editing.email) {
+        payload.email = form.email
+        changed.push(`email → ${form.email}`)
+      }
+      if (form.password && form.password.trim().length > 0) {
+        payload.password = form.password
+        changed.push("password updated")
+      }
       // vendor mapping (only for partner; allow clearing)
       if (isPartner) {
         if ((form.mapped_vendor_qbo_id ?? null) !== (editing.mapped_vendor_qbo_id ?? null)) {
           payload.mapped_vendor_qbo_id = form.mapped_vendor_qbo_id
+          const fromName =
+            editing.mapped_vendor_qbo_id != null
+              ? `${editing.mapped_vendor_name ?? "Unknown"} · ID ${editing.mapped_vendor_qbo_id}`
+              : "—"
+          const toName =
+            form.mapped_vendor_qbo_id != null
+              ? `${vendors.find((v) => v.vendor_qbo_id === form.mapped_vendor_qbo_id)?.vendor_name ?? "Unknown"} · ID ${
+                  form.mapped_vendor_qbo_id
+                }`
+              : "—"
+          changed.push(`vendor: ${fromName} → ${toName}`)
         }
       } else if (editing.mapped_vendor_qbo_id != null) {
         payload.mapped_vendor_qbo_id = null
+        changed.push("vendor: cleared (non-partner)")
+      }
+
+      if (Object.keys(payload).length === 0) {
+        toast({ title: "No changes", description: "There are no changes to save." })
+        return
       }
 
       const resp = await fetch(`${API_URL}/users/${editing.id}`, {
@@ -157,10 +188,12 @@ export default function EditUserPage({ onBack }: EditUserPageProps) {
       // update list
       setUsers((prev) => prev.map((u) => (u.id === updated.id ? { ...u, ...updated } : u)))
 
-      // success toast
+      // success toast (with changed fields)
       toast({
         title: "User updated",
-        description: `${updated.name ?? updated.email} has been saved.`,
+        description:
+          `${updated.name ?? updated.email} has been saved.` +
+          (changed.length ? ` Changes: ${changed.join("; ")}.` : ""),
       })
 
       // close editor
@@ -224,8 +257,8 @@ export default function EditUserPage({ onBack }: EditUserPageProps) {
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="min-w-full text-sm">
-              <thead className="bg-muted/40">
+            <table className="w-full text-sm">
+              <thead>
                 <tr className="[&>th]:px-4 [&>th]:py-3 text-left">
                   <th className="w-[220px]">Name</th>
                   <th className="w-[260px]">Email</th>
@@ -320,13 +353,24 @@ export default function EditUserPage({ onBack }: EditUserPageProps) {
 
             <div className="space-y-2">
               <Label htmlFor="password">Password (leave blank to keep current)</Label>
-              <Input
-                id="password"
-                type="password"
-                value={form.password}
-                onChange={(e) => setForm((f) => ({ ...f, password: e.target.value }))}
-                placeholder="••••••••"
-              />
+              <div className="relative">
+                <Input
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  value={form.password}
+                  onChange={(e) => setForm((f) => ({ ...f, password: e.target.value }))}
+                  placeholder="••••••••"
+                  className="pr-10"
+                />
+                <button
+                  type="button"
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                  onClick={() => setShowPassword((v) => !v)}
+                  className="absolute inset-y-0 right-0 px-3 grid place-items-center text-muted-foreground hover:text-foreground"
+                >
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
             </div>
 
             {isPartner && (
@@ -341,12 +385,18 @@ export default function EditUserPage({ onBack }: EditUserPageProps) {
                       className={clsx("w-full justify-between", !form.mapped_vendor_qbo_id && "text-muted-foreground")}
                     >
                       {form.mapped_vendor_qbo_id
-                        ? `${vendors.find((v) => v.vendor_qbo_id === form.mapped_vendor_qbo_id)?.vendor_name ?? "Unknown"} · ID ${form.mapped_vendor_qbo_id}`
+                        ? `${
+                            vendors.find((v) => v.vendor_qbo_id === form.mapped_vendor_qbo_id)?.vendor_name ?? "Unknown"
+                          } · ID ${form.mapped_vendor_qbo_id}`
                         : "Select vendor…"}
                       <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                     </Button>
                   </PopoverTrigger>
-                  <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
+                  <PopoverContent 
+                    className="w-full max-h-60 overflow-y-auto" 
+                    side="bottom" 
+                    align="start"
+                  >
                     <Command>
                       <CommandInput placeholder="Search vendors…" />
                       <CommandEmpty>No vendor found.</CommandEmpty>
@@ -358,7 +408,6 @@ export default function EditUserPage({ onBack }: EditUserPageProps) {
                             setVendorPopoverOpen(false)
                           }}
                         >
-                          <span className="text-muted-foreground">— No vendor —</span>
                         </CommandItem>
                         {vendors.map((v) => (
                           <CommandItem
@@ -372,10 +421,10 @@ export default function EditUserPage({ onBack }: EditUserPageProps) {
                             <Check
                               className={clsx(
                                 "mr-2 h-4 w-4",
-                                form.mapped_vendor_qbo_id === v.vendor_qbo_id ? "opacity-100" : "opacity-0"
+                                form.mapped_vendor_qbo_id === v.vendor_qbo_id ? "opacity-100" : "opacity-0",
                               )}
                             />
-                            {v.vendor_name} · ID {v.vendor_qbo_id}
+                            {v.vendor_name} <span className="text-muted-foreground">· ID {v.vendor_qbo_id}</span>
                           </CommandItem>
                         ))}
                       </CommandGroup>

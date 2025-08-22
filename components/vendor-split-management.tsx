@@ -10,9 +10,19 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/command"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { Loader2, Eye, Check, ChevronsUpDown, Link2 } from "lucide-react"
+import { Loader2, Eye, Check, ChevronsUpDown, Link2, Trash2 } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { useAuth } from "@/lib/auth-context"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 
 // Use the environment variable for the API URL.
 // This will be http://127.0.0.1:8000 on your local machine (from .env.local)
@@ -61,6 +71,11 @@ export default function VendorSplitManagement() {
   const [isLoadingVendors, setIsLoadingVendors] = useState(false)
   const [isLoadingSplits, setIsLoadingSplits] = useState(false)
   const [isLoadingSave, setIsLoadingSave] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
+
+  // Delete dialog state
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [splitToDelete, setSplitToDelete] = useState<Split | null>(null)
 
   // Form states
   const [newSplit, setNewSplit] = useState({ adPercent: "", programmaticPercent: "", effectiveDate: "" })
@@ -218,6 +233,39 @@ export default function VendorSplitManagement() {
     setNewSplit((prev) => ({ ...prev, [field]: value }))
     if (errors[field]) {
       setErrors((prev) => ({ ...prev, [field]: "" }))
+    }
+  }
+
+  // --- Delete handling ---
+  const confirmDelete = (split: Split) => {
+    setSplitToDelete(split)
+    setDeleteDialogOpen(true)
+  }
+
+  const handleDeleteSplit = async () => {
+    if (!splitToDelete || !token) return
+    setIsDeleting(true)
+    try {
+      const resp = await fetch(`${API_URL}/split-management/splits/${splitToDelete.split_id}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      if (!resp.ok && resp.status !== 204) {
+        let detail = "Failed to delete split"
+        try {
+          const err = await resp.json()
+          detail = err?.detail || detail
+        } catch {}
+        throw new Error(detail)
+      }
+      setSplits((prev) => prev.filter((s) => s.split_id !== splitToDelete.split_id))
+      toast({ title: "Deleted", description: "Split has been deleted." })
+    } catch (err: any) {
+      toast({ title: "Delete Failed", description: err.message || "Could not delete split", variant: "destructive" })
+    } finally {
+      setIsDeleting(false)
+      setDeleteDialogOpen(false)
+      setSplitToDelete(null)
     }
   }
 
@@ -398,6 +446,7 @@ export default function VendorSplitManagement() {
                       <TableHead>AD %</TableHead>
                       <TableHead>Programmatic %</TableHead>
                       <TableHead>Effective Date</TableHead>
+                      <TableHead className="w-24">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -409,16 +458,46 @@ export default function VendorSplitManagement() {
                           <TableCell>{split.evergreen_pct_ads * 100}%</TableCell>
                           <TableCell>{split.evergreen_pct_programmatic * 100}%</TableCell>
                           <TableCell>{new Date(split.effective_date).toLocaleDateString()}</TableCell>
+                          <TableCell>
+                            <Button
+                              variant="destructive"
+                              size="sm"
+                              onClick={() => confirmDelete(split)}
+                            >
+                              <Trash2 className="mr-2 h-4 w-4" />
+                              Delete
+                            </Button>
+                          </TableCell>
                         </TableRow>
                       ))
                     ) : (
                       <TableRow>
-                        <TableCell colSpan={5} className="text-center h-24">No splits found.</TableCell>
+                        <TableCell colSpan={6} className="text-center h-24">No splits found.</TableCell>
                       </TableRow>
                     )}
                   </TableBody>
                 </Table>
               </div>
+
+              {/* Confirm Delete Dialog */}
+              <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Delete this split?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      This action cannot be undone. This will permanently remove the selected split record.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleDeleteSplit} disabled={isDeleting}>
+                      {isDeleting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                      Delete
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+
               {isUpdatingOpen && (
                 <div className="border-t pt-6">
                   <h3 className="text-lg font-semibold mb-4">Update New Split</h3>

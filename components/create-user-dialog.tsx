@@ -23,9 +23,7 @@ interface Vendor {
   vendor_qbo_id: number
 }
 
-// Define the API URL. In a real application, this should be in a .env file.
 // const API_URL = "http://127.0.0.1:8000"
-
 const API_URL = process.env.NEXT_PUBLIC_API_URL
 
 export default function CreateUserDialog({ open, onOpenChange }: CreateUserDialogProps) {
@@ -119,6 +117,20 @@ export default function CreateUserDialog({ open, onOpenChange }: CreateUserDialo
     return Object.keys(newErrors).length === 0
   }
 
+  const parseErrorMessage = async (resp: Response) => {
+    try {
+      const data = await resp.json()
+      return data?.detail || data?.message || `Request failed (${resp.status})`
+    } catch {
+      try {
+        const text = await resp.text()
+        return text || `Request failed (${resp.status})`
+      } catch {
+        return `Request failed (${resp.status})`
+      }
+    }
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!validateForm()) return
@@ -144,13 +156,34 @@ export default function CreateUserDialog({ open, onOpenChange }: CreateUserDialo
       })
 
       if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.detail || "Failed to create user")
+        const msg = await parseErrorMessage(response)
+        throw new Error(msg)
       }
+
+      // Try to read the created user (if backend returns it). Fall back to form data.
+      const created = await response.json().catch(() => null as any)
+
+      const role = (created?.role ?? formData.userType) as string
+      const email = (created?.email ?? formData.username) as string
+      const name = (created?.name ?? formData.fullName) as string
+
+      // If partner with vendor mapping, include vendor name + ID in toast.
+      const mappedId =
+        created?.mapped_vendor_qbo_id ??
+        (formData.userType === "partner" ? Number(formData.mapped_vendor_qbo_id) : null)
+
+      const vendorLine =
+        role === "partner" && mappedId != null
+          ? (() => {
+              const vend = vendors.find((v) => v.vendor_qbo_id === Number(mappedId))
+              const vendName = vend?.vendor_name ?? "Unknown Vendor"
+              return ` · Vendor: ${vendName} · ID ${mappedId}`
+            })()
+          : ""
 
       toast({
         title: "User created successfully",
-        description: `${formData.fullName} has been added as a ${formData.userType}.`,
+        description: `${name} (${email}) · Role: ${role}${vendorLine}`,
       })
 
       setFormData({
@@ -165,7 +198,7 @@ export default function CreateUserDialog({ open, onOpenChange }: CreateUserDialo
     } catch (error: any) {
       toast({
         title: "Error creating user",
-        description: error.message || "There was a problem creating the user.",
+        description: error?.message || "There was a problem creating the user.",
         variant: "destructive",
       })
     } finally {
@@ -197,7 +230,7 @@ export default function CreateUserDialog({ open, onOpenChange }: CreateUserDialo
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="admin">Admin</SelectItem>
-                <SelectItem value="internal">Internal (read-only)</SelectItem>
+                <SelectItem value="internal">Internal</SelectItem>
                 <SelectItem value="partner">Partner</SelectItem>
               </SelectContent>
             </Select>
@@ -271,7 +304,7 @@ export default function CreateUserDialog({ open, onOpenChange }: CreateUserDialo
                   className="w-[--radix-popover-trigger-width] p-0"
                   side="bottom"
                   align="start"
-                  sideOffset={5}
+                  sideOffset={1}
                   avoidCollisions={false}
                 >
                   <Command>
