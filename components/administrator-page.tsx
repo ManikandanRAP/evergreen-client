@@ -18,6 +18,20 @@ export default function AdministratorPage() {
   const isCreateUserDisabled = loading || !user || !token
   const isEditUsersDisabled = isCreateUserDisabled
 
+  // Block access for non-admin users
+  if (!loading && (!user || (user.role && user.role.toLowerCase() != "admin"))) {
+    return (
+      <div className="p-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>Access denied</CardTitle>
+            <CardDescription>This page is available to admin users only.</CardDescription>
+          </CardHeader>
+        </Card>
+      </div>
+    )
+  }
+
   // When Edit Users is active, render the full-page editor and hide the rest
   if (showEditUsersPage) {
     return <EditUserPage onBack={() => setShowEditUsersPage(false)} />
@@ -40,7 +54,7 @@ export default function AdministratorPage() {
               <UserPlus className="h-5 w-5" />
               Create User
             </CardTitle>
-            <CardDescription>Add new admin or partner users to the system.</CardDescription>
+            <CardDescription>Add new admin, internal, or partner users to the system.</CardDescription>
           </CardHeader>
           <CardContent>
             <Button onClick={() => setIsCreateUserOpen(true)} className="w-full" disabled={isCreateUserDisabled}>

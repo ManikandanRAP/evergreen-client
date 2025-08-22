@@ -15,7 +15,7 @@ interface User {
   name: string | null
   email: string | null
   password_hash: string | null
-  role: "admin" | "partner" | null
+  role: "admin" | "partner" | "internal" | null
   created_at: string | null
 }
 

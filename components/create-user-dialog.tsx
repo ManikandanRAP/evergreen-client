@@ -89,9 +89,9 @@ export default function CreateUserDialog({ open, onOpenChange }: CreateUserDialo
     setFormData((prev) => ({
       ...prev,
       userType: value,
-      mapped_vendor_qbo_id: value === "admin" ? "" : prev.mapped_vendor_qbo_id,
+      mapped_vendor_qbo_id: value !== "partner" ? "" : prev.mapped_vendor_qbo_id,
     }))
-    if (value === "admin" && errors.mapped_vendor_qbo_id) {
+    if (value !== "partner" && errors.mapped_vendor_qbo_id) {
       setErrors((prev) => ({ ...prev, mapped_vendor_qbo_id: "" }))
     }
   }
@@ -183,7 +183,7 @@ export default function CreateUserDialog({ open, onOpenChange }: CreateUserDialo
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>Create New User</DialogTitle>
-          <DialogDescription>Add a new admin or partner user to the system.</DialogDescription>
+          <DialogDescription>Add a new admin, internal, or partner user to the system.</DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -195,6 +195,7 @@ export default function CreateUserDialog({ open, onOpenChange }: CreateUserDialo
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="admin">Admin</SelectItem>
+                <SelectItem value="internal">Internal (read-only)</SelectItem>
                 <SelectItem value="partner">Partner</SelectItem>
               </SelectContent>
             </Select>
