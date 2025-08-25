@@ -652,7 +652,7 @@ export default function CreateShowDialog({
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label>QBO Show (name – id)</Label>
+                      <Label>QBO Show (Name – ID)</Label>
                       <Popover open={isQboOpen} onOpenChange={setIsQboOpen}>
                         <PopoverTrigger asChild>
                           <Button
@@ -662,7 +662,7 @@ export default function CreateShowDialog({
                           >
                             {formData.qbo_show_id
                               ? `${formData.qbo_show_name} – ${formData.qbo_show_id}`
-                              : "Optional: choose QBO show"}
+                              : "Choose a QBO Show Name"}
                             <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                           </Button>
                         </PopoverTrigger>
