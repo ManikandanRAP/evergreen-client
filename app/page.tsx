@@ -8,6 +8,8 @@ import DashboardNav from "@/components/dashboard-nav"
 import ShowsManagement from "@/components/shows-management"
 import AdministratorPage from "@/components/administrator-page"
 import RevenueLedger from "@/components/revenue-ledger"
+import AddFeatureSuggestion from "@/components/add-feature-suggestion"
+import Feedbacks from "@/components/feedbacks"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Radio, DollarSign, TrendingUp, Users, BarChart3, Loader2 } from "lucide-react"
@@ -37,7 +39,7 @@ function DashboardOverview() {
     return (
       <div className="space-y-6">
         <div>
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-emerald-600 to-cyan-600 bg-clip-text text-transparent">
+          <h1 className="text-3xl font-bold bg-gradient-to-r from-emerald-600 to-cyan-600 bg-clip-text text-transparent tracking-tight">
             Welcome back, {user?.name}!
           </h1>
           <p className="text-muted-foreground">Loading your dashboard...</p>
@@ -313,6 +315,10 @@ export default function Dashboard() {
         return <RevenueLedger />
       case "administrator":
         return user.role === "admin" ? <AdministratorPage /> : <DashboardOverview />
+      case "add-feature":
+        return user.role === "internal" ? <AddFeatureSuggestion /> : <DashboardOverview />
+      case "feedbacks":
+        return user.role === "admin" ? <Feedbacks /> : <DashboardOverview />
       case "settings":
         return <Settings />
       default:

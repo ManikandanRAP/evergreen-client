@@ -25,6 +25,8 @@ import {
   ChevronLeft,
   ChevronRight,
   Shield,
+  Lightbulb,
+  MessageSquare,
 } from "lucide-react"
 import { useTheme } from "next-themes"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
@@ -53,13 +55,16 @@ export default function DashboardNav({ activeTab, onTabChange, onSidebarToggle }
     onSidebarToggle?.(isDesktopCollapsed)
   }, [isDesktopCollapsed, onSidebarToggle])
 
-  const navItems = [
+  const mainNavItems = [
     { id: "dashboard", label: "Dashboard", icon: Home },
     { id: "shows", label: "Shows", icon: Radio },
-    // ...(user?.role === "admin" ? [{ id: "users", label: "Users", icon: Users }] : []),
     { id: "ledger", label: "Revenue Ledger", icon: DollarSign },
     ...(user?.role === "admin" ? [{ id: "administrator", label: "Administrator", icon: Shield }] : []),
-    // { id: "settings", label: "Settings", icon: Settings },
+  ]
+
+  const secondaryNavItems = [
+    ...(user?.role === "internal" ? [{ id: "add-feature", label: "Feature Suggestion", icon: Lightbulb }] : []),
+    ...(user?.role === "admin" ? [{ id: "feedbacks", label: "Feedbacks", icon: MessageSquare }] : []),
   ]
 
   const handleSidebarToggle = () => {
@@ -126,26 +131,49 @@ export default function DashboardNav({ activeTab, onTabChange, onSidebarToggle }
         )}
       </div>
 
-      <nav className="flex-1 p-4 space-y-2">
-        {navItems.map((item) => (
-          <Button
-            key={item.id}
-            variant={activeTab === item.id ? "default" : "ghost"}
-            className={cn(
-              "w-full transition-all duration-200",
-              activeTab === item.id ? "evergreen-button shadow-lg" : "hover:bg-accent hover:text-accent-foreground",
-              isDesktopCollapsed && !isMobile ? "justify-center px-2" : "justify-start",
-            )}
-            onClick={() => {
-              onTabChange(item.id)
-              setIsMobileMenuOpen(false)
-            }}
-            title={isDesktopCollapsed && !isMobile ? item.label : undefined}
-          >
-            <item.icon className={cn("h-4 w-4", (!isDesktopCollapsed || isMobile) && "mr-3")} />
-            {(!isDesktopCollapsed || isMobile) && item.label}
-          </Button>
-        ))}
+      <nav className="flex-1 flex flex-col p-4">
+        <div className="space-y-2">
+          {mainNavItems.map((item) => (
+            <Button
+              key={item.id}
+              variant={activeTab === item.id ? "default" : "ghost"}
+              className={cn(
+                "w-full transition-all duration-200",
+                activeTab === item.id ? "evergreen-button shadow-lg" : "hover:bg-accent hover:text-accent-foreground",
+                isDesktopCollapsed && !isMobile ? "justify-center px-2" : "justify-start",
+              )}
+              onClick={() => {
+                onTabChange(item.id)
+                setIsMobileMenuOpen(false)
+              }}
+              title={isDesktopCollapsed && !isMobile ? item.label : undefined}
+            >
+              <item.icon className={cn("h-4 w-4", (!isDesktopCollapsed || isMobile) && "mr-3")} />
+              {(!isDesktopCollapsed || isMobile) && item.label}
+            </Button>
+          ))}
+        </div>
+        <div className="mt-auto space-y-2">
+          {secondaryNavItems.map((item) => (
+            <Button
+              key={item.id}
+              variant={activeTab === item.id ? "default" : "ghost"}
+              className={cn(
+                "w-full transition-all duration-200",
+                activeTab === item.id ? "evergreen-button shadow-lg" : "hover:bg-accent hover:text-accent-foreground",
+                isDesktopCollapsed && !isMobile ? "justify-center px-2" : "justify-start",
+              )}
+              onClick={() => {
+                onTabChange(item.id)
+                setIsMobileMenuOpen(false)
+              }}
+              title={isDesktopCollapsed && !isMobile ? item.label : undefined}
+            >
+              <item.icon className={cn("h-4 w-4", (!isDesktopCollapsed || isMobile) && "mr-3")} />
+              {(!isDesktopCollapsed || isMobile) && item.label}
+            </Button>
+          ))}
+        </div>
       </nav>
 
       <div className="p-4 border-t border-border/50 space-y-2">

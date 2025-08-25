@@ -9,8 +9,8 @@ import { Toaster } from "@/components/ui/sonner"
 const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "Evergreen Podcasts - Partner Portal",
-  description: "Partner portal for Evergreen Podcasts network",
+  title: "Myco - Shows and Ledger Management",
+  description: "Shows and Ledger Management Application for Myco Users and Partners",
     generator: 'v0.dev'
 }
 
