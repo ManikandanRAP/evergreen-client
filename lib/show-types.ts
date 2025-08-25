@@ -90,7 +90,8 @@ export interface Show {
   subscriptionHandsOffPercent:number
   region:string
   is_active:boolean
-
+  qbo_show_id?: number | null
+  qbo_show_name?: string | null
 }
 
 // Utility function to convert API Show to legacy Show format

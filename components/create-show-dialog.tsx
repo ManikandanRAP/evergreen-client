@@ -15,7 +15,10 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import { ArrowLeft, ArrowRight, Save, X, AlertCircle } from "lucide-react"
 import { cn } from "@/lib/utils"
 import type { Show } from "@/lib/show-types"
-import { ShowCreate, ShowUpdate } from "@/lib/api-client" // Import both types
+import { ShowCreate, ShowUpdate, fetchAllclass  } from "@/lib/api-client" // Import both types
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command"
+import { ChevronsUpDown } from "lucide-react"
 
 interface CreateShowDialogProps {
   open: boolean
@@ -40,6 +43,8 @@ export interface ShowFormData {
   start_date: string
   isTentpole: boolean
   isOriginal: boolean
+  qbo_show_id?: string // keep as string for Select value; will convert on save
+  qbo_show_name?: string
 
   // Financial
   minimumGuarantee: string
@@ -106,6 +111,8 @@ const initialFormData: ShowFormData = {
   start_date: "",
   isTentpole: false,
   isOriginal: false,
+  qbo_show_id: "",
+  qbo_show_name: "",
 
   // Financial
   minimumGuarantee: "",
@@ -202,6 +209,9 @@ export default function CreateShowDialog({
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [errors, setErrors] = useState<FormErrors>({})
   const [attemptedSubmit, setAttemptedSubmit] = useState(false)
+  const [qboOptions, setQboOptions] = useState<{ id: number; name: string }[]>([])
+  const [isQboOpen, setIsQboOpen] = useState(false)
+
 
   const isEditMode = !!editingShow
 
@@ -257,11 +267,21 @@ export default function CreateShowDialog({
         secondaryEducationDemographic: (editingShow.secondary_education || "") as EducationLevel,
         is_active: !!editingShow.is_active,
         is_undersized: !!editingShow.is_undersized,
+        qbo_show_id: editingShow.qbo_show_id ? String(editingShow.qbo_show_id) : "",
+        qbo_show_name: editingShow.qbo_show_name ?? "",
       })
     } else {
       setFormData(initialFormData)
-    }
+    }    
   }, [editingShow])
+  
+  useEffect(() => {
+    if (open) {
+      fetchAllclass()
+        .then(setQboOptions)
+        .catch((e) => console.error("Failed to load QBO shows:", e))
+    }
+  }, [open])
 
   const tabs = [
     { id: "basic", label: "Basic Info", icon: "📝" },
@@ -439,6 +459,8 @@ export default function CreateShowDialog({
       subnetwork_id: formData.subnetwork_id || undefined,
       is_active: formData.is_active,      // camelCase to match your database
       is_undersized: formData.is_undersized, // camelCase to match your database
+      qbo_show_id: toIntOrUndef(formData.qbo_show_id),
+      qbo_show_name: formData.qbo_show_name || undefined,
     }
 
     console.log("Show data being sent to API:", showData)
@@ -629,6 +651,68 @@ export default function CreateShowDialog({
                         onChange={(e) => handleInputChange("start_date", e.target.value)}
                       />
                     </div>
+                    <div className="space-y-2">
+                      <Label>QBO Show (name – id)</Label>
+                      <Popover open={isQboOpen} onOpenChange={setIsQboOpen}>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant="outline"
+                            role="combobox"
+                            className="w-full justify-between"
+                          >
+                            {formData.qbo_show_id
+                              ? `${formData.qbo_show_name} – ${formData.qbo_show_id}`
+                              : "Optional: choose QBO show"}
+                            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent
+                          className="w-[--radix-popover-trigger-width] p-0"
+                          side="bottom"
+                          align="start"
+                          sideOffset={1}
+                          avoidCollisions={false}
+                        >
+                          <Command>
+                            <CommandInput placeholder="Search QBO shows..." />
+                            <CommandEmpty>No shows found.</CommandEmpty>
+                            {/* ✅ Scrollable list */}
+                            <CommandList className="max-h-60 overflow-y-auto">
+                              <CommandGroup>
+                                <CommandItem
+                                  key="__none__"
+                                  value="__none__"
+                                  onSelect={() => {
+                                    handleInputChange("qbo_show_id", "")
+                                    handleInputChange("qbo_show_name", "")
+                                    setIsQboOpen(false)
+                                  }}
+                                >
+                                  None
+                                </CommandItem>
+                                {qboOptions.map((o) => (
+                                  <CommandItem
+                                    key={o.id}
+                                    value={String(o.id)}                // keep value as id
+                                    keywords={[o.name, String(o.id)]}   // 🔍 make name searchable
+                                    onSelect={() => {
+                                      handleInputChange("qbo_show_id", String(o.id))
+                                      handleInputChange("qbo_show_name", o.name)
+                                      setIsQboOpen(false)
+                                    }}
+                                  >
+                                    {o.name} – {o.id}
+                                  </CommandItem>
+                                ))}
+                              </CommandGroup>
+                            </CommandList>
+                          </Command>
+                        </PopoverContent>
+                      </Popover>
+                    </div>
+
+
+                    
                   </div>
 
                   <div className="flex gap-6">

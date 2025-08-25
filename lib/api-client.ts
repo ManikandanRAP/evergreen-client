@@ -1,5 +1,13 @@
 import { toast } from "sonner"
 
+export async function authHeaders() {
+  const token = localStorage.getItem("access_token")
+  return {
+    "Content-Type": "application/json",
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+  }
+}
+
 interface LoginCredentials {
   username: string
   password: string
@@ -43,7 +51,6 @@ interface Show {
   ad_slots: number;
   avg_show_length_mins: number;
   start_date: string;
-  qbo_show_name: string;
   side_bonus_percent: number;
   youtube_ads_percent: number;
   subscriptions_percent: number;
@@ -71,6 +78,7 @@ interface Show {
   primary_education: string;
   secondary_education: string;
   evergreen_production_staff_name: string;
+  qbo_show_name: string;
   qbo_show_id: string;
 }
 
@@ -97,7 +105,6 @@ interface ShowCreate {
   ad_slots?: number;
   avg_show_length_mins?: number;
   start_date?: string;
-  qbo_show_name?: string;
   side_bonus_percent?: number;
   youtube_ads_percent?: number;
   subscriptions_percent?: number;
@@ -125,7 +132,8 @@ interface ShowCreate {
   secondary_education?: string;
   region?: string;
   gender?: string;
-  qbo_show_id?: string;
+  qbo_show_id?: number
+  qbo_show_name?: string
 }
 
 interface ShowUpdate {
@@ -151,7 +159,6 @@ interface ShowUpdate {
   ad_slots?: number;
   avg_show_length_mins?: number;
   start_date?: string;
-  qbo_show_name?: string;
   side_bonus_percent?: number;
   youtube_ads_percent?: number;
   subscriptions_percent?: number;
@@ -179,7 +186,8 @@ interface ShowUpdate {
   secondary_education?: string;
   gender?: string;
   region?: string;
-  qbo_show_id?: string;
+  qbo_show_id?: number
+  qbo_show_name?: string
 }
 
 interface PartnerCreate {
@@ -410,6 +418,23 @@ class ApiClient {
     })
   }
 }
+
+export interface AllclassItem {
+  id: number
+  name: string
+}
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL
+
+export async function fetchAllclass(): Promise<AllclassItem[]> {
+  const res = await fetch(`${API_URL}/qbo/allclass`, {
+    method: 'GET',
+    headers: await authHeaders(),
+  })
+  if (!res.ok) throw new Error('Failed to load QBO shows')
+  return res.json()
+}
+
 
 export const apiClient = new ApiClient()
 
