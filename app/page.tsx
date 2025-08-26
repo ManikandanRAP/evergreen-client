@@ -147,7 +147,7 @@ function DashboardOverview() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-emerald-600">{shows.length}</div>
-            <p className="text-xs text-muted-foreground">{user?.role === "admin" ? "Network shows" : "Your shows"}</p>
+            <p className="text-xs text-muted-foreground">{user?.role === "admin" ? "Network shows" : "Network shows"}</p>
           </CardContent>
         </Card>
 
@@ -192,10 +192,10 @@ function DashboardOverview() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Radio className="h-5 w-5 text-emerald-600" />
-            {user?.role === "admin" ? "Recent Shows" : "Your Shows"}
+            {user?.role === "admin" ? "Recent Shows" : "Recent Shows"}
           </CardTitle>
           <CardDescription>
-            {user?.role === "admin" ? "Latest shows added to the network" : "Shows you have access to"}
+            {user?.role === "admin" ? "Latest shows added to the network" : "Latest shows added to the network"}
           </CardDescription>
         </CardHeader>
 
