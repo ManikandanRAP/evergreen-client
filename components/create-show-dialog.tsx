@@ -557,7 +557,7 @@ export default function CreateShowDialog({
                 <CardContent className="space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="title" className="flex items-center gap-1">
+                      <Label htmlFor="title">
                         Show Name <span className="text-red-500">*</span>
                       </Label>
                       <Input
@@ -731,6 +731,22 @@ export default function CreateShowDialog({
                         onCheckedChange={(checked) => handleInputChange("isOriginal", checked)}
                       />
                       <Label htmlFor="isOriginal">Is Original Content</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id="is_active"
+                        checked={formData.is_active}
+                        onCheckedChange={(checked) => handleInputChange("is_active", checked)}
+                      />
+                      <Label htmlFor="is_active">Is Active</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id="is_undersized"
+                        checked={formData.is_undersized}
+                        onCheckedChange={(checked) => handleInputChange("is_undersized", checked)}
+                      />
+                      <Label htmlFor="is_undersized">Is Undersized</Label>
                     </div>
                   </div>
                 </CardContent>
@@ -1188,7 +1204,7 @@ export default function CreateShowDialog({
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="first:pt-2 space-y-2">
+                    <div className="space-y-2">
                       <Label>Age Demographic</Label>
                       <Select
                         value={formData.age_demographic}
@@ -1285,25 +1301,6 @@ export default function CreateShowDialog({
                           ))}
                         </SelectContent>
                       </Select>
-                    </div>
-                  </div>
-
-                  <div className="flex gap-6 pt-4">
-                    <div className="flex items-center space-x-2">
-                      <Checkbox
-                        id="is_active"
-                        checked={formData.is_active}
-                        onCheckedChange={(checked) => handleInputChange("is_active", checked)}
-                      />
-                      <Label htmlFor="is_active">Is Active</Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <Checkbox
-                        id="is_undersized"
-                        checked={formData.is_undersized}
-                        onCheckedChange={(checked) => handleInputChange("is_undersized", checked)}
-                      />
-                      <Label htmlFor="is_undersized">Is Undersized</Label>
                     </div>
                   </div>
                 </CardContent>

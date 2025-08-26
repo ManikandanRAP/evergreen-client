@@ -55,12 +55,21 @@ export default function DashboardNav({ activeTab, onTabChange, onSidebarToggle }
     onSidebarToggle?.(isDesktopCollapsed)
   }, [isDesktopCollapsed, onSidebarToggle])
 
-  const mainNavItems = [
-    { id: "dashboard", label: "Dashboard", icon: Home },
-    { id: "shows", label: "Shows", icon: Radio },
-    { id: "ledger", label: "Revenue Ledger", icon: DollarSign },
-    ...(user?.role === "admin" ? [{ id: "administrator", label: "Administrator", icon: Shield }] : []),
-  ]
+  let mainNavItems: { id: string; label: string; icon: any }[] = []
+
+  if (user?.role === "partner") {
+    mainNavItems = [{ id: "ledger", label: "Revenue Ledger", icon: DollarSign }]
+  } else {
+    mainNavItems = [
+      { id: "dashboard", label: "Dashboard", icon: Home },
+      { id: "shows", label: "Shows", icon: Radio },
+      { id: "ledger", label: "Revenue Ledger", icon: DollarSign },
+      ...(user?.role === "admin"
+        ? [{ id: "administrator", label: "Administrator", icon: Shield }]
+        : []),
+    ]
+  }
+
 
   const secondaryNavItems = [
     ...(user?.role === "internal" ? [{ id: "add-feature", label: "Feature Suggestion", icon: Lightbulb }] : []),

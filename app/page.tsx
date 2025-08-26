@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useAuth } from "@/lib/auth-context"
 import { useShows } from "@/hooks/use-shows"
 import LoginForm from "@/components/login-form"
@@ -285,8 +285,28 @@ function Settings() {
 
 export default function Dashboard() {
   const { user, isLoading } = useAuth()
-  const [activeTab, setActiveTab] = useState("dashboard")
+  const isPartner = user?.role === "partner"
+  // start with no tab until we know the role
+  const [activeTab, setActiveTab] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (!isLoading) {
+      setActiveTab(isPartner ? "ledger" : "dashboard")
+    }
+  }, [isLoading, isPartner])
+  
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false)
+
+  if (activeTab === null) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600 mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    )
+  }
 
   if (isLoading) {
     return (
@@ -328,12 +348,20 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-emerald-50/30 via-cyan-50/30 to-green-50/30 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
-      <DashboardNav activeTab={activeTab} onTabChange={setActiveTab} onSidebarToggle={setIsSidebarCollapsed} />
+      <DashboardNav
+        activeTab={activeTab ?? (user?.role === "partner" ? "ledger" : "dashboard")}
+        onTabChange={setActiveTab}
+        onSidebarToggle={setIsSidebarCollapsed}
+      />
 
       {/* Dynamic padding based on sidebar state */}
       <div className={cn("transition-all duration-300 ease-in-out", isSidebarCollapsed ? "lg:pl-20" : "lg:pl-64")}>
         <main className="p-4 lg:p-8">
-          <div>{renderContent()}</div>
+          {isPartner ? (
+            <RevenueLedger />
+          ) : (
+            <div>{renderContent()}</div>
+          )}
         </main>
       </div>
     </div>
