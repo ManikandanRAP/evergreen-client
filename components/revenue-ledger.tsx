@@ -711,7 +711,7 @@ function PaginationControls({
         <ChevronRight className="h-4 w-4" />
       </Button>
       <div className="flex items-center gap-2 ml-2">
-        <Label htmlFor={`page-input-${rangeText ?? ""}`} className="text-xs text-muted-foreground">Go to page</Label>
+        <Label htmlFor={`page-input-${rangeText ?? ""}`} className="text-xs text-muted-foreground">Go to</Label>
         <Input
           id={`page-input-${rangeText ?? ""}`}
           type="number"

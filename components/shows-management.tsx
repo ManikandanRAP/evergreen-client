@@ -1141,8 +1141,8 @@ export default function ShowsManagement() {
 
           {/* Right: pagination controls */}
           <div className="flex items-center gap-3">
-            <div className="text-sm text-muted-foreground hidden sm:block">
-              Showing <span className="font-medium">{pageRangeStart}</span>–<span className="font-medium">{pageRangeEnd}</span> of{" "}
+            <div className="text-xs text-muted-foreground hidden sm:block">
+              <span className="font-medium">{pageRangeStart}</span>–<span className="font-medium">{pageRangeEnd}</span> of{" "}
               <span className="font-medium">{filteredShows.length}</span>
             </div>
             <div className="flex items-center gap-2">
@@ -1152,8 +1152,8 @@ export default function ShowsManagement() {
               <Button variant="outline" size="sm" onClick={gotoPrev} disabled={page === 1} className="bg-transparent">
                 Prev
               </Button>
-              <span className="text-sm text-muted-foreground px-1">
-                Page <span className="font-medium">{page}</span> of <span className="font-medium">{totalPages}</span>
+              <span className="text-xs text-muted-foreground px-1">
+                Page <span className="font-medium">{page}</span> / <span className="font-medium">{totalPages}</span>
               </span>
               <Button variant="outline" size="sm" onClick={gotoNext} disabled={page === totalPages} className="bg-transparent">
                 Next
@@ -1164,7 +1164,7 @@ export default function ShowsManagement() {
             </div>
             {/* Go to page */}
             <div className="flex items-center gap-2">
-              <Label htmlFor="goto" className="text-sm text-muted-foreground">Go to</Label>
+              <Label htmlFor="goto" className="text-xs text-muted-foreground">Go to</Label>
               <Input
                 id="goto"
                 inputMode="numeric"
@@ -1485,8 +1485,8 @@ export default function ShowsManagement() {
 
           {/* Right: pagination controls */}
           <div className="flex items-center gap-3">
-            <div className="text-sm text-muted-foreground hidden sm:block">
-              Showing <span className="font-medium">{pageRangeStart}</span>–<span className="font-medium">{pageRangeEnd}</span> of{" "}
+            <div className="text-xs text-muted-foreground hidden sm:block">
+              <span className="font-medium">{pageRangeStart}</span>–<span className="font-medium">{pageRangeEnd}</span> of{" "}
               <span className="font-medium">{filteredShows.length}</span>
             </div>
             <div className="flex items-center gap-2">
@@ -1496,8 +1496,8 @@ export default function ShowsManagement() {
               <Button variant="outline" size="sm" onClick={gotoPrev} disabled={page === 1} className="bg-transparent">
                 Prev
               </Button>
-              <span className="text-sm text-muted-foreground px-1">
-                Page <span className="font-medium">{page}</span> of <span className="font-medium">{totalPages}</span>
+              <span className="text-xs text-muted-foreground px-1">
+                Page <span className="font-medium">{page}</span> / <span className="font-medium">{totalPages}</span>
               </span>
               <Button variant="outline" size="sm" onClick={gotoNext} disabled={page === totalPages} className="bg-transparent">
                 Next
@@ -1508,7 +1508,7 @@ export default function ShowsManagement() {
             </div>
             {/* Go to page */}
             <div className="flex items-center gap-2">
-              <Label htmlFor="goto-bottom" className="text-sm text-muted-foreground">Go to</Label>
+              <Label htmlFor="goto-bottom" className="text-xs text-muted-foreground">Go to</Label>
               <Input
                 id="goto-bottom"
                 inputMode="numeric"
