@@ -471,6 +471,11 @@ export default function ShowsManagement() {
     }).format(amount)
   }
 
+  // Show % as "N/A" if missing (same UX as the dialog)
+const formatPercentage = (n: number | null | undefined) =>
+  n === null || typeof n === "undefined" ? "N/A" : `${n}%`
+
+
   const getUniqueValues = (key: keyof Show) => {
     const values = shows.map((show) => show[key]) as (string | number)[]
     return [...new Set(values)]
@@ -1266,14 +1271,15 @@ export default function ShowsManagement() {
                       <span className="text-muted-foreground">Revenue Split:</span>
                       <div className="flex gap-2">
                         <Badge className="text-xs border bg-purple-100 text-purple-800 border-purple-300 dark:bg-purple-900/50 dark:text-purple-300 dark:border-purple-700 pointer-events-none">
-                          EG: {show.revenueSplit.evergreen}%
+                          Std Ads: {formatPercentage(show.standardAdsPercent)}
                         </Badge>
                         <Badge className="text-xs border bg-purple-100 text-purple-800 border-purple-300 dark:bg-purple-900/50 dark:text-purple-300 dark:border-purple-700 pointer-events-none">
-                          Partner: {show.revenueSplit.partner}%
+                          Prog Ads: {formatPercentage(show.programmaticAdsSpanPercent)}
                         </Badge>
                       </div>
                     </div>
                   </div>
+
                 </div>
                 <div className="flex justify-center gap-2 pt-4 border-t border-border/50">
                   <Button
