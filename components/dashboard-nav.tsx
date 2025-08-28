@@ -55,7 +55,7 @@ export default function DashboardNav({ activeTab, onTabChange, onSidebarToggle }
     onSidebarToggle?.(isDesktopCollapsed)
   }, [isDesktopCollapsed, onSidebarToggle])
 
-  let mainNavItems: { id: string; label: string; icon: any }[] = []
+  let mainNavItems: { id: string; label: string; icon: any; variant?: "default" | "ghost" | "outline" }[] = []
 
   if (user?.role === "partner") {
     mainNavItems = [{ id: "ledger", label: "Revenue Ledger", icon: DollarSign }]
@@ -72,8 +72,8 @@ export default function DashboardNav({ activeTab, onTabChange, onSidebarToggle }
 
 
   const secondaryNavItems = [
-    ...(user?.role === "internal" ? [{ id: "add-feature", label: "Feature Suggestion", icon: Lightbulb }] : []),
-    ...(user?.role === "admin" ? [{ id: "feedbacks", label: "Feedbacks", icon: MessageSquare }] : []),
+    ...(user?.role === "internal" ? [{ id: "add-feature", label: "Feature Suggestion", variant: "outline", icon: Lightbulb }] : []),
+    ...(user?.role === "admin" ? [{ id: "feedbacks", label: "Feedbacks", variant: "outline", icon: MessageSquare }] : []),
   ]
 
   const handleSidebarToggle = () => {
@@ -145,7 +145,7 @@ export default function DashboardNav({ activeTab, onTabChange, onSidebarToggle }
           {mainNavItems.map((item) => (
             <Button
               key={item.id}
-              variant={activeTab === item.id ? "default" : "ghost"}
+              variant={activeTab === item.id ? "default" : (item.variant ?? "outline")}
               className={cn(
                 "w-full transition-all duration-200",
                 activeTab === item.id ? "evergreen-button shadow-lg" : "hover:bg-accent hover:text-accent-foreground",
@@ -160,13 +160,14 @@ export default function DashboardNav({ activeTab, onTabChange, onSidebarToggle }
               <item.icon className={cn("h-4 w-4", (!isDesktopCollapsed || isMobile) && "mr-3")} />
               {(!isDesktopCollapsed || isMobile) && item.label}
             </Button>
+          
           ))}
         </div>
         <div className="mt-auto space-y-2">
           {secondaryNavItems.map((item) => (
             <Button
               key={item.id}
-              variant={activeTab === item.id ? "default" : "ghost"}
+              variant={activeTab === item.id ? "default" : "outline"}
               className={cn(
                 "w-full transition-all duration-200",
                 activeTab === item.id ? "evergreen-button shadow-lg" : "hover:bg-accent hover:text-accent-foreground",
@@ -206,7 +207,7 @@ export default function DashboardNav({ activeTab, onTabChange, onSidebarToggle }
         )}
 
         <Button
-          variant="ghost"
+          variant="outline"
           className={cn(
             "w-full text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950 transition-colors",
             isDesktopCollapsed && !isMobile ? "justify-center px-2" : "justify-start",
