@@ -106,10 +106,7 @@ export default function DeleteShowDialog({
                   <strong>Name:</strong> {show.name}
                 </p>
                 <p>
-                  <strong>Type:</strong> {show.selectType}
-                </p>
-                <p>
-                  <strong>genre_name:</strong> {show.genre_name}
+                  <strong>Genre:</strong> {show.genre_name}
                 </p>
                 <p>
                   <strong>Format:</strong> {show.format}

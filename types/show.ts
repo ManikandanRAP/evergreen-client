@@ -10,10 +10,9 @@ export interface Show {
 
   // Basic Info
   showType: string
-  selectType: "Podcasts" | "Video Series" | "Live Show" | "Interview Series"
   subnetwork: string
-  format: "Video" | "Audio"
-  relationship: "Owned" | "Partnership" | "Licensed"
+  format: "Video" | "Audio" | "Both"
+  relationship: "Strong" | "Medium" | "Weak"
   ageMonths: number
   isTentpole: boolean
   isOriginal: boolean

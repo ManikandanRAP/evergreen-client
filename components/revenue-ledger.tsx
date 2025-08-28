@@ -21,6 +21,7 @@ import {
   ChevronsUpDown,
   Check,
   RotateCcw,
+  Download,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
@@ -84,7 +85,7 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL
 const PAGE_SIZE = 10
 
 export default function RevenueLedger() {
-  const { user, token, loading } = useAuth()
+  const { token, loading } = useAuth()
 
   const [selectedShow, setSelectedShow] = useState<string>("all")
   const [dateFrom, setDateFrom] = useState<string>("")
@@ -111,6 +112,40 @@ export default function RevenueLedger() {
     setDateTo("")
   }
 
+  // unified fetch for initial load + refresh
+  const fetchData = async () => {
+    if (!token) {
+      setLedger([])
+      setPayouts([])
+      return
+    }
+    setFetching(true)
+    setError(null)
+    try {
+      const headers: HeadersInit = { "Content-Type": "application/json", Authorization: `Bearer ${token}` }
+      const base = API_URL?.replace(/\/$/, "") || ""
+      const [ledgerRes, payoutRes] = await Promise.all([
+        fetch(`${base}/ledger`, { headers }),
+        fetch(`${base}/partner_payouts`, { headers }),
+      ])
+      if (!ledgerRes.ok) throw new Error(await readErr(ledgerRes, "Ledger request failed"))
+      if (!payoutRes.ok) throw new Error(await readErr(payoutRes, "Partner payouts request failed"))
+
+      const ledgerJson: LedgerItem[] = await ledgerRes.json()
+      const payoutsJson: PartnerPayout[] = await payoutRes.json()
+      setLedger(Array.isArray(ledgerJson) ? ledgerJson : [])
+      setPayouts(Array.isArray(payoutsJson) ? payoutsJson : [])
+    } catch (e: any) {
+      setError(e?.message || "Failed to load ledger data")
+    } finally {
+      setFetching(false)
+    }
+  }
+
+  const onRefresh = async () => {
+    await fetchData()
+  }
+
   useEffect(() => {
     if (loading) return
     if (!token) {
@@ -118,37 +153,7 @@ export default function RevenueLedger() {
       setPayouts([])
       return
     }
-
-    let isMounted = true
-    const run = async () => {
-      setFetching(true)
-      setError(null)
-      try {
-        const headers: HeadersInit = { "Content-Type": "application/json", Authorization: `Bearer ${token}` }
-        const base = API_URL?.replace(/\/$/, "") || ""
-        const [ledgerRes, payoutRes] = await Promise.all([
-          fetch(`${base}/ledger`, { headers }),
-          fetch(`${base}/partner_payouts`, { headers }),
-        ])
-        if (!ledgerRes.ok) throw new Error(await readErr(ledgerRes, "Ledger request failed"))
-        if (!payoutRes.ok) throw new Error(await readErr(payoutRes, "Partner payouts request failed"))
-
-        const ledgerJson: LedgerItem[] = await ledgerRes.json()
-        const payoutsJson: PartnerPayout[] = await payoutRes.json()
-        if (!isMounted) return
-        setLedger(Array.isArray(ledgerJson) ? ledgerJson : [])
-        setPayouts(Array.isArray(payoutsJson) ? payoutsJson : [])
-      } catch (e: any) {
-        if (!isMounted) return
-        setError(e?.message || "Failed to load ledger data")
-      } finally {
-        if (isMounted) setFetching(false)
-      }
-    }
-    run()
-    return () => {
-      isMounted = false
-    }
+    fetchData()
   }, [loading, token])
 
   const availableShows = useMemo(() => {
@@ -264,7 +269,7 @@ export default function RevenueLedger() {
   const formatCurrency = (v: number | null | undefined) =>
     new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(num(v))
   const formatDate = (s: string | null) => (s ? toDate(s).toLocaleDateString() : "-")
-  const formatPct = (f: number | null | undefined) => (f == null ? "-" : `${Math.round(f * 100)}%`)
+  const formatPct = (f: number | null | undefined) => (f == null ? "-" : `${Math.round(num(f) * 100)}%`)
   const renderSortIcon = (key: string, isRevenue: boolean) => {
     const cfg = isRevenue ? revenueSortConfig : paymentsSortConfig
     if (cfg.key !== key || !cfg.direction) return <ArrowUpDown className="ml-2 h-4 w-4 text-muted-foreground" />
@@ -283,6 +288,55 @@ export default function RevenueLedger() {
   const clamp = (val: number, min: number, max: number) => Math.max(min, Math.min(max, val || 1))
   const tryJumpRevenue = () => setRevenuePage(clamp(parseInt(revenuePageInput, 10), 1, revenueTotalPages))
   const tryJumpPayments = () => setPaymentsPage(clamp(parseInt(paymentsPageInput, 10), 1, paymentsTotalPages))
+
+  // Export to Excel with two sheets
+  const exportToExcel = async () => {
+    const XLSX = await import("xlsx")
+
+    const revenueRows = sortedRevenueData.map((i) => ({
+      "Show Name": i.invoice_classref_name,
+      Customer: i.customer,
+      Description: i.invoice_description,
+      "Invoice Date": i.invoice_date ? toDate(i.invoice_date).toISOString().slice(0, 10) : "",
+      "Payment Amount": num(i.payment_amount),
+      "Comp Type": i.invoice_itemrefname || "",
+      "% Evergreen": i.evergreen_percentage != null ? num(i.evergreen_percentage) : null,
+      "Evergreen Comp": num(i.evergreen_compensation),
+      "% Partner": i.partner_percentage != null ? num(i.partner_percentage) : null,
+      "Partner Comp": num(i.partner_compensation),
+      "Invoice #": i.invoice_doc_number || "",
+      "Payment Line Txn ID": i.payment_line_linkedtxn_txnid || "",
+      "Pending Payments": num(i.pending_payments),
+    }))
+
+    const partnerRows = sortedPartnerPayments.map((i) => ({
+      "Show Name": i.show_qbo_name,
+      "Partner Name": i.vendor_qbo_name,
+      "Bill Number": i.docnumber || "",
+      "Bill Date": i.txndate ? toDate(i.txndate).toISOString().slice(0, 10) : "",
+      "Bill Amount": num(i.bill_amount),
+      "Payment ID": i.linked_paymentid || "",
+      "Payment Date": i.payment_date ? toDate(i.payment_date).toISOString().slice(0, 10) : "",
+      "Amount Paid": num(i.paid_amount),
+      "Related Bills Sum": num(i.sum_of_related_bill_amts),
+      Balance: num(i.balance_billpayments),
+    }))
+
+    const revenueSheet = XLSX.utils.json_to_sheet(revenueRows)
+    const partnerSheet = XLSX.utils.json_to_sheet(partnerRows)
+
+    const wb = XLSX.utils.book_new()
+    XLSX.utils.book_append_sheet(wb, revenueSheet, "Revenue")
+    XLSX.utils.book_append_sheet(wb, partnerSheet, "Partner Payments")
+
+    const now = new Date()
+    const pad = (n: number) => String(n).padStart(2, "0")
+    const fname = `revenue_ledger_${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}_${pad(
+      now.getHours()
+    )}${pad(now.getMinutes())}.xlsx`
+
+    XLSX.writeFile(wb, fname)
+  }
 
   if (loading) {
     return (
@@ -315,6 +369,18 @@ export default function RevenueLedger() {
             Revenue Ledger
           </h1>
           <p className="text-muted-foreground">Track revenue transactions and partner payments</p>
+        </div>
+
+        {/* actions */}
+        <div className="flex items-center gap-2">
+          <Button variant="outline" onClick={onRefresh} disabled={fetching}>
+            {fetching ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <RotateCcw className="mr-2 h-4 w-4" />}
+            Refresh
+          </Button>
+          <Button className="evergreen-button" onClick={exportToExcel}>
+            <Download className="mr-2 h-4 w-4" />
+            Export CSV
+          </Button>
         </div>
       </div>
 
@@ -399,7 +465,7 @@ export default function RevenueLedger() {
               </div>
 
               <div className="flex justify-end pt-4">
-                <Button variant="ghost" onClick={handleClearFilters}>
+                <Button variant="outline" onClick={handleClearFilters}>
                   <RotateCcw className="mr-2 h-4 w-4" />
                   Clear All Filters
                 </Button>
@@ -438,7 +504,6 @@ export default function RevenueLedger() {
 
         <CardContent>
           <div className="border rounded-lg overflow-hidden">
-            {/* table-fixed + colgroup -> enforces widths */}
             <Table className="table-fixed min-w-[1880px]">
               <colgroup>
                 <col className="w-[150px]" />
@@ -452,7 +517,6 @@ export default function RevenueLedger() {
                 <col className="w-[100px]" />
                 <col className="w-[120px]" />
               </colgroup>
-              {/* ...thead / tbody... */}
 
               <TableHeader>
                 <TableRow>
@@ -515,12 +579,9 @@ export default function RevenueLedger() {
                     <TableRow key={`${item.payment_id}-${item.invoice_doc_number}-${item.invoice_date}`}>
                       <TableCell className="font-medium border-r px-4 py-3">{item.invoice_classref_name}</TableCell>
                       <TableCell className="border-r px-4 py-3">{item.customer}</TableCell>
-
-                      {/* Description: wrap long text */}
                       <TableCell className="border-r px-4 py-3 whitespace-normal break-words">
                         {item.invoice_description}
                       </TableCell>
-
                       <TableCell className="border-r px-4 py-3">{formatDate(item.invoice_date)}</TableCell>
                       <TableCell className="text-right font-mono border-r px-4 py-3">{formatCurrency(item.payment_amount)}</TableCell>
                       <TableCell className="border-r px-4 py-3">{item.invoice_itemrefname || "-"}</TableCell>
@@ -556,7 +617,7 @@ export default function RevenueLedger() {
         </CardContent>
       </Card>
 
-      {/* Partner Payments (unchanged layout) */}
+      {/* Partner Payments */}
       <Card className={cn(fetching ? "opacity-60" : "")}>
         <CardHeader className="flex-row items-start justify-between space-y-0">
           <div>

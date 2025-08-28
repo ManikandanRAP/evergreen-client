@@ -30,6 +30,30 @@ interface CreateShowDialogProps {
   existingShows: Show[]
 }
 
+const DATE_MIN = "1900-01-01";
+const DATE_MAX = "2100-12-31";
+
+// Strict YYYY-MM-DD + real calendar date + bounds check
+function isValidIsoDate(value: string): boolean {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false
+  const [y, m, d] = value.split("-").map(Number)
+  if (y < 1900 || y > 2100) return false
+  const dt = new Date(y, m - 1, d)
+  return dt.getFullYear() === y && dt.getMonth() === m - 1 && dt.getDate() === d
+}
+
+// Only accept empty or proper YYYY-MM-DD from the date input
+function handleDateOnly(
+  e: React.ChangeEvent<HTMLInputElement>,
+  set: (field: keyof ShowFormData, value: any) => void
+) {
+  const next = e.target.value
+  if (next === "" || /^\d{4}-\d{2}-\d{2}$/.test(next)) {
+    set("start_date", next)
+  }
+}
+
+
 const educationLevels = ["No high School", "High School", "College", "Postgraduate"] as const
 type EducationLevel = (typeof educationLevels)[number] | ""
 
@@ -211,6 +235,7 @@ export default function CreateShowDialog({
   const [attemptedSubmit, setAttemptedSubmit] = useState(false)
   const [qboOptions, setQboOptions] = useState<{ id: number; name: string }[]>([])
   const [isQboOpen, setIsQboOpen] = useState(false)
+  const [genreName, setGenreName] = useState<string | null>(null);
 
 
   const isEditMode = !!editingShow
@@ -334,6 +359,12 @@ export default function CreateShowDialog({
       return "Format must be MM/FF (e.g., 60/40)"
     }
 
+    if (field === "start_date") {
+      if (value && !isValidIsoDate(value)) {
+        return `Please choose a valid date between ${DATE_MIN} and ${DATE_MAX}`
+      }
+    }    
+
     return ""
   }
   
@@ -408,6 +439,13 @@ export default function CreateShowDialog({
       return Number.isFinite(n) ? n : undefined
     }
 
+    // Guard invalid dates (prevents 422 from backend)
+    if (formData.start_date && !isValidIsoDate(formData.start_date)) {
+      setErrors((prev) => ({ ...prev, start_date: `Please choose a valid date between ${DATE_MIN} and ${DATE_MAX}` }))
+      setCurrentTab("basic")
+      setIsSubmitting(false)
+      return
+    }
 
     // Convert form data to use exact field names that match your database schema
     const showData: Partial<ShowCreate | ShowUpdate> = {
@@ -646,11 +684,22 @@ export default function CreateShowDialog({
                       <Label htmlFor="start_date">Start Date</Label>
                       <Input
                         id="start_date"
-                        type="date"                        
+                        type="date"
                         value={formData.start_date}
-                        onChange={(e) => handleInputChange("start_date", e.target.value)}
+                        min={DATE_MIN}
+                        max={DATE_MAX}
+                        pattern="\d{4}-\d{2}-\d{2}"
+                        onChange={(e) => handleDateOnly(e, (f, v) => handleInputChange(f, v))}
+                        className={cn(getFieldError("start_date") && "border-red-500")}
                       />
+                      {getFieldError("start_date") && (
+                        <p className="text-sm text-red-500 flex items-center gap-1">
+                          <AlertCircle className="h-3 w-3" />
+                          {getFieldError("start_date")}
+                        </p>
+                      )}
                     </div>
+
                     <div className="space-y-2">
                       <Label>QBO Show (Name – ID)</Label>
                       <Popover open={isQboOpen} onOpenChange={setIsQboOpen}>

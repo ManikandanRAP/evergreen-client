@@ -233,7 +233,6 @@ export default function ShowsManagement() {
     const csvData = showsToExport.map((show) => [
       show.name,
       show.show_type,
-      show.selectType,
       show.subnetwork_id,
       show.format,
       show.relationship,
@@ -291,7 +290,6 @@ export default function ShowsManagement() {
         const searchableFields = [
           show.name,
           show.show_type,
-          show.selectType,
           show.subnetwork_id,
           show.genre_name,
           show.primaryContactHost,
@@ -1105,7 +1103,7 @@ export default function ShowsManagement() {
                 </div>
               </div>
               <div className="flex justify-end pt-4">
-                <Button variant="ghost" onClick={handleClearFilters}>
+                <Button variant="outline" onClick={handleClearFilters}>
                   <RotateCcw className="mr-2 h-4 w-4" />
                   Clear All Filters
                 </Button>

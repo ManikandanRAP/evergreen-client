@@ -242,13 +242,14 @@ export default function Feedbacks() {
   const getTypeBadgeVariant = (type: string) => {
     switch (type) {
       case "New Feature":
-        return "default"
+        return { className: "text-xs border bg-emerald-100 text-emerald-800 border-emerald-300 dark:bg-emerald-900/50 dark:text-emerald-300 dark:border-emerald-700 capitalize pointer-events-none" } // pastel green
       case "General Feedback":
-        return "secondary"
+        return { className: "text-xs border bg-purple-100 text-purple-800 border-purple-300 dark:bg-purple-900/50 dark:text-purple-300 dark:border-purple-700 capitalize pointer-events-none" } // pastel blue
       default:
-        return "outline"
+        return { className: "bg-gray-100 text-gray-800 border-gray-200" }
     }
   }
+  
 
   const getSortIcon = (field: SortField) => {
     if (sortField !== field) {
@@ -283,7 +284,7 @@ export default function Feedbacks() {
           <h1 className="text-3xl font-bold bg-gradient-to-r from-emerald-600 to-cyan-600 bg-clip-text text-transparent tracking-tight">Feedbacks</h1>
           <p className="text-muted-foreground">View and manage user feedback and feature suggestions.</p>
         </div>
-        <Button onClick={handleExport} variant="outline" disabled={filteredAndSortedFeedbacks.length === 0}>
+        <Button className="evergreen-button" onClick={handleExport} disabled={filteredAndSortedFeedbacks.length === 0}>
           <Download className="mr-2 h-4 w-4" />
           Export CSV
         </Button>
@@ -330,7 +331,7 @@ export default function Feedbacks() {
                       {feedback.title}
                     </TableCell>
                     <TableCell>
-                      <Badge variant={getTypeBadgeVariant(feedback.type)}>{feedback.type}</Badge>
+                      <Badge {...getTypeBadgeVariant(feedback.type)}>{feedback.type}</Badge>
                     </TableCell>
                     <TableCell>{feedback.createdByName}</TableCell>
                     <TableCell>
@@ -339,15 +340,14 @@ export default function Feedbacks() {
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
-                        <Button variant="ghost" size="sm" onClick={() => handleViewFeedback(feedback)}>
+                        <Button variant="outline" size="sm" onClick={() => handleViewFeedback(feedback)}>
                           <Eye className="h-4 w-4 mr-1" />
                           View
                         </Button>
                         <Button
-                          variant="ghost"
+                          variant="destructive"
                           size="sm"
                           onClick={() => handleDeleteClick(feedback)}
-                          className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950"
                         >
                           <Trash2 className="h-4 w-4 mr-1" />
                           Delete
@@ -396,9 +396,7 @@ export default function Feedbacks() {
                         <Tag className="h-4 w-4 text-muted-foreground" />
                         <span className="font-medium">Type:</span>
                       </div>
-                      <Badge variant={getTypeBadgeVariant(selectedFeedback.type)} className="text-sm">
-                        {selectedFeedback.type}
-                      </Badge>
+                      <Badge {...getTypeBadgeVariant(selectedFeedback.type)}>{selectedFeedback.type}</Badge>
                     </div>
                     <div className="space-y-2">
                       <div className="flex items-center gap-2">

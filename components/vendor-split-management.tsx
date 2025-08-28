@@ -25,8 +25,6 @@ import {
 } from "@/components/ui/alert-dialog"
 
 // Use the environment variable for the API URL.
-// This will be http://127.0.0.1:8000 on your local machine (from .env.local)
-// and the production URL on your server.
 const API_URL = process.env.NEXT_PUBLIC_API_URL
 
 interface Show {
@@ -48,7 +46,8 @@ interface Split {
   effective_date: string
 }
 
-export default function VendorSplitManagement() {
+// NEW: accept a refresh signal from parent
+export default function VendorSplitManagement({ refreshSignal = 0 }: { refreshSignal?: number }) {
   const { user, token } = useAuth()
   const { toast } = useToast()
 
@@ -345,6 +344,98 @@ export default function VendorSplitManagement() {
     }
   }
 
+  // 🔄 NEW: respond to parent-level refresh signal
+  useEffect(() => {
+    if (!user || !token) return
+
+    // 1) Re-fetch primary show list
+    const refreshShows = async () => {
+      setIsLoadingShows(true)
+      try {
+        const res = await fetch(`${API_URL}/split-management/shows`, {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+        if (!res.ok) throw new Error("Failed to refresh shows")
+        const data = await res.json()
+        setShows(data || [])
+      } catch (e: any) {
+        toast({ title: "Refresh failed", description: e.message || "Could not refresh shows", variant: "destructive" })
+      } finally {
+        setIsLoadingShows(false)
+      }
+    }
+
+    // 2) Re-fetch catalog (all shows/vendors)
+    const refreshCatalog = async () => {
+      try {
+        setIsLoadingCatalog((s) => ({ ...s, shows: true }))
+        const [showsRes, vendorsRes] = await Promise.all([
+          fetch(`${API_URL}/split-management/catalog/all-shows`, { headers: { Authorization: `Bearer ${token}` } }),
+          fetch(`${API_URL}/split-management/catalog/all-vendors`, { headers: { Authorization: `Bearer ${token}` } }),
+        ])
+        if (!showsRes.ok) throw new Error("Failed to refresh all shows")
+        if (!vendorsRes.ok) throw new Error("Failed to refresh all vendors")
+        const [showsData, vendorsData] = await Promise.all([showsRes.json(), vendorsRes.json()])
+        setCatalogShows(showsData || [])
+        setCatalogVendors(vendorsData || [])
+      } catch (err: any) {
+        toast({ title: "Refresh failed", description: err.message || "Could not refresh catalog", variant: "destructive" })
+      } finally {
+        setIsLoadingCatalog((s) => ({ ...s, shows: false, vendors: false }))
+      }
+    }
+
+    // 3) If a show is selected, refresh its vendors
+    const refreshVendorsIfNeeded = async () => {
+      if (!selectedShow) return
+      setIsLoadingVendors(true)
+      try {
+        const res = await fetch(`${API_URL}/split-management/vendors/${selectedShow.show_qbo_id}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+        if (!res.ok) throw new Error("Failed to refresh vendors")
+        const data = await res.json()
+        setVendors(data || [])
+      } catch (e: any) {
+        toast({ title: "Refresh failed", description: e.message || "Could not refresh vendors", variant: "destructive" })
+      } finally {
+        setIsLoadingVendors(false)
+      }
+    }
+
+    // 4) If both show & vendor are selected, refresh current splits table
+    const refreshSplitsIfNeeded = async () => {
+      if (!selectedShow || !selectedVendor) {
+        setShowSplitsTable(false)
+        setSplits([])
+        return
+      }
+      setIsLoadingSplits(true)
+      try {
+        const res = await fetch(
+          `${API_URL}/split-management/splits?show_qbo_id=${selectedShow.show_qbo_id}&vendor_qbo_id=${selectedVendor.vendor_qbo_id}`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        )
+        if (!res.ok) throw new Error("Failed to refresh splits")
+        const data = await res.json()
+        setSplits(data || [])
+        setShowSplitsTable(true)
+        setIsUpdatingOpen(true)
+      } catch (e: any) {
+        toast({ title: "Refresh failed", description: e.message || "Could not refresh splits", variant: "destructive" })
+      } finally {
+        setIsLoadingSplits(false)
+      }
+    }
+
+    // Run all refresh steps
+    refreshShows()
+    refreshCatalog()
+    refreshVendorsIfNeeded()
+    refreshSplitsIfNeeded()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [refreshSignal]) // react to parent refresh
+
   return (
     <div className="space-y-6">
       <Card>
@@ -425,7 +516,7 @@ export default function VendorSplitManagement() {
             </div>
 
             <div className="flex items-end">
-              <Button onClick={handleViewSplits} disabled={isLoadingSplits || !selectedShow || !selectedVendor} className="w-full">
+              <Button onClick={handleViewSplits} disabled={isLoadingSplits || !selectedShow || !selectedVendor} className="evergreen-button w-full">
                 {isLoadingSplits ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Eye className="mr-2 h-4 w-4" />}
                 View and Update Splits
               </Button>
@@ -634,7 +725,7 @@ export default function VendorSplitManagement() {
               <Button
                 onClick={() => setIsMappingOpen(true)}
                 disabled={!selectedCatalogShow || !selectedCatalogVendor}
-                className="w-full"
+                className="evergreen-button w-full"
               >
                 <Link2 className="mr-2 h-4 w-4" />
                 Map Show and Vendor for Split

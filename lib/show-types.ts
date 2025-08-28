@@ -13,7 +13,6 @@ export interface Show {
 
   // Basic Info
   show_type: string
-  selectType: "Podcasts" | "Video Series" | "Live Show" | "Interview Series"
   subnetwork_id: string
   format: "Video" | "Audio" | "Both"
   relationship: "Strong" | "Medium" | "Weak"
@@ -36,7 +35,7 @@ export interface Show {
   requiresPartnerLedgerAccess: boolean
 
   // Content Details
-  genre_name: string
+  genre_name: string | null
   showsPerYear: number
   adSlots: number
   averageLength: number
@@ -122,7 +121,6 @@ export function convertApiShowToLegacy(apiShow: ApiShow): Show {
     revenueSplit: { evergreen: apiShow.evergreen_ownership_pct || 0, partner: 100 - (apiShow.evergreen_ownership_pct || 0) },
     start_date: apiShow.start_date || new Date().toISOString(),
     show_type: apiShow.show_type || "Original",
-    selectType: "Podcasts",    
     format: formatMap[apiShow.media_type || "audio"] || "Audio",
     relationship: relationshipMap[apiShow.relationship_level || "medium"] || "Medium",
     ageMonths,
@@ -140,7 +138,7 @@ export function convertApiShowToLegacy(apiShow: ApiShow): Show {
     hasSponsorshipRevenue: apiShow.has_sponsorship_revenue || false,
     hasNonEvergreenRevenue: apiShow.has_non_evergreen_revenue || false,
     requiresPartnerLedgerAccess: apiShow.requires_partner_access || false,
-    genre_name: apiShow.genre_name || "General",
+    genre_name: apiShow.genre_name?.trim() ? apiShow.genre_name : null,
     showsPerYear: apiShow.shows_per_year || 0,
     adSlots: apiShow.ad_slots || 0,
     averageLength: apiShow.avg_show_length_mins || 0,
