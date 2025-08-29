@@ -508,14 +508,14 @@ export default function RevenueLedger() {
               <colgroup>
                 <col className="w-[150px]" />
                 <col className="w-[150px]" />
-                <col className="w-[250px]" />
-                <col className="w-[120px]" />
-                <col className="w-[120px]" />
+                <col className="w-[110px]" />
                 <col className="w-[120px]" />
                 <col className="w-[120px]" />
                 <col className="w-[140px]" />
                 <col className="w-[100px]" />
                 <col className="w-[120px]" />
+                <col className="w-[120px]" />
+                <col className="w-[250px]" />
               </colgroup>
 
               <TableHeader>
@@ -531,11 +531,6 @@ export default function RevenueLedger() {
                     </Button>
                   </TableHead>
                   <TableHead className="border-r p-0">
-                    <Button variant="ghost" className="w-full justify-start text-left font-semibold hover:bg-transparent px-4 py-2" onClick={() => handleSort("invoice_description", true)}>
-                      Description {renderSortIcon("invoice_description", true)}
-                    </Button>
-                  </TableHead>
-                  <TableHead className="border-r p-0">
                     <Button variant="ghost" className="w-full justify-start text-left font-semibold hover:bg-transparent px-4 py-2" onClick={() => handleSort("invoice_date", true)}>
                       Invoice Date {renderSortIcon("invoice_date", true)}
                     </Button>
@@ -543,11 +538,6 @@ export default function RevenueLedger() {
                   <TableHead className="border-r p-0">
                     <Button variant="ghost" className="w-full justify-end text-right font-semibold hover:bg-transparent px-4 py-2" onClick={() => handleSort("payment_amount", true)}>
                       Payment Amt {renderSortIcon("payment_amount", true)}
-                    </Button>
-                  </TableHead>
-                  <TableHead className="border-r p-0">
-                    <Button variant="ghost" className="w-full justify-start text-left font-semibold hover:bg-transparent px-4 py-2" onClick={() => handleSort("invoice_itemrefname", true)}>
-                      Comp Type {renderSortIcon("invoice_itemrefname", true)}
                     </Button>
                   </TableHead>
                   <TableHead className="border-r p-0">
@@ -565,9 +555,19 @@ export default function RevenueLedger() {
                       % Partner {renderSortIcon("partner_percentage", true)}
                     </Button>
                   </TableHead>
-                  <TableHead className="p-0">
+                  <TableHead className="border-r p-0">
                     <Button variant="ghost" className="w-full justify-end text-right font-semibold hover:bg-transparent px-4 py-2" onClick={() => handleSort("partner_compensation", true)}>
                       Partner Comp {renderSortIcon("partner_compensation", true)}
+                    </Button>
+                  </TableHead>
+                  <TableHead className="border-r p-0">
+                    <Button variant="ghost" className="w-full justify-start text-left font-semibold hover:bg-transparent px-4 py-2" onClick={() => handleSort("invoice_itemrefname", true)}>
+                      Comp Type {renderSortIcon("invoice_itemrefname", true)}
+                    </Button>
+                  </TableHead>
+                  <TableHead className="p-0">
+                    <Button variant="ghost" className="w-full justify-start text-left font-semibold hover:bg-transparent px-4 py-2" onClick={() => handleSort("invoice_description", true)}>
+                      Description {renderSortIcon("invoice_description", true)}
                     </Button>
                   </TableHead>
                 </TableRow>
@@ -579,16 +579,14 @@ export default function RevenueLedger() {
                     <TableRow key={`${item.payment_id}-${item.invoice_doc_number}-${item.invoice_date}`}>
                       <TableCell className="font-medium border-r px-4 py-3">{item.invoice_classref_name}</TableCell>
                       <TableCell className="border-r px-4 py-3">{item.customer}</TableCell>
-                      <TableCell className="border-r px-4 py-3 whitespace-normal break-words">
-                        {item.invoice_description}
-                      </TableCell>
                       <TableCell className="border-r px-4 py-3">{formatDate(item.invoice_date)}</TableCell>
                       <TableCell className="text-right font-mono border-r px-4 py-3">{formatCurrency(item.payment_amount)}</TableCell>
-                      <TableCell className="border-r px-4 py-3">{item.invoice_itemrefname || "-"}</TableCell>
                       <TableCell className="text-right border-r px-4 py-3">{formatPct(item.evergreen_percentage)}</TableCell>
                       <TableCell className="text-right font-mono text-emerald-600 border-r px-4 py-3">{formatCurrency(item.evergreen_compensation)}</TableCell>
                       <TableCell className="text-right border-r px-4 py-3">{formatPct(item.partner_percentage)}</TableCell>
-                      <TableCell className="text-right font-mono text-blue-600 px-4 py-3">{formatCurrency(item.partner_compensation)}</TableCell>
+                      <TableCell className="border-r text-right font-mono text-blue-600 px-4 py-3">{formatCurrency(item.partner_compensation)}</TableCell>
+                      <TableCell className="border-r px-4 py-3">{item.invoice_itemrefname || "-"}</TableCell>
+                      <TableCell className="px-4 py-3 whitespace-normal break-words">{item.invoice_description}</TableCell>
                     </TableRow>
                   ))
                 ) : (
