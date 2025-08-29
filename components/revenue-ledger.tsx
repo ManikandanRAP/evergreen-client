@@ -509,11 +509,11 @@ export default function RevenueLedger() {
                 <col className="w-[150px]" />
                 <col className="w-[150px]" />
                 <col className="w-[110px]" />
-                <col className="w-[120px]" />
-                <col className="w-[120px]" />
-                <col className="w-[140px]" />
-                <col className="w-[100px]" />
-                <col className="w-[120px]" />
+                <col className="w-[110px]" />
+                <col className="w-[80px]" />
+                <col className="w-[90px]" />
+                <col className="w-[90px]" />
+                <col className="w-[110px]" />
                 <col className="w-[120px]" />
                 <col className="w-[250px]" />
               </colgroup>
@@ -542,17 +542,17 @@ export default function RevenueLedger() {
                   </TableHead>
                   <TableHead className="border-r p-0">
                     <Button variant="ghost" className="w-full justify-end text-right font-semibold hover:bg-transparent px-4 py-2" onClick={() => handleSort("evergreen_percentage", true)}>
-                      % Evergreen {renderSortIcon("evergreen_percentage", true)}
+                      EG % {renderSortIcon("evergreen_percentage", true)}
                     </Button>
                   </TableHead>
                   <TableHead className="border-r p-0">
                     <Button variant="ghost" className="w-full justify-end text-right font-semibold hover:bg-transparent px-4 py-2" onClick={() => handleSort("evergreen_compensation", true)}>
-                      Evergreen Comp {renderSortIcon("evergreen_compensation", true)}
+                      EG Comp {renderSortIcon("evergreen_compensation", true)}
                     </Button>
                   </TableHead>
                   <TableHead className="border-r p-0">
                     <Button variant="ghost" className="w-full justify-end text-right font-semibold hover:bg-transparent px-4 py-2" onClick={() => handleSort("partner_percentage", true)}>
-                      % Partner {renderSortIcon("partner_percentage", true)}
+                      Partner % {renderSortIcon("partner_percentage", true)}
                     </Button>
                   </TableHead>
                   <TableHead className="border-r p-0">
