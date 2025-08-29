@@ -508,7 +508,7 @@ export default function RevenueLedger() {
               <colgroup>
                 <col className="w-[150px]" />
                 <col className="w-[150px]" />
-                <col className="w-[110px]" />
+                <col className="w-[100px]" />
                 <col className="w-[110px]" />
                 <col className="w-[80px]" />
                 <col className="w-[90px]" />
