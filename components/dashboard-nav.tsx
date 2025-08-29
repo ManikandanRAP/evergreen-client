@@ -83,7 +83,7 @@ export default function DashboardNav({ activeTab, onTabChange, onSidebarToggle }
   const ThemeToggle = ({ isMobile = false }: { isMobile?: boolean }) => {
     if (!mounted) {
       return (
-        <Button variant="ghost" size="icon" className={cn("transition-colors", isMobile ? "w-full justify-start" : "")}>
+        <Button variant="outline" size="icon" className={cn("transition-colors", isMobile ? "w-full justify-start" : "")}>
           <Sun className="h-4 w-4" />
           {isMobile && <span className="ml-3">Theme</span>}
         </Button>
@@ -94,7 +94,7 @@ export default function DashboardNav({ activeTab, onTabChange, onSidebarToggle }
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button
-            variant="ghost"
+            variant="outline"
             size="icon"
             className={cn("transition-colors", isMobile ? "w-full justify-start" : "")}
           >
