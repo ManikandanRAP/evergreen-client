@@ -506,15 +506,15 @@ export default function RevenueLedger() {
           <div className="border rounded-lg overflow-hidden">
             <Table className="table-fixed min-w-[1880px]">
               <colgroup>
-                <col className="w-[150px]" />
-                <col className="w-[150px]" />
-                <col className="w-[100px]" />
-                <col className="w-[110px]" />
-                <col className="w-[80px]" />
-                <col className="w-[90px]" />
-                <col className="w-[90px]" />
-                <col className="w-[110px]" />
                 <col className="w-[120px]" />
+                <col className="w-[120px]" />
+                <col className="w-[85px]" />
+                <col className="w-[90px]" />
+                <col className="w-[60px]" />
+                <col className="w-[75px]" />
+                <col className="w-[75px]" />
+                <col className="w-[90px]" />
+                <col className="w-[90px]" />
                 <col className="w-[250px]" />
               </colgroup>
 
