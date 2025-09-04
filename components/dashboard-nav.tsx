@@ -131,7 +131,7 @@ export default function DashboardNav({ activeTab, onTabChange, onSidebarToggle }
         )}
       >
         {(!isDesktopCollapsed || isMobile) && (
-          <Image src="/myco-logo.png" alt="Myco" width={150} height={40} className="h-8 w-auto" priority />
+          <Image src="/myco-beta-logo.png" alt="Myco" width={200} height={50} className="h-12 w-auto" priority />
         )}
         {isDesktopCollapsed && !isMobile && (
           <div className="w-8 h-8 bg-gradient-to-r from-emerald-500 to-cyan-500 rounded-lg flex items-center justify-center">
@@ -246,7 +246,7 @@ export default function DashboardNav({ activeTab, onTabChange, onSidebarToggle }
 
       {/* Mobile Header */}
       <div className="lg:hidden flex items-center justify-between p-4 bg-card border-b border-border/50 sticky top-0 z-40">
-        <Image src="/myco-logo.png" alt="Myco" width={120} height={30} className="h-6 w-auto" priority />
+        <Image src="/myco-beta-logo.png" alt="Myco" width={180} height={50} className="h-10 w-auto" priority />
         <div className="flex items-center gap-2">
           <ThemeToggle />
           <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
