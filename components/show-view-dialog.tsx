@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 import { ScrollArea } from "@/components/ui/scroll-area"
+import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/components/ui/collapsible"
 import {
   DollarSign,
   Calendar,
@@ -31,6 +32,7 @@ import {
   X,
   ChevronLeft,
   ChevronRight,
+  ChevronDown,
 } from "lucide-react"
 import type { Show } from "@/lib/show-types"
 import React, { useEffect, useState } from "react"
@@ -143,6 +145,7 @@ export default function ShowViewDialog({
   hasPrevious,
 }: ShowViewDialogProps) {
   const [animationDirection, setAnimationDirection] = useState<"next" | "previous" | null>(null)
+  const [isContactOpen, setIsContactOpen] = useState(false)
 
   useEffect(() => {
     if (!open) {
@@ -322,31 +325,56 @@ export default function ShowViewDialog({
                   </div>
                 </CardContent>
               </Card>
+              {/* Contact Information — collapsible with smooth slide */}
               <Card className="dark:bg-[#262626]">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-base">
-                    <Users className="h-5 w-5 text-gray-500" /> Contact Information
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <ContactCard title="Host Contact" contactString={show.primaryContactHost} />
-                  <Separator className="dark:bg-slate-700" />
-                  <ContactCard
-                    title="Show Primary Contact"
-                    contactString={show.primaryContactShow}
-                  />
-                  <Separator className="dark:bg-slate-700" />
-                  <div>
-                    <h5 className="font-semibold text-sm text-muted-foreground">
-                      Evergreen Production Staff
-                    </h5>
-                    <div className="flex items-center gap-2 mt-1 text-sm">
-                      <Users className="h-4 w-4 flex-shrink-0 text-gray-400" />
-                      <span>{show.evergreenProductionStaffName || "None"}</span>
+                <Collapsible open={isContactOpen} onOpenChange={setIsContactOpen}>
+                  {/* Clickable header (keeps your exact title style) */}
+                  <CollapsibleTrigger asChild>
+                    <CardHeader className="cursor-pointer">
+                      <div className="flex items-center justify-between">
+                        <CardTitle className="flex items-center gap-2 text-lg">
+                          <Users className="h-5 w-5 text-emerald-500" />
+                          Contact Information
+                        </CardTitle>
+                        <ChevronDown
+                          className={`h-4 w-4 transition-transform duration-300 ${isContactOpen ? "rotate-180" : ""}`}
+                          aria-hidden="true"
+                        />
+                      </div>
+                    </CardHeader>
+                  </CollapsibleTrigger>
+
+                  {/* Slide down/up with grid-rows trick (no height:auto jank) */}
+                  <CollapsibleContent asChild forceMount>
+                    <div
+                      className={`grid transition-all duration-300 ease-out ${
+                        isContactOpen ? "grid-rows-[1fr]" : "grid-rows-[0fr]"
+                      }`}
+                    >
+                      <div
+                        className={`overflow-hidden min-h-0 transition-all duration-300 ease-out ${
+                          isContactOpen ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-1"
+                        }`}
+                      >
+                        <CardContent className="space-y-4">
+                          <ContactCard title="Host Contact" contactString={show.primaryContactHost} />
+                          <Separator className="dark:bg-slate-700" />
+                          <ContactCard title="Show Primary Contact" contactString={show.primaryContactShow} />
+                          <Separator className="dark:bg-slate-700" />
+                          <div>
+                            <h5 className="font-semibold text-sm text-muted-foreground">Evergreen Production Staff</h5>
+                            <div className="flex items-center gap-2 mt-1 text-sm">
+                              <Users className="h-4 w-4 flex-shrink-0 text-gray-400" />
+                              <span>{show.evergreenProductionStaffName || "None"}</span>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </div>
                     </div>
-                  </div>
-                </CardContent>
+                  </CollapsibleContent>
+                </Collapsible>
               </Card>
+
             </div>
 
             {/* Column 2 */}
@@ -398,15 +426,15 @@ export default function ShowViewDialog({
                       </h4>
                       <div className="grid grid-cols-2 gap-3">
                         <div className="text-center p-3 bg-muted/50 dark:bg-black rounded-lg">
-                          <p className="text-xs text-muted-foreground">Evergreen</p>
+                          <p className="text-xs text-muted-foreground">Standard Ads</p>
                           <p className="text-base font-bold text-emerald-600">
-                            {show.revenueSplit.evergreen}%
+                            {show.standardAdsPercent}%
                           </p>
                         </div>
                         <div className="text-center p-3 bg-muted/50 dark:bg-black rounded-lg">
-                          <p className="text-xs text-muted-foreground">Partner</p>
+                          <p className="text-xs text-muted-foreground">Programmatic Ads</p>
                           <p className="text-base font-bold text-cyan-600">
-                            {show.revenueSplit.partner}%
+                            {show.programmaticAdsSpanPercent}%
                           </p>
                         </div>
                       </div>
@@ -419,36 +447,30 @@ export default function ShowViewDialog({
                     <h4 className="font-semibold flex items-center gap-2 mb-3 text-base">
                       <TrendingUp className="h-4 w-4" /> Revenue Flags
                     </h4>
+                    {/* Only show flags that are true */}
                     <div className="flex flex-wrap gap-2">
-                      {revenueFlags.map((flag) => (
-                        <Badge
-                          key={flag.label}
-                          className={`text-xs border pointer-events-none ${
-                            flag.value
-                              ? "bg-emerald-100 text-emerald-800 border-emerald-300 dark:bg-emerald-900/50 dark:text-emerald-300 dark:border-emerald-700"
-                              : "bg-red-100 text-red-800 border-red-300 dark:bg-red-900/50 dark:text-red-300 dark:border-red-700"
-                          }`}
-                        >
-                          {flag.label} - {flag.value ? "Yes" : "No"}
-                        </Badge>
-                      ))}
+                      {revenueFlags.filter((flag) => !!flag.value).length > 0 ? (
+                        revenueFlags
+                          .filter((flag) => !!flag.value)
+                          .map((flag) => (
+                            <Badge
+                              key={flag.label}
+                              className={`text-xs border pointer-events-none ${
+                                flag.value
+                                  ? "bg-emerald-100 text-emerald-800 border-emerald-300 dark:bg-emerald-900/50 dark:text-emerald-300 dark:border-emerald-700"
+                                  : "bg-red-100 text-red-800 border-red-300 dark:bg-red-900/50 dark:text-red-300 dark:border-red-700"
+                              }`}
+                            >
+                              {flag.label}
+                            </Badge>
+                          ))
+                      ) : (
+                        <p className="text-sm text-muted-foreground italic">
+                          No Revenue Flags Available for this Show
+                        </p>
+                      )}
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
-              <Card className="dark:bg-[#262626]">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-base">
-                    <Target className="h-5 w-5 text-gray-500" /> Demographics
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-3 gap-4">
-                    <DetailItem label="Age" value={show.age_demographic} />
-                    <DetailItem label="Gender" value={show.gender} />
-                    <DetailItem label="Region" value={show.region} />
-                    <DetailItem label="Primary Education" value={show.primary_education} />
-                    <DetailItem label="Secondary Education" value={show.secondary_education} />
+
                   </div>
                 </CardContent>
               </Card>
@@ -456,7 +478,7 @@ export default function ShowViewDialog({
 
             {/* Column 3 */}
             <div className="space-y-6">
-              <Card className="dark:bg-[#262626]">
+              {/* <Card className="dark:bg-[#262626]">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2 text-base">
                     <Percent className="h-5 w-5 text-gray-500" /> Financial Splits
@@ -485,7 +507,7 @@ export default function ShowViewDialog({
                     </div>
                   </div>
                 </CardContent>
-              </Card>
+              </Card> */}
               <Card className="dark:bg-[#262626]">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2 text-lg">
@@ -497,6 +519,22 @@ export default function ShowViewDialog({
                   <DetailItem label="Shows per Year" value={show.showsPerYear} />
                   <DetailItem label="Ad Slots" value={show.adSlots} />
                   <DetailItem label="Average Length" value={`${show.averageLength} min`} />
+                </CardContent>
+              </Card>
+              <Card className="dark:bg-[#262626]">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-lg">
+                    <Target className="h-5 w-5 text-emerald-500" /> Demographics
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-3 gap-4">
+                    <DetailItem label="Age" value={show.age_demographic} />
+                    <DetailItem label="Gender" value={show.gender} />
+                    <DetailItem label="Region" value={show.region} />
+                    <DetailItem label="Primary Education" value={show.primary_education} />
+                    <DetailItem label="Secondary Education" value={show.secondary_education} />
+                  </div>
                 </CardContent>
               </Card>
             </div>
