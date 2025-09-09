@@ -228,7 +228,8 @@ class ApiClient {
   private baseUrl: string
   private token: string | null = null
 
-  constructor(baseUrl = process.env.NEXT_PUBLIC_API_URL as string) {
+  // DEFAULT to same-origin '/api' if env is not set
+  constructor(baseUrl = (process.env.NEXT_PUBLIC_API_URL ?? "/api") as string) {
     this.baseUrl = baseUrl
     if (typeof window !== "undefined") {
       this.token = localStorage.getItem("access_token")
@@ -424,7 +425,8 @@ export interface AllclassItem {
   name: string
 }
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL
+// Use same-origin '/api' if env missing
+const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "/api"
 
 export async function fetchAllclass(): Promise<AllclassItem[]> {
   const res = await fetch(`${API_URL}/qbo/allclass`, {
