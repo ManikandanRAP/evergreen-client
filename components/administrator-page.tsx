@@ -7,23 +7,23 @@ import { UserPlus, Users, Loader2, RotateCcw } from "lucide-react"
 import CreateUserDialog from "@/components/create-user-dialog"
 import VendorSplitManagement from "@/components/vendor-split-management"
 import { useAuth } from "@/lib/auth-context"
-import EditUserPage from "@/components/edit-user-page"
+import UserManagement from "@/components/user-management"
 import { Toaster } from "@/components/ui/toaster"
 
 export default function AdministratorPage() {
   const [isCreateUserOpen, setIsCreateUserOpen] = useState(false)
   const [showEditUsersPage, setShowEditUsersPage] = useState(false)
-  const { user, token, loading } = useAuth()
+  const { user, token, isLoading } = useAuth()
 
   // Global refresh signal for children
   const [refreshCounter, setRefreshCounter] = useState(0)
   const triggerRefresh = () => setRefreshCounter((c) => c + 1)
 
-  const isCreateUserDisabled = loading || !user || !token
+  const isCreateUserDisabled = isLoading || !user || !token
   const isEditUsersDisabled = isCreateUserDisabled
 
   // Block access for non-admin users
-  if (!loading && (!user || (user.role && user.role.toLowerCase() != "admin"))) {
+  if (!isLoading && (!user || (user.role && user.role.toLowerCase() != "admin"))) {
     return (
       <>
         <div className="p-6">
@@ -43,7 +43,7 @@ export default function AdministratorPage() {
   if (showEditUsersPage) {
     return (
       <>
-        <EditUserPage onBack={() => setShowEditUsersPage(false)} />
+        <UserManagement onBack={() => setShowEditUsersPage(false)} />
         <Toaster />
       </>
     )
@@ -61,8 +61,8 @@ export default function AdministratorPage() {
             <p className="text-muted-foreground">Manage users and vendor split configurations.</p>
           </div>
 
-          <Button variant="outline" onClick={triggerRefresh} disabled={loading} title="Refresh data in this page">
-            {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <RotateCcw className="mr-2 h-4 w-4" />}
+          <Button variant="outline" onClick={triggerRefresh} disabled={isLoading} title="Refresh data in this page">
+            {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <RotateCcw className="mr-2 h-4 w-4" />}
             Refresh
           </Button>
         </div>
