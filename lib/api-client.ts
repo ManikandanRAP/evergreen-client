@@ -125,7 +125,7 @@ interface ShowCreate {
   evergreen_production_staff_name?: string;
   show_host_contact?: string;
   show_primary_contact?: string;
-  age_demographic?: string;
+  age_demographic?: "18-24" | "25-34" | "35-44" | "45-54" | "55+";
   is_undersized?: boolean;  // camelCase to match your database
   is_active?: boolean;      // camelCase to match your database
   primary_education?: string;
@@ -179,7 +179,7 @@ interface ShowUpdate {
   evergreen_production_staff_name?: string;
   show_host_contact?: string;
   show_primary_contact?: string;
-  age_demographic?: string;
+  age_demographic?: "18-24" | "25-34" | "35-44" | "45-54" | "55+";
   is_undersized?: boolean;  // camelCase to match your database
   is_active?: boolean;      // camelCase to match your database
   primary_education?: string;

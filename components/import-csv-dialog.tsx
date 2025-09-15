@@ -119,7 +119,7 @@ export default function ImportCSVDialog({ open, onOpenChange, onImportComplete }
     Papa.parse<any>(file, {
       header: true,
       skipEmptyLines: true,
-      complete: async (results) => {
+      complete: async (results: Papa.ParseResult<any>) => {
         const { data, errors: parsingErrors } = results;
 
         if (parsingErrors.length > 0) {
@@ -281,7 +281,7 @@ export default function ImportCSVDialog({ open, onOpenChange, onImportComplete }
             onOpenChange(false);
         }
       },
-      error: (err) => {
+      error: (err: Error) => {
         setError(err.message);
         setIsImporting(false);
       }

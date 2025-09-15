@@ -81,7 +81,7 @@ export interface Show {
   sponsorshipAdPartnerLeadPercent:number
   sponsorshipAdPartnerSoldPercent:number
   programmaticAdsSpanPercent:number
-  merchandePercent:number
+  merchandisePercent:number
   brandedRevenuePercent:number
   marketingServicesRevenuePercent:number
   directCustomerHandsOffPercent:number

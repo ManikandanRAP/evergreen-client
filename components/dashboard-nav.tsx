@@ -31,17 +31,18 @@ import {
 import { useTheme } from "next-themes"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import Image from "next/image"
+import Link from "next/link"
+import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
 
 interface DashboardNavProps {
-  activeTab: string
-  onTabChange: (tab: string) => void
   onSidebarToggle?: (collapsed: boolean) => void
 }
 
-export default function DashboardNav({ activeTab, onTabChange, onSidebarToggle }: DashboardNavProps) {
+export default function DashboardNav({ onSidebarToggle }: DashboardNavProps) {
   const { user, logout } = useAuth()
   const { setTheme, theme } = useTheme()
+  const pathname = usePathname()
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [isDesktopCollapsed, setIsDesktopCollapsed] = useState(false)
   const [mounted, setMounted] = useState(false)
@@ -55,25 +56,24 @@ export default function DashboardNav({ activeTab, onTabChange, onSidebarToggle }
     onSidebarToggle?.(isDesktopCollapsed)
   }, [isDesktopCollapsed, onSidebarToggle])
 
-  let mainNavItems: { id: string; label: string; icon: any; variant?: "default" | "ghost" | "outline" }[] = []
+  let mainNavItems: { href: string; label: string; icon: any; variant?: "default" | "ghost" | "outline" }[] = []
 
   if (user?.role === "partner") {
-    mainNavItems = [{ id: "ledger", label: "Revenue Ledger", icon: DollarSign }]
+    mainNavItems = [{ href: "/revenue-ledger", label: "Revenue Ledger", icon: DollarSign }]
   } else {
     mainNavItems = [
-      { id: "dashboard", label: "Dashboard", icon: Home },
-      { id: "shows", label: "Shows", icon: Radio },
-      { id: "ledger", label: "Revenue Ledger", icon: DollarSign },
+      { href: "/", label: "Dashboard", icon: Home },
+      { href: "/shows-management", label: "Shows", icon: Radio },
+      { href: "/revenue-ledger", label: "Revenue Ledger", icon: DollarSign },
       ...(user?.role === "admin"
-        ? [{ id: "administrator", label: "Administrator", icon: Shield }]
+        ? [{ href: "/administrator", label: "Administrator", icon: Shield }]
         : []),
     ]
   }
 
-
   const secondaryNavItems = [
-    ...(user?.role === "internal" ? [{ id: "add-feature", label: "Feature Suggestion", variant: "outline", icon: Lightbulb }] : []),
-    ...(user?.role === "admin" ? [{ id: "feedbacks", label: "Feedbacks", variant: "outline", icon: MessageSquare }] : []),
+    ...(user?.role === "internal" ? [{ href: "/add-feature-suggestion", label: "Feature Suggestion", variant: "outline", icon: Lightbulb }] : []),
+    ...(user?.role === "admin" ? [{ href: "/feedbacks", label: "Feedbacks", variant: "outline", icon: MessageSquare }] : []),
   ]
 
   const handleSidebarToggle = () => {
@@ -143,45 +143,40 @@ export default function DashboardNav({ activeTab, onTabChange, onSidebarToggle }
       <nav className="flex-1 flex flex-col p-4">
         <div className="space-y-2">
           {mainNavItems.map((item) => (
-            <Button
-              key={item.id}
-              variant={activeTab === item.id ? "default" : (item.variant ?? "outline")}
-              className={cn(
-                "w-full transition-all duration-200",
-                activeTab === item.id ? "evergreen-button shadow-lg" : "hover:bg-accent hover:text-accent-foreground",
-                isDesktopCollapsed && !isMobile ? "justify-center px-2" : "justify-start",
-              )}
-              onClick={() => {
-                onTabChange(item.id)
-                setIsMobileMenuOpen(false)
-              }}
-              title={isDesktopCollapsed && !isMobile ? item.label : undefined}
-            >
-              <item.icon className={cn("h-4 w-4", (!isDesktopCollapsed || isMobile) && "mr-3")} />
-              {(!isDesktopCollapsed || isMobile) && item.label}
-            </Button>
-          
+            <Link key={item.href} href={item.href} className="block">
+              <Button
+                variant={pathname === item.href ? "default" : (item.variant ?? "outline")}
+                className={cn(
+                  "w-full transition-all duration-200",
+                  pathname === item.href ? "evergreen-button shadow-lg" : "hover:bg-accent hover:text-accent-foreground",
+                  isDesktopCollapsed && !isMobile ? "justify-center px-2" : "justify-start",
+                )}
+                onClick={() => setIsMobileMenuOpen(false)}
+                title={isDesktopCollapsed && !isMobile ? item.label : undefined}
+              >
+                <item.icon className={cn("h-4 w-4", (!isDesktopCollapsed || isMobile) && "mr-3")} />
+                {(!isDesktopCollapsed || isMobile) && item.label}
+              </Button>
+            </Link>
           ))}
         </div>
         <div className="mt-auto space-y-2">
           {secondaryNavItems.map((item) => (
-            <Button
-              key={item.id}
-              variant={activeTab === item.id ? "default" : "outline"}
-              className={cn(
-                "w-full transition-all duration-200",
-                activeTab === item.id ? "evergreen-button shadow-lg" : "hover:bg-accent hover:text-accent-foreground",
-                isDesktopCollapsed && !isMobile ? "justify-center px-2" : "justify-start",
-              )}
-              onClick={() => {
-                onTabChange(item.id)
-                setIsMobileMenuOpen(false)
-              }}
-              title={isDesktopCollapsed && !isMobile ? item.label : undefined}
-            >
-              <item.icon className={cn("h-4 w-4", (!isDesktopCollapsed || isMobile) && "mr-3")} />
-              {(!isDesktopCollapsed || isMobile) && item.label}
-            </Button>
+            <Link key={item.href} href={item.href} className="block">
+              <Button
+                variant={pathname === item.href ? "default" : "outline"}
+                className={cn(
+                  "w-full transition-all duration-200",
+                  pathname === item.href ? "evergreen-button shadow-lg" : "hover:bg-accent hover:text-accent-foreground",
+                  isDesktopCollapsed && !isMobile ? "justify-center px-2" : "justify-start",
+                )}
+                onClick={() => setIsMobileMenuOpen(false)}
+                title={isDesktopCollapsed && !isMobile ? item.label : undefined}
+              >
+                <item.icon className={cn("h-4 w-4", (!isDesktopCollapsed || isMobile) && "mr-3")} />
+                {(!isDesktopCollapsed || isMobile) && item.label}
+              </Button>
+            </Link>
           ))}
         </div>
       </nav>

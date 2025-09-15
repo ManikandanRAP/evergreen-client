@@ -7,13 +7,13 @@ import { UserPlus, Users, Loader2, RotateCcw } from "lucide-react"
 import CreateUserDialog from "@/components/create-user-dialog"
 import VendorSplitManagement from "@/components/vendor-split-management"
 import { useAuth } from "@/lib/auth-context"
-import UserManagement from "@/components/user-management"
+import { useRouter } from "next/navigation"
 import { Toaster } from "@/components/ui/toaster"
 
 export default function AdministratorPage() {
   const [isCreateUserOpen, setIsCreateUserOpen] = useState(false)
-  const [showEditUsersPage, setShowEditUsersPage] = useState(false)
   const { user, token, isLoading } = useAuth()
+  const router = useRouter()
 
   // Global refresh signal for children
   const [refreshCounter, setRefreshCounter] = useState(0)
@@ -34,16 +34,6 @@ export default function AdministratorPage() {
             </CardHeader>
           </Card>
         </div>
-        <Toaster />
-      </>
-    )
-  }
-
-  // Full-page editor when viewing users list
-  if (showEditUsersPage) {
-    return (
-      <>
-        <UserManagement onBack={() => setShowEditUsersPage(false)} />
         <Toaster />
       </>
     )
@@ -98,7 +88,7 @@ export default function AdministratorPage() {
 
                 {/* Second button: View Users List */}
                 <Button
-                  onClick={() => setShowEditUsersPage(true)}
+                  onClick={() => router.push("/user-management")}
                   className="evergreen-button"
                   disabled={isEditUsersDisabled}
                   variant="secondary"

@@ -3,22 +3,16 @@
 import { useState, useEffect, useMemo } from "react"
 import { useAuth } from "@/lib/auth-context"
 import { useShows } from "@/hooks/use-shows"
-import LoginForm from "@/components/login-form"
-import DashboardNav from "@/components/dashboard-nav"
-import ShowsManagement from "@/components/shows-management"
-import AdministratorPage from "@/components/administrator-page"
-import RevenueLedger from "@/components/revenue-ledger"
-import AddFeatureSuggestion from "@/components/add-feature-suggestion"
-import Feedbacks from "@/components/feedbacks"
+import { useRouter } from "next/navigation"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Radio, DollarSign, TrendingUp, Users, CreditCard, Loader2 } from "lucide-react"
-import { cn } from "@/lib/utils"
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL
 
-function DashboardOverview() {
+export default function HomePage() {
   const { user, token } = useAuth()
+  const router = useRouter()
   const { shows, loading } = useShows()
 
   type LedgerItem = {
@@ -37,6 +31,12 @@ function DashboardOverview() {
   const [error, setError] = useState<string | null>(null)
   const [ledger, setLedger] = useState<LedgerItem[]>([])
   const [payouts, setPayouts] = useState<PartnerPayout[]>([])
+
+  useEffect(() => {
+    if (user?.role === "partner") {
+      router.push("/revenue-ledger")
+    }
+  }, [user, router])
 
   useEffect(() => {
     let isMounted = true
@@ -264,84 +264,6 @@ function DashboardOverview() {
           </div>
         </CardContent>
       </Card>
-    </div>
-  )
-}
-
-export default function Dashboard() {
-  const { user, isLoading } = useAuth()
-  const isPartner = user?.role === "partner"
-  const [activeTab, setActiveTab] = useState<string | null>(null)
-
-  useEffect(() => {
-    if (!isLoading) {
-      setActiveTab(isPartner ? "ledger" : "dashboard")
-    }
-  }, [isLoading, isPartner])
-
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false)
-
-  if (activeTab === null) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600 mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Loading...</p>
-        </div>
-      </div>
-    )
-  }
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600 mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Loading...</p>
-        </div>
-      </div>
-    )
-  }
-
-  if (!user) {
-    return <LoginForm />
-  }
-
-  const renderContent = () => {
-    switch (activeTab) {
-      case "dashboard":
-        return <DashboardOverview />
-      case "shows":
-        return <ShowsManagement />
-      case "users":
-        return <AdministratorPage />
-      case "ledger":
-        return <RevenueLedger />
-      case "administrator":
-        return user.role === "admin" ? <AdministratorPage /> : <DashboardOverview />
-      case "add-feature":
-        return user.role === "internal" ? <AddFeatureSuggestion /> : <DashboardOverview />
-      case "feedbacks":
-        return user.role === "admin" ? <Feedbacks /> : <DashboardOverview />
-      case "settings":
-        return <AdministratorPage />
-      default:
-        return <DashboardOverview />
-    }
-  }
-
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-emerald-50/30 via-cyan-50/30 to-green-50/30 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
-      <DashboardNav
-        activeTab={activeTab ?? (user?.role === "partner" ? "ledger" : "dashboard")}
-        onTabChange={setActiveTab}
-        onSidebarToggle={setIsSidebarCollapsed}
-      />
-      <div className={cn("transition-all duration-300 ease-in-out", isSidebarCollapsed ? "lg:pl-20" : "lg:pl-64")}>
-        <main className="p-4 lg:p-8">
-          {isPartner ? <RevenueLedger /> : <div>{renderContent()}</div>}
-        </main>
-      </div>
     </div>
   )
 }

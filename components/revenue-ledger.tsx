@@ -85,7 +85,7 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL
 const PAGE_SIZE = 10
 
 export default function RevenueLedger() {
-  const { token, loading } = useAuth()
+  const { token, isLoading } = useAuth()
 
   const [selectedShow, setSelectedShow] = useState<string>("all")
   const [dateFrom, setDateFrom] = useState<string>("")
@@ -147,14 +147,14 @@ export default function RevenueLedger() {
   }
 
   useEffect(() => {
-    if (loading) return
+    if (isLoading) return
     if (!token) {
       setLedger([])
       setPayouts([])
       return
     }
     fetchData()
-  }, [loading, token])
+  }, [isLoading, token])
 
   const availableShows = useMemo(() => {
     const set = new Set<string>()
@@ -338,7 +338,7 @@ export default function RevenueLedger() {
     XLSX.writeFile(wb, fname)
   }
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="p-6 flex items-center gap-2 text-sm text-muted-foreground">
         <Loader2 className="h-4 w-4 animate-spin" /> Checking authentication…
