@@ -224,6 +224,35 @@ interface BulkImportResponse {
   errors: string[];
 }
 
+// --- NEW INTERFACES FOR DUPLICATE HANDLING ---
+interface DuplicateCheckResult {
+  title: string;
+  exists: boolean;
+  existing_show: Show | null;
+}
+
+interface DuplicateCheckResponse {
+  duplicates: DuplicateCheckResult[];
+  total_checked: number;
+  duplicates_found: number;
+  message: string;
+}
+
+interface DuplicateAction {
+  title: string;
+  action: "create" | "update" | "skip";
+}
+
+interface BulkImportWithActionsResponse {
+  message: string;
+  total: number;
+  successful: number;
+  updated: number;
+  skipped: number;
+  failed: number;
+  errors: string[];
+}
+
 class ApiClient {
   private baseUrl: string
   private token: string | null = null
@@ -361,6 +390,63 @@ class ApiClient {
   }
   // --- END UPDATED METHOD ---
 
+  // --- NEW DUPLICATE CHECKING METHODS ---
+  async checkDuplicates(data: ShowCreate[]): Promise<DuplicateCheckResponse> {
+    try {
+      console.log("Checking for duplicates:", JSON.stringify(data, null, 2))
+      const response = await this.request<DuplicateCheckResponse>("/podcasts/check-duplicates", {
+        method: "POST",
+        body: JSON.stringify(data),
+      })
+      return response
+    } catch (error: any) {
+      console.error("Duplicate check error:", error)
+      throw error
+    }
+  }
+
+  async checkSingleDuplicate(data: ShowCreate): Promise<{ exists: boolean; existing_show: any }> {
+    try {
+      console.log("Checking single duplicate:", JSON.stringify(data, null, 2))
+      const response = await this.request<{ exists: boolean; existing_show: any }>("/podcasts/check-duplicate", {
+        method: "POST",
+        body: JSON.stringify(data),
+      })
+      return response
+    } catch (error: any) {
+      console.error("Single duplicate check error:", error)
+      throw error
+    }
+  }
+
+  async bulkCreatePodcastsWithActions(
+    data: ShowCreate[], 
+    actions: DuplicateAction[]
+  ): Promise<BulkImportWithActionsResponse> {
+    try {
+      console.log("Bulk import with actions:", JSON.stringify({ data, actions }, null, 2))
+      const response = await this.request<BulkImportWithActionsResponse>("/podcasts/bulk-import-with-actions", {
+        method: "POST",
+        body: JSON.stringify({ shows_data: data, actions }),
+      })
+
+      // Custom toast message based on the outcome
+      if (response.failed > 0 && response.successful === 0 && response.updated === 0) {
+        toast.error(response.message || "All show imports failed.")
+      } else if (response.failed > 0) {
+        toast.warning(response.message || "Bulk import completed with some errors.")
+      } else {
+        toast.success(response.message || "Bulk import completed successfully!")
+      }
+      
+      return response
+    } catch (error: any) {
+      console.error("Bulk import with actions error:", error)
+      toast.error(error.message || "An unexpected error occurred during the import process.")
+      throw error
+    }
+  }
+
   async updatePodcast(showId: string, data: ShowUpdate): Promise<Show> {
     try {
       const updatedShow = await this.request<Show>(`/podcasts/${showId}`, {
@@ -381,6 +467,19 @@ class ApiClient {
       toast.success("Show deleted successfully!")
     } catch (error: any) {
       toast.error(error.message || "Failed to delete show.")
+      throw error
+    }
+  }
+
+  async bulkDeletePodcasts(showIds: string[]): Promise<{ successful: number; failed: number; errors: string[]; message: string }> {
+    try {
+      const response = await this.request<{ successful: number; failed: number; errors: string[]; message: string }>("/podcasts/bulk-delete", {
+        method: "DELETE",
+        body: JSON.stringify({ show_ids: showIds }),
+      })
+      return response
+    } catch (error: any) {
+      console.error("Bulk delete podcasts error:", error)
       throw error
     }
   }
@@ -440,4 +539,18 @@ export async function fetchAllclass(): Promise<AllclassItem[]> {
 
 export const apiClient = new ApiClient()
 
-export type { User, Show, ShowCreate, ShowUpdate, PartnerCreate, PasswordUpdate, FilterParams, Token, LoginCredentials }
+export type { 
+  User, 
+  Show, 
+  ShowCreate, 
+  ShowUpdate, 
+  PartnerCreate, 
+  PasswordUpdate, 
+  FilterParams, 
+  Token, 
+  LoginCredentials,
+  DuplicateCheckResult,
+  DuplicateCheckResponse,
+  DuplicateAction,
+  BulkImportWithActionsResponse
+}

@@ -3,6 +3,8 @@
 import { useState, useMemo, useEffect } from "react"
 import { useAuth } from "@/lib/auth-context"
 import { useShows } from "@/hooks/use-shows"
+import { apiClient } from "@/lib/api-client"
+import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -33,8 +35,11 @@ import {
   X,
   Loader2,
   ChevronDown,
+  ChevronLeft,
+  ChevronRight,
   RotateCcw,
   MoreVertical,
+  AlertTriangle,
 } from "lucide-react"
 import {
   Collapsible,
@@ -51,6 +56,16 @@ import CreateShowDialog from "@/components/create-show-dialog"
 import DeleteShowDialog from "@/components/delete-show-dialog"
 import ImportCSVDialog from "@/components/import-csv-dialog"
 import ShowViewDialog from "@/components/show-view-dialog"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 import type { Show } from "@/lib/show-types"
 import { Checkbox } from "@/components/ui/checkbox"
 
@@ -164,6 +179,8 @@ export default function ShowsManagement() {
 
   const [selectedShows, setSelectedShows] = useState<Set<string>>(new Set())
   const [importResult, setImportResult] = useState<ImportResult | null>(null)
+  const [isBulkDeleting, setIsBulkDeleting] = useState(false)
+  const [showBulkDeleteConfirm, setShowBulkDeleteConfirm] = useState(false)
 
   const handleClearFilters = () => {
     setFilters(initialFilters)
@@ -177,6 +194,13 @@ export default function ShowsManagement() {
   const handleEditShow = (show: Show) => {
     setEditingShow(show)
     setIsCreateDialogOpen(true)
+  }
+
+  const handleEditExistingShow = (show: Show) => {
+    console.log("handleEditExistingShow called with:", show)
+    setEditingShow(show)
+    setIsCreateDialogOpen(true)
+    console.log("Dialog should now be open with editingShow:", show)
   }
 
   const handleDeleteShow = (show: Show) => setDeletingShow(show)
@@ -208,6 +232,43 @@ export default function ShowsManagement() {
     const next = new Set(selectedShows)
     next.has(showId) ? next.delete(showId) : next.add(showId)
     setSelectedShows(next)
+  }
+
+  const handleBulkDelete = () => {
+    setShowBulkDeleteConfirm(true)
+  }
+
+  const handleConfirmBulkDelete = async () => {
+    if (selectedShows.size === 0) return
+
+    setIsBulkDeleting(true)
+    try {
+      const selectedShowIds = Array.from(selectedShows)
+      
+      // Use the new bulk delete API
+      const result = await apiClient.bulkDeletePodcasts(selectedShowIds)
+      
+      // Clear selection after deletion
+      setSelectedShows(new Set())
+      
+      // Show appropriate success/error message
+      if (result.failed === 0) {
+        toast.success(`Successfully deleted all ${result.successful} selected shows!`)
+      } else if (result.successful > 0) {
+        toast.warning(`Deleted ${result.successful} shows, ${result.failed} failed`)
+      } else {
+        toast.error(`Failed to delete any shows. ${result.errors.join(', ')}`)
+      }
+
+      // Refresh the shows list
+      await fetchShows()
+    } catch (error: any) {
+      console.error("Bulk delete failed:", error)
+      toast.error(error.message || "Failed to delete selected shows")
+    } finally {
+      setIsBulkDeleting(false)
+      setShowBulkDeleteConfirm(false)
+    }
   }
 
   const handleExportCSV = () => {
@@ -456,7 +517,6 @@ export default function ShowsManagement() {
   const PAGE_SIZE = 20
   const [page, setPage] = useState(1)
   const [gotoInput, setGotoInput] = useState<string>("")
-  const [gotoInputBottom, setGotoInputBottom] = useState<string>("")
 
   const totalPages = useMemo(
     () => Math.max(1, Math.ceil(filteredShows.length / PAGE_SIZE)),
@@ -475,20 +535,13 @@ export default function ShowsManagement() {
   const pageRangeStart = filteredShows.length === 0 ? 0 : (page - 1) * PAGE_SIZE + 1
   const pageRangeEnd = Math.min(page * PAGE_SIZE, filteredShows.length)
 
-  const gotoFirst = () => setPage(1)
   const gotoPrev = () => setPage((p) => Math.max(1, p - 1))
   const gotoNext = () => setPage((p) => Math.min(totalPages, p + 1))
-  const gotoLast = () => setPage(totalPages)
 
   const handleGoto = () => {
     const n = parseInt(gotoInput, 10)
     if (!isNaN(n)) setPage(Math.min(Math.max(1, n), totalPages))
     setGotoInput("")
-  }
-  const handleGotoBottom = () => {
-    const n = parseInt(gotoInputBottom, 10)
-    if (!isNaN(n)) setPage(Math.min(Math.max(1, n), totalPages))
-    setGotoInputBottom("")
   }
 
   useEffect(() => {
@@ -1244,9 +1297,20 @@ export default function ShowsManagement() {
             </Button>
             <span className="text-sm text-muted-foreground">{selectedShows.size} selected</span>
             {selectedShows.size > 0 && (
-              <Button variant="outline" size="sm" onClick={() => setSelectedShows(new Set())}>
-                Clear Selection
-              </Button>
+              <>
+                <Button variant="outline" size="sm" onClick={() => setSelectedShows(new Set())}>
+                  Clear Selection
+                </Button>
+                <Button 
+                  variant="destructive" 
+                  size="sm" 
+                  onClick={handleBulkDelete}
+                  disabled={isBulkDeleting}
+                >
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  {isBulkDeleting ? "Deleting..." : "Delete Selected Shows"}
+                </Button>
+              </>
             )}
           </div>
 
@@ -1256,36 +1320,33 @@ export default function ShowsManagement() {
               <span className="font-medium">{filteredShows.length}</span>
             </div>
             <div className="flex items-center gap-2">
-              <Button variant="outline" size="sm" onClick={gotoFirst} disabled={page === 1} className="bg-transparent">
-                First
-              </Button>
-              <Button variant="outline" size="sm" onClick={gotoPrev} disabled={page === 1} className="bg-transparent">
+              <Button variant="outline" size="sm" onClick={gotoPrev} disabled={page === 1}>
+                <ChevronLeft className="h-4 w-4" />
                 Prev
               </Button>
-              <span className="text-xs text-muted-foreground px-1">
-                Page <span className="font-medium">{page}</span> / <span className="font-medium">{totalPages}</span>
+              <span className="text-xs text-muted-foreground">
+                Page {page} / {totalPages}
               </span>
-              <Button variant="outline" size="sm" onClick={gotoNext} disabled={page === totalPages} className="bg-transparent">
+              <Button variant="outline" size="sm" onClick={gotoNext} disabled={page === totalPages}>
                 Next
+                <ChevronRight className="h-4 w-4" />
               </Button>
-              <Button variant="outline" size="sm" onClick={gotoLast} disabled={page === totalPages} className="bg-transparent">
-                Last
-              </Button>
-            </div>
-            <div className="flex items-center gap-2">
-              <Label htmlFor="goto" className="text-xs text-muted-foreground">Go to</Label>
-              <Input
-                id="goto"
-                inputMode="numeric"
-                pattern="[0-9]*"
-                value={gotoInput}
-                onChange={(e) => setGotoInput(e.target.value)}
-                placeholder="Page #"
-                className="h-8 w-20"
-              />
-              <Button variant="outline" size="sm" onClick={handleGoto} className="bg-transparent">
-                Go
-              </Button>
+              <div className="flex items-center gap-2 ml-2">
+                <Label htmlFor="page-input" className="text-xs text-muted-foreground">Go to</Label>
+                <Input
+                  id="page-input"
+                  type="number"
+                  min={1}
+                  max={totalPages}
+                  value={gotoInput}
+                  onChange={(e) => setGotoInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") handleGoto()
+                  }}
+                  className="h-8 w-20"
+                />
+                <Button variant="outline" size="sm" onClick={handleGoto}>Go</Button>
+              </div>
             </div>
           </div>
         </div>
@@ -1511,9 +1572,20 @@ export default function ShowsManagement() {
             </Button>
             <span className="text-sm text-muted-foreground">{selectedShows.size} selected</span>
             {selectedShows.size > 0 && (
-              <Button variant="outline" size="sm" onClick={() => setSelectedShows(new Set())}>
-                Clear Selection
-              </Button>
+              <>
+                <Button variant="outline" size="sm" onClick={() => setSelectedShows(new Set())}>
+                  Clear Selection
+                </Button>
+                <Button 
+                  variant="destructive" 
+                  size="sm" 
+                  onClick={handleBulkDelete}
+                  disabled={isBulkDeleting}
+                >
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  {isBulkDeleting ? "Deleting..." : "Delete Selected Shows"}
+                </Button>
+              </>
             )}
           </div>
 
@@ -1523,36 +1595,33 @@ export default function ShowsManagement() {
               <span className="font-medium">{filteredShows.length}</span>
             </div>
             <div className="flex items-center gap-2">
-              <Button variant="outline" size="sm" onClick={gotoFirst} disabled={page === 1} className="bg-transparent">
-                First
-              </Button>
-              <Button variant="outline" size="sm" onClick={gotoPrev} disabled={page === 1} className="bg-transparent">
+              <Button variant="outline" size="sm" onClick={gotoPrev} disabled={page === 1}>
+                <ChevronLeft className="h-4 w-4" />
                 Prev
               </Button>
-              <span className="text-xs text-muted-foreground px-1">
-                Page <span className="font-medium">{page}</span> / <span className="font-medium">{totalPages}</span>
+              <span className="text-xs text-muted-foreground">
+                Page {page} / {totalPages}
               </span>
-              <Button variant="outline" size="sm" onClick={gotoNext} disabled={page === totalPages} className="bg-transparent">
+              <Button variant="outline" size="sm" onClick={gotoNext} disabled={page === totalPages}>
                 Next
+                <ChevronRight className="h-4 w-4" />
               </Button>
-              <Button variant="outline" size="sm" onClick={gotoLast} disabled={page === totalPages} className="bg-transparent">
-                Last
-              </Button>
-            </div>
-            <div className="flex items-center gap-2">
-              <Label htmlFor="goto-bottom" className="text-xs text-muted-foreground">Go to</Label>
-              <Input
-                id="goto-bottom"
-                inputMode="numeric"
-                pattern="[0-9]*"
-                value={gotoInputBottom}
-                onChange={(e) => setGotoInputBottom(e.target.value)}
-                placeholder="Page #"
-                className="h-8 w-20"
-              />
-              <Button variant="outline" size="sm" onClick={handleGotoBottom} className="bg-transparent">
-                Go
-              </Button>
+              <div className="flex items-center gap-2 ml-2">
+                <Label htmlFor="page-input" className="text-xs text-muted-foreground">Go to</Label>
+                <Input
+                  id="page-input"
+                  type="number"
+                  min={1}
+                  max={totalPages}
+                  value={gotoInput}
+                  onChange={(e) => setGotoInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") handleGoto()
+                  }}
+                  className="h-8 w-20"
+                />
+                <Button variant="outline" size="sm" onClick={handleGoto}>Go</Button>
+              </div>
             </div>
           </div>
         </div>
@@ -1567,6 +1636,7 @@ export default function ShowsManagement() {
         createShow={createShow}
         updateShow={updateShow}
         existingShows={shows}
+        onEditExistingShow={handleEditExistingShow}
       />
       <DeleteShowDialog
         open={!!deletingShow}
@@ -1588,6 +1658,43 @@ export default function ShowsManagement() {
         hasNext={viewingShowIndex !== null && viewingShowIndex < filteredShows.length - 1}
         hasPrevious={viewingShowIndex !== null && viewingShowIndex > 0}
       />
+
+      {/* Bulk Delete Confirmation Dialog */}
+      <AlertDialog open={showBulkDeleteConfirm} onOpenChange={setShowBulkDeleteConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2 text-red-600">
+              <AlertTriangle className="h-5 w-5" />
+              Delete Selected Shows
+            </AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-2">
+                <p>Are you sure you want to delete {selectedShows.size} selected show{selectedShows.size > 1 ? 's' : ''}?</p>
+                <p>This action cannot be undone and will permanently remove:</p>
+                <ul className="ml-4 list-disc space-y-1">
+                  <li>All show data and settings</li>
+                  <li>Associated revenue records</li>
+                  <li>Partner access permissions</li>
+                  <li>Historical performance data</li>
+                </ul>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setShowBulkDeleteConfirm(false)}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleConfirmBulkDelete}
+              disabled={isBulkDeleting}
+              className="bg-red-600 hover:bg-red-700 focus:ring-red-600"
+            >
+              <Trash2 className="h-4 w-4 mr-2" />
+              {isBulkDeleting ? "Deleting..." : `Delete ${selectedShows.size} Show${selectedShows.size > 1 ? 's' : ''}`}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }

@@ -12,10 +12,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { ArrowLeft, ArrowRight, Save, X, AlertCircle } from "lucide-react"
+import { ArrowLeft, ArrowRight, Save, X, AlertCircle, Loader2, Edit } from "lucide-react"
 import { cn } from "@/lib/utils"
 import type { Show } from "@/lib/show-types"
-import { ShowCreate, ShowUpdate, fetchAllclass  } from "@/lib/api-client" // Import both types
+import { ShowCreate, ShowUpdate, fetchAllclass, apiClient } from "@/lib/api-client" // Import both types
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command"
 import { ChevronsUpDown } from "lucide-react"
@@ -28,6 +28,7 @@ interface CreateShowDialogProps {
   createShow: (showData: Partial<ShowCreate>) => Promise<Show | null>
   updateShow: (showId: string, showData: Partial<ShowUpdate>) => Promise<Show | null>
   existingShows: Show[]
+  onEditExistingShow?: (show: Show) => void
 }
 
 const DATE_MIN = "1900-01-01";
@@ -227,6 +228,7 @@ export default function CreateShowDialog({
   createShow,
   updateShow,
   existingShows,
+  onEditExistingShow,
 }: CreateShowDialogProps) {
   const [formData, setFormData] = useState<ShowFormData>(initialFormData)
   const [currentTab, setCurrentTab] = useState("basic")
@@ -236,9 +238,47 @@ export default function CreateShowDialog({
   const [qboOptions, setQboOptions] = useState<{ id: number; name: string }[]>([])
   const [isQboOpen, setIsQboOpen] = useState(false)
   const [genreName, setGenreName] = useState<string | null>(null);
+  const [isCheckingDuplicate, setIsCheckingDuplicate] = useState(false)
+  const [duplicateCheckResult, setDuplicateCheckResult] = useState<{ isDuplicate: boolean; existingShow?: any } | null>(null)
 
 
   const isEditMode = !!editingShow
+
+  // Debounced duplicate checking
+  useEffect(() => {
+    if (!formData.title || formData.title.trim() === "") {
+      setDuplicateCheckResult(null)
+      return
+    }
+
+    // Skip checking if we're editing the same show
+    if (isEditMode && editingShow?.name?.toLowerCase() === formData.title.toLowerCase()) {
+      setDuplicateCheckResult({ isDuplicate: false })
+      return
+    }
+
+    const timeoutId = setTimeout(async () => {
+      setIsCheckingDuplicate(true)
+      try {
+        // Create a temporary show object to check for duplicates
+        const tempShow: ShowCreate = { title: formData.title }
+        const result = await apiClient.checkSingleDuplicate(tempShow)
+        
+        setDuplicateCheckResult({
+          isDuplicate: result.exists,
+          existingShow: result.existing_show
+        })
+      } catch (error) {
+        console.error("Error checking duplicate:", error)
+        // Don't set result to null on error - keep previous state
+        // This prevents flickering between available/unavailable states
+      } finally {
+        setIsCheckingDuplicate(false)
+      }
+    }, 500) // 500ms debounce
+
+    return () => clearTimeout(timeoutId)
+  }, [formData.title, isEditMode, editingShow?.name])
 
   useEffect(() => {
     if (editingShow) {
@@ -322,11 +362,18 @@ export default function CreateShowDialog({
       if (!value || typeof value !== "string" || value.trim() === "") {
         return "This field is required"
       }
-      const isDuplicate = existingShows.some(
+      
+      // Use real-time duplicate check result if available
+      if (duplicateCheckResult?.isDuplicate && duplicateCheckResult.existingShow) {
+        return `A show with this name already exists: "${duplicateCheckResult.existingShow.title}". Please choose a different name or edit the existing show.`
+      }
+      
+      // Fallback to local check if real-time check hasn't completed yet
+      const duplicateShow = existingShows.find(
         (show) => show.name.toLowerCase() === value.toLowerCase() && show.id !== editingShow?.id,
       )
-      if (isDuplicate) {
-        return "A show with this name already exists."
+      if (duplicateShow) {
+        return `A show with this name already exists: "${duplicateShow.name}". Please choose a different name or edit the existing show.`
       }
     }
 
@@ -389,6 +436,18 @@ export default function CreateShowDialog({
         allErrors['title'] = error
         isValid = false
     }
+
+    // Also check if we're currently checking for duplicates
+    if (isCheckingDuplicate) {
+        allErrors['title'] = "Please wait while we check for duplicates..."
+        isValid = false
+    }
+
+    // Check if we have a duplicate result
+    if (duplicateCheckResult?.isDuplicate) {
+        allErrors['title'] = `A show with this name already exists: "${duplicateCheckResult.existingShow?.title}". Please choose a different name or edit the existing show.`
+        isValid = false
+    }
     
     setErrors(allErrors)
     return isValid
@@ -402,6 +461,11 @@ export default function CreateShowDialog({
         delete newErrors[field]
         return newErrors
       })
+    }
+    
+    // Clear duplicate check result when title changes
+    if (field === "title") {
+      setDuplicateCheckResult(null)
     }
   }
 
@@ -525,6 +589,93 @@ export default function CreateShowDialog({
     setAttemptedSubmit(false)
     onOpenChange(false)
   }
+
+  const handleEditExistingShow = () => {
+    if (duplicateCheckResult?.existingShow && onEditExistingShow) {
+      console.log("Edit existing show clicked, data:", duplicateCheckResult.existingShow)
+      
+      // Convert the existing show data to the Show type expected by the parent
+      // We'll create a minimal Show object with the essential fields
+      const existingShow: Show = {
+        id: duplicateCheckResult.existingShow.id,
+        name: duplicateCheckResult.existingShow.title,
+        partnerUsers: [],
+        revenueSplit: { evergreen: 0, partner: 0 },
+        show_type: duplicateCheckResult.existingShow.show_type || "Original",
+        subnetwork_id: duplicateCheckResult.existingShow.subnetwork_id || "",
+        format: duplicateCheckResult.existingShow.media_type === "video" ? "Video" : 
+                duplicateCheckResult.existingShow.media_type === "audio" ? "Audio" : "Both",
+        relationship: duplicateCheckResult.existingShow.relationship_level === "strong" ? "Strong" :
+                     duplicateCheckResult.existingShow.relationship_level === "medium" ? "Medium" : "Weak",
+        ageMonths: 0,
+        isTentpole: duplicateCheckResult.existingShow.tentpole || false,
+        isOriginal: duplicateCheckResult.existingShow.is_original || false,
+        minimumGuarantee: duplicateCheckResult.existingShow.minimum_guarantee || 0,
+        ownershipPercentage: duplicateCheckResult.existingShow.evergreen_ownership_pct || 0,
+        brandedRevenueAmount: 0,
+        marketingRevenueAmount: 0,
+        webManagementRevenue: 0,
+        latestCPM: duplicateCheckResult.existingShow.latest_cpm_usd || 0,
+        revenue2023: duplicateCheckResult.existingShow.revenue_2023 || 0,
+        revenue2024: duplicateCheckResult.existingShow.revenue_2024 || 0,
+        revenue2025: duplicateCheckResult.existingShow.revenue_2025 || 0,
+        hasSponsorshipRevenue: duplicateCheckResult.existingShow.has_sponsorship_revenue || false,
+        hasNonEvergreenRevenue: duplicateCheckResult.existingShow.has_non_evergreen_revenue || false,
+        requiresPartnerLedgerAccess: duplicateCheckResult.existingShow.requires_partner_access || false,
+        genre_name: duplicateCheckResult.existingShow.genre_name || null,
+        showsPerYear: duplicateCheckResult.existingShow.shows_per_year || 0,
+        adSlots: duplicateCheckResult.existingShow.ad_slots || 0,
+        averageLength: duplicateCheckResult.existingShow.avg_show_length_mins || 0,
+        primaryContactHost: duplicateCheckResult.existingShow.show_host_contact || "",
+        primaryContactShow: duplicateCheckResult.existingShow.show_primary_contact || "",
+        age_demographic: duplicateCheckResult.existingShow.age_demographic || null,
+        gender: duplicateCheckResult.existingShow.gender || null,
+        is_undersized: duplicateCheckResult.existingShow.is_undersized || false,
+        primary_education: duplicateCheckResult.existingShow.primary_education || null,
+        secondary_education: duplicateCheckResult.existingShow.secondary_education || null,
+        evergreenProductionStaffName: duplicateCheckResult.existingShow.evergreen_production_staff_name || null,
+        demographics: {
+          region: duplicateCheckResult.existingShow.region || "",
+          primary_education: duplicateCheckResult.existingShow.primary_education || "",
+          secondary_education: duplicateCheckResult.existingShow.secondary_education || ""
+        },
+        hasBrandedRevenue: duplicateCheckResult.existingShow.has_branded_revenue || false,
+        hasMarketingRevenue: duplicateCheckResult.existingShow.has_marketing_revenue || false,
+        hasWebManagementRevenue: duplicateCheckResult.existingShow.has_web_mgmt_revenue || false,
+        genderDemographic: duplicateCheckResult.existingShow.gender || null,
+        avgShowLengthMins: duplicateCheckResult.existingShow.avg_show_length_mins || 0,
+        start_date: duplicateCheckResult.existingShow.start_date || "",
+        sideBonusPercent: duplicateCheckResult.existingShow.side_bonus_percent || 0,
+        youtubeAdsPercent: duplicateCheckResult.existingShow.youtube_ads_percent || 0,
+        subscriptionsPercent: duplicateCheckResult.existingShow.subscriptions_percent || 0,
+        standardAdsPercent: duplicateCheckResult.existingShow.standard_ads_percent || 0,
+        sponsorshipAdFpLeadPercent: duplicateCheckResult.existingShow.sponsorship_ad_fp_lead_percent || 0,
+        sponsorshipAdPartnerLeadPercent: duplicateCheckResult.existingShow.sponsorship_ad_partner_lead_percent || 0,
+        sponsorshipAdPartnerSoldPercent: duplicateCheckResult.existingShow.sponsorship_ad_partner_sold_percent || 0,
+        programmaticAdsSpanPercent: duplicateCheckResult.existingShow.programmatic_ads_span_percent || 0,
+        merchandisePercent: duplicateCheckResult.existingShow.merchandise_percent || 0,
+        brandedRevenuePercent: duplicateCheckResult.existingShow.branded_revenue_percent || 0,
+        marketingServicesRevenuePercent: duplicateCheckResult.existingShow.marketing_services_revenue_percent || 0,
+        directCustomerHandsOffPercent: duplicateCheckResult.existingShow.direct_customer_hands_off_percent || 0,
+        youtubeHandsOffPercent: duplicateCheckResult.existingShow.youtube_hands_off_percent || 0,
+        subscriptionHandsOffPercent: duplicateCheckResult.existingShow.subscription_hands_off_percent || 0,
+        region: duplicateCheckResult.existingShow.region || "",
+        is_active: duplicateCheckResult.existingShow.is_active || true,
+        qbo_show_id: duplicateCheckResult.existingShow.qbo_show_id || null,
+        qbo_show_name: duplicateCheckResult.existingShow.qbo_show_name || null,
+      }
+      
+      console.log("Converted show data:", existingShow)
+      
+      // Close the create dialog first, then open edit dialog after a small delay
+      onOpenChange(false)
+      
+      // Use setTimeout to ensure the dialog closes before opening the edit dialog
+      setTimeout(() => {
+        onEditExistingShow(existingShow)
+      }, 100)
+    }
+  }
   
   const isTabComplete = (tabId: string) => {
     if (tabId === 'basic') {
@@ -611,7 +762,36 @@ export default function CreateShowDialog({
                           {getFieldError("title")}
                         </p>
                       )}
-                      
+                      {!getFieldError("title") && formData.title && !isCheckingDuplicate && (
+                        <div className="text-xs text-muted-foreground">
+                          {duplicateCheckResult?.isDuplicate ? (
+                            <div className="space-y-1">
+                              <p className="text-red-500">⚠ Show name is not available</p>
+                              <p className="text-xs text-muted-foreground">
+                                A show named "{duplicateCheckResult.existingShow?.title}" already exists. 
+                                Please choose a different name or{" "}
+                                <button
+                                  type="button"
+                                  onClick={handleEditExistingShow}
+                                  className="text-blue-600 hover:text-blue-800 underline inline-flex items-center gap-1 font-medium"
+                                >
+                                  <Edit className="h-3 w-3" />
+                                  edit the existing show
+                                </button>
+                                .
+                              </p>
+                            </div>
+                          ) : (
+                            <span className="text-green-600">✓ Show name is available</span>
+                          )}
+                        </div>
+                      )}
+                      {isCheckingDuplicate && (
+                        <p className="text-xs text-muted-foreground flex items-center gap-1">
+                          <Loader2 className="h-3 w-3 animate-spin" />
+                          Checking availability...
+                        </p>
+                      )}
                     </div>
                     <div className="space-y-2">
                       <Label>Show Type</Label>
