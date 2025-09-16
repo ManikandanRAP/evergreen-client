@@ -520,53 +520,53 @@ export default function RevenueLedger() {
 
               <TableHeader>
                 <TableRow>
-                  <TableHead className="border-r p-0">
-                    <Button variant="ghost" className="w-full justify-start text-left font-semibold hover:bg-transparent px-4 py-2" onClick={() => handleSort("invoice_classref_name", true)}>
+                  <TableHead className="border-r p-0 bg-muted/50">
+                    <Button variant="ghost" className="w-full justify-start text-left font-semibold hover:bg-transparent px-4 py-4" onClick={() => handleSort("invoice_classref_name", true)}>
                       Show Name {renderSortIcon("invoice_classref_name", true)}
                     </Button>
                   </TableHead>
-                  <TableHead className="border-r p-0">
-                    <Button variant="ghost" className="w-full justify-start text-left font-semibold hover:bg-transparent px-4 py-2" onClick={() => handleSort("customer", true)}>
+                  <TableHead className="border-r p-0 bg-muted/50">
+                    <Button variant="ghost" className="w-full justify-start text-left font-semibold hover:bg-transparent px-4 py-4" onClick={() => handleSort("customer", true)}>
                       Customer {renderSortIcon("customer", true)}
                     </Button>
                   </TableHead>
-                  <TableHead className="border-r p-0">
-                    <Button variant="ghost" className="w-full justify-start text-left font-semibold hover:bg-transparent px-4 py-2" onClick={() => handleSort("invoice_date", true)}>
+                  <TableHead className="border-r p-0 bg-muted/50">
+                    <Button variant="ghost" className="w-full justify-start text-left font-semibold hover:bg-transparent px-4 py-4" onClick={() => handleSort("invoice_date", true)}>
                       Invoice Date {renderSortIcon("invoice_date", true)}
                     </Button>
                   </TableHead>
-                  <TableHead className="border-r p-0">
-                    <Button variant="ghost" className="w-full justify-end text-right font-semibold hover:bg-transparent px-4 py-2" onClick={() => handleSort("payment_amount", true)}>
+                  <TableHead className="border-r p-0 bg-muted/50">
+                    <Button variant="ghost" className="w-full justify-end text-right font-semibold hover:bg-transparent px-4 py-4" onClick={() => handleSort("payment_amount", true)}>
                       Payment Amt {renderSortIcon("payment_amount", true)}
                     </Button>
                   </TableHead>
-                  <TableHead className="border-r p-0">
-                    <Button variant="ghost" className="w-full justify-end text-right font-semibold hover:bg-transparent px-4 py-2" onClick={() => handleSort("evergreen_percentage", true)}>
+                  <TableHead className="border-r p-0 bg-muted/50">
+                    <Button variant="ghost" className="w-full justify-end text-right font-semibold hover:bg-transparent px-4 py-4" onClick={() => handleSort("evergreen_percentage", true)}>
                       EG % {renderSortIcon("evergreen_percentage", true)}
                     </Button>
                   </TableHead>
-                  <TableHead className="border-r p-0">
-                    <Button variant="ghost" className="w-full justify-end text-right font-semibold hover:bg-transparent px-4 py-2" onClick={() => handleSort("evergreen_compensation", true)}>
+                  <TableHead className="border-r p-0 bg-muted/50">
+                    <Button variant="ghost" className="w-full justify-end text-right font-semibold hover:bg-transparent px-4 py-4" onClick={() => handleSort("evergreen_compensation", true)}>
                       EG Comp {renderSortIcon("evergreen_compensation", true)}
                     </Button>
                   </TableHead>
-                  <TableHead className="border-r p-0">
-                    <Button variant="ghost" className="w-full justify-end text-right font-semibold hover:bg-transparent px-4 py-2" onClick={() => handleSort("partner_percentage", true)}>
+                  <TableHead className="border-r p-0 bg-muted/50">
+                    <Button variant="ghost" className="w-full justify-end text-right font-semibold hover:bg-transparent px-4 py-4" onClick={() => handleSort("partner_percentage", true)}>
                       Partner % {renderSortIcon("partner_percentage", true)}
                     </Button>
                   </TableHead>
-                  <TableHead className="border-r p-0">
-                    <Button variant="ghost" className="w-full justify-end text-right font-semibold hover:bg-transparent px-4 py-2" onClick={() => handleSort("partner_compensation", true)}>
+                  <TableHead className="border-r p-0 bg-muted/50">
+                    <Button variant="ghost" className="w-full justify-end text-right font-semibold hover:bg-transparent px-4 py-4" onClick={() => handleSort("partner_compensation", true)}>
                       Partner Comp {renderSortIcon("partner_compensation", true)}
                     </Button>
                   </TableHead>
-                  <TableHead className="border-r p-0">
-                    <Button variant="ghost" className="w-full justify-start text-left font-semibold hover:bg-transparent px-4 py-2" onClick={() => handleSort("invoice_itemrefname", true)}>
+                  <TableHead className="border-r p-0 bg-muted/50">
+                    <Button variant="ghost" className="w-full justify-start text-left font-semibold hover:bg-transparent px-4 py-4" onClick={() => handleSort("invoice_itemrefname", true)}>
                       Comp Type {renderSortIcon("invoice_itemrefname", true)}
                     </Button>
                   </TableHead>
-                  <TableHead className="p-0">
-                    <Button variant="ghost" className="w-full justify-start text-left font-semibold hover:bg-transparent px-4 py-2" onClick={() => handleSort("invoice_description", true)}>
+                  <TableHead className="p-0 bg-muted/50">
+                    <Button variant="ghost" className="w-full justify-start text-left font-semibold hover:bg-transparent px-4 py-4" onClick={() => handleSort("invoice_description", true)}>
                       Description {renderSortIcon("invoice_description", true)}
                     </Button>
                   </TableHead>
@@ -639,53 +639,53 @@ export default function RevenueLedger() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="border-r p-0">
-                    <Button variant="ghost" className="w-full justify-start text-left font-semibold hover:bg-transparent px-4 py-2" onClick={() => handleSort("show_qbo_name", false)}>
+                  <TableHead className="border-r p-0 bg-muted/50">
+                    <Button variant="ghost" className="w-full justify-start text-left font-semibold hover:bg-transparent px-4 py-4" onClick={() => handleSort("show_qbo_name", false)}>
                       Show Name {renderSortIcon("show_qbo_name", false)}
                     </Button>
                   </TableHead>
-                  <TableHead className="border-r p-0">
-                    <Button variant="ghost" className="w-full justify-start text-left font-semibold hover:bg-transparent px-4 py-2" onClick={() => handleSort("vendor_qbo_name", false)}>
+                  <TableHead className="border-r p-0 bg-muted/50">
+                    <Button variant="ghost" className="w-full justify-start text-left font-semibold hover:bg-transparent px-4 py-4" onClick={() => handleSort("vendor_qbo_name", false)}>
                       Partner Name {renderSortIcon("vendor_qbo_name", false)}
                     </Button>
                   </TableHead>
-                  <TableHead className="border-r p-0">
-                    <Button variant="ghost" className="w-full justify-start text-left font-semibold hover:bg-transparent px-4 py-2" onClick={() => handleSort("docnumber", false)}>
+                  <TableHead className="border-r p-0 bg-muted/50">
+                    <Button variant="ghost" className="w-full justify-start text-left font-semibold hover:bg-transparent px-4 py-4" onClick={() => handleSort("docnumber", false)}>
                       Bill Number {renderSortIcon("docnumber", false)}
                     </Button>
                   </TableHead>
-                  <TableHead className="border-r p-0">
-                    <Button variant="ghost" className="w-full justify-start text-left font-semibold hover:bg-transparent px-4 py-2" onClick={() => handleSort("txndate", false)}>
+                  <TableHead className="border-r p-0 bg-muted/50">
+                    <Button variant="ghost" className="w-full justify-start text-left font-semibold hover:bg-transparent px-4 py-4" onClick={() => handleSort("txndate", false)}>
                       Bill Date {renderSortIcon("txndate", false)}
                     </Button>
                   </TableHead>
-                  <TableHead className="border-r p-0">
-                    <Button variant="ghost" className="w-full justify-end text-right font-semibold hover:bg-transparent px-4 py-2" onClick={() => handleSort("bill_amount", false)}>
+                  <TableHead className="border-r p-0 bg-muted/50">
+                    <Button variant="ghost" className="w-full justify-end text-right font-semibold hover:bg-transparent px-4 py-4" onClick={() => handleSort("bill_amount", false)}>
                       Bill Amount {renderSortIcon("bill_amount", false)}
                     </Button>
                   </TableHead>
-                  <TableHead className="border-r p-0">
-                    <Button variant="ghost" className="w-full justify-start text-left font-semibold hover:bg-transparent px-4 py-2" onClick={() => handleSort("linked_paymentid", false)}>
+                  <TableHead className="border-r p-0 bg-muted/50">
+                    <Button variant="ghost" className="w-full justify-start text-left font-semibold hover:bg-transparent px-4 py-4" onClick={() => handleSort("linked_paymentid", false)}>
                       Payment ID {renderSortIcon("linked_paymentid", false)}
                     </Button>
                   </TableHead>
-                  <TableHead className="border-r p-0">
-                    <Button variant="ghost" className="w-full justify-start text-left font-semibold hover:bg-transparent px-4 py-2" onClick={() => handleSort("payment_date", false)}>
+                  <TableHead className="border-r p-0 bg-muted/50">
+                    <Button variant="ghost" className="w-full justify-start text-left font-semibold hover:bg-transparent px-4 py-4" onClick={() => handleSort("payment_date", false)}>
                       Payment Date {renderSortIcon("payment_date", false)}
                     </Button>
                   </TableHead>
-                  <TableHead className="border-r p-0">
-                    <Button variant="ghost" className="w-full justify-end text-right font-semibold hover:bg-transparent px-4 py-2" onClick={() => handleSort("paid_amount", false)}>
+                  <TableHead className="border-r p-0 bg-muted/50">
+                    <Button variant="ghost" className="w-full justify-end text-right font-semibold hover:bg-transparent px-4 py-4" onClick={() => handleSort("paid_amount", false)}>
                       Amount Paid {renderSortIcon("paid_amount", false)}
                     </Button>
                   </TableHead>
-                  <TableHead className="border-r p-0">
-                    <Button variant="ghost" className="w-full justify-end text-right font-semibold hover:bg-transparent px-4 py-2" onClick={() => handleSort("sum_of_related_bill_amts", false)}>
+                  <TableHead className="border-r p-0 bg-muted/50">
+                    <Button variant="ghost" className="w-full justify-end text-right font-semibold hover:bg-transparent px-4 py-4" onClick={() => handleSort("sum_of_related_bill_amts", false)}>
                       Related Bills Sum {renderSortIcon("sum_of_related_bill_amts", false)}
                     </Button>
                   </TableHead>
-                  <TableHead className="p-0">
-                    <Button variant="ghost" className="w-full justify-end text-right font-semibold hover:bg-transparent px-4 py-2" onClick={() => handleSort("balance_billpayments", false)}>
+                  <TableHead className="p-0 bg-muted/50">
+                    <Button variant="ghost" className="w-full justify-end text-right font-semibold hover:bg-transparent px-4 py-4" onClick={() => handleSort("balance_billpayments", false)}>
                       Balance {renderSortIcon("balance_billpayments", false)}
                     </Button>
                   </TableHead>
