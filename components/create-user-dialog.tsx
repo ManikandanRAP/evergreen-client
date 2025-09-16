@@ -8,7 +8,9 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/command"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { Popover, PopoverTrigger } from "@/components/ui/popover"
+import { CustomPopoverContent } from "@/components/ui/custom-popover-content"
+import { ScrollArea } from "@/components/ui/scroll-area"
 import { Eye, EyeOff, Loader2, Check, ChevronsUpDown } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { useAuth } from "@/lib/auth-context"
@@ -215,10 +217,10 @@ export default function CreateUserDialog({ open, onOpenChange }: CreateUserDialo
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[700px] md:max-w-[800px]">
         <DialogHeader>
           <DialogTitle>Create New User</DialogTitle>
-          <DialogDescription>Add a new admin, internal, or partner user to the system.</DialogDescription>
+          <DialogDescription>Add new Admin, Internal, or Partner users to the Myco System.</DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -237,16 +239,29 @@ export default function CreateUserDialog({ open, onOpenChange }: CreateUserDialo
             {errors.userType && <p className="text-sm text-red-500">{errors.userType}</p>}
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="username">Username (Email ID)</Label>
-            <Input
-              id="username"
-              type="email"
-              placeholder="user@example.com"
-              value={formData.username}
-              onChange={(e) => handleInputChange("username", e.target.value)}
-            />
-            {errors.username && <p className="text-sm text-red-500">{errors.username}</p>}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="fullName">Full Name</Label>
+              <Input
+                id="fullName"
+                placeholder="Enter full name"
+                value={formData.fullName}
+                onChange={(e) => handleInputChange("fullName", e.target.value)}
+              />
+              {errors.fullName && <p className="text-sm text-red-500">{errors.fullName}</p>}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="username">Username (Email ID)</Label>
+              <Input
+                id="username"
+                type="email"
+                placeholder="user@example.com"
+                value={formData.username}
+                onChange={(e) => handleInputChange("username", e.target.value)}
+              />
+              {errors.username && <p className="text-sm text-red-500">{errors.username}</p>}
+            </div>
           </div>
 
           <div className="space-y-2">
@@ -272,17 +287,6 @@ export default function CreateUserDialog({ open, onOpenChange }: CreateUserDialo
             {errors.password && <p className="text-sm text-red-500">{errors.password}</p>}
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="fullName">Full Name</Label>
-            <Input
-              id="fullName"
-              placeholder="Enter full name"
-              value={formData.fullName}
-              onChange={(e) => handleInputChange("fullName", e.target.value)}
-            />
-            {errors.fullName && <p className="text-sm text-red-500">{errors.fullName}</p>}
-          </div>
-
           {formData.userType === "partner" && (
             <div className="space-y-2">
               <Label>Vendor Name as in QBO</Label>
@@ -295,26 +299,21 @@ export default function CreateUserDialog({ open, onOpenChange }: CreateUserDialo
                     className="w-full justify-between"
                   >
                     {formData.mapped_vendor_qbo_id
-                      ? vendors.find((v) => v.vendor_qbo_id.toString() === formData.mapped_vendor_qbo_id)?.vendor_name
+                      ? `${vendors.find((v) => v.vendor_qbo_id.toString() === formData.mapped_vendor_qbo_id)?.vendor_name ?? "Unknown"} · ID ${formData.mapped_vendor_qbo_id}`
                       : "Select vendor..."}
                     <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent
-                  className="w-[--radix-popover-trigger-width] p-0"
-                  side="bottom"
-                  align="start"
-                  sideOffset={1}
-                  avoidCollisions={false}
-                >
+                <CustomPopoverContent className="w-[--radix-popover-trigger-width] p-0" side="bottom" align="start">
                   <Command>
                     <CommandInput placeholder="Search vendor..." />
                     <CommandEmpty>No vendor found.</CommandEmpty>
-                    <CommandGroup className="max-h-52 overflow-y-auto">
+                    <ScrollArea className="h-52">
+                      <CommandGroup>
                       {vendors.map((vendor) => (
                         <CommandItem
                           key={vendor.vendor_qbo_id}
-                          value={vendor.vendor_name}
+                          value={`${vendor.vendor_name} ${vendor.vendor_qbo_id}`}
                           onSelect={() => {
                             handleInputChange("mapped_vendor_qbo_id", vendor.vendor_qbo_id.toString())
                             setIsVendorPopoverOpen(false)
@@ -327,12 +326,13 @@ export default function CreateUserDialog({ open, onOpenChange }: CreateUserDialo
                                 : "opacity-0"
                             }`}
                           />
-                          {vendor.vendor_name}
+                          {vendor.vendor_name} <span className="text-muted-foreground">· ID {vendor.vendor_qbo_id}</span>
                         </CommandItem>
-                      ))}
-                    </CommandGroup>
+                        ))}
+                      </CommandGroup>
+                    </ScrollArea>
                   </Command>
-                </PopoverContent>
+                </CustomPopoverContent>
               </Popover>
               {errors.mapped_vendor_qbo_id && (
                 <p className="text-sm text-red-500">{errors.mapped_vendor_qbo_id}</p>

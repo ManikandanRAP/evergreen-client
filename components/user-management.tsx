@@ -18,7 +18,8 @@ import {
   CommandInput,
   CommandItem,
 } from "@/components/ui/command"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { Popover, PopoverTrigger } from "@/components/ui/popover"
+import { CustomPopoverContent } from "@/components/ui/custom-popover-content"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import {
   AlertDialog,
@@ -630,12 +631,12 @@ export default function UserManagement({ onBack }: UserManagementProps) {
         <DialogContent className="sm:max-w-[700px] md:max-w-[800px]">
           <DialogHeader>
             <DialogTitle>Edit User</DialogTitle>
-            <DialogDescription>Update the fields below and click Save.</DialogDescription>
+            <DialogDescription>Update the user fields of Name, Email, Password, and Mapped Vendor.</DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="name">Name</Label>
+                <Label htmlFor="name">Full Name</Label>
                 <Input
                   id="name"
                   value={form.name}
@@ -644,7 +645,7 @@ export default function UserManagement({ onBack }: UserManagementProps) {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor="email">Username (Email)</Label>
                 <Input
                   id="email"
                   type="email"
@@ -656,7 +657,7 @@ export default function UserManagement({ onBack }: UserManagementProps) {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="role">Role</Label>
+              <Label htmlFor="role">User Type</Label>
               <Input id="role" value={form.role} readOnly className="bg-muted/30" />
             </div>
 
@@ -701,23 +702,12 @@ export default function UserManagement({ onBack }: UserManagementProps) {
                       <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                     </Button>
                   </PopoverTrigger>
-                  <PopoverContent 
-                    className="w-full max-h-60 overflow-y-auto" 
-                    side="bottom" 
-                    align="start"
-                  >
+                  <CustomPopoverContent className="w-[--radix-popover-trigger-width] p-0" side="bottom" align="start">
                     <Command>
-                      <CommandInput placeholder="Search vendors…" />
+                      <CommandInput placeholder="Search vendor..." />
                       <CommandEmpty>No vendor found.</CommandEmpty>
-                      <CommandGroup>
-                        {/* Clear selection */}
-                        <CommandItem
-                          onSelect={() => {
-                            setForm((f) => ({ ...f, mapped_vendor_qbo_id: null }))
-                            setVendorPopoverOpen(false)
-                          }}
-                        >
-                        </CommandItem>
+                      <ScrollArea className="h-52">
+                        <CommandGroup>
                         {vendors.map((v) => (
                           <CommandItem
                             key={v.vendor_qbo_id}
@@ -728,17 +718,19 @@ export default function UserManagement({ onBack }: UserManagementProps) {
                             }}
                           >
                             <Check
-                              className={clsx(
-                                "mr-2 h-4 w-4",
-                                form.mapped_vendor_qbo_id === v.vendor_qbo_id ? "opacity-100" : "opacity-0",
-                              )}
+                              className={`mr-2 h-4 w-4 ${
+                                form.mapped_vendor_qbo_id === v.vendor_qbo_id
+                                  ? "opacity-100"
+                                  : "opacity-0"
+                              }`}
                             />
                             {v.vendor_name} <span className="text-muted-foreground">· ID {v.vendor_qbo_id}</span>
                           </CommandItem>
                         ))}
-                      </CommandGroup>
+                        </CommandGroup>
+                      </ScrollArea>
                     </Command>
-                  </PopoverContent>
+                  </CustomPopoverContent>
                 </Popover>
               </div>
             )}

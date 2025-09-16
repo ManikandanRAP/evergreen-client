@@ -16,8 +16,10 @@ import { ArrowLeft, ArrowRight, Save, X, AlertCircle, Loader2, Edit } from "luci
 import { cn } from "@/lib/utils"
 import type { Show } from "@/lib/show-types"
 import { ShowCreate, ShowUpdate, fetchAllclass, apiClient } from "@/lib/api-client" // Import both types
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { Popover, PopoverTrigger } from "@/components/ui/popover"
+import { CustomPopoverContent } from "@/components/ui/custom-popover-content"
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command"
+import { ScrollArea } from "@/components/ui/scroll-area"
 import { ChevronsUpDown } from "lucide-react"
 
 interface CreateShowDialogProps {
@@ -895,18 +897,11 @@ export default function CreateShowDialog({
                             <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                           </Button>
                         </PopoverTrigger>
-                        <PopoverContent
-                          className="w-[--radix-popover-trigger-width] p-0"
-                          side="bottom"
-                          align="start"
-                          sideOffset={1}
-                          avoidCollisions={false}
-                        >
+                        <CustomPopoverContent className="w-[--radix-popover-trigger-width] p-0" side="bottom" align="start">
                           <Command>
                             <CommandInput placeholder="Search QBO shows..." />
                             <CommandEmpty>No shows found.</CommandEmpty>
-                            {/* ✅ Scrollable list */}
-                            <CommandList className="max-h-60 overflow-y-auto">
+                            <ScrollArea className="h-60">
                               <CommandGroup>
                                 <CommandItem
                                   key="__none__"
@@ -934,9 +929,9 @@ export default function CreateShowDialog({
                                   </CommandItem>
                                 ))}
                               </CommandGroup>
-                            </CommandList>
+                            </ScrollArea>
                           </Command>
-                        </PopoverContent>
+                        </CustomPopoverContent>
                       </Popover>
                     </div>
 
@@ -990,7 +985,7 @@ export default function CreateShowDialog({
                   <CardDescription>Configure revenue and financial details</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="minimumGuarantee">Minimum Guarantee (Annual)</Label>
                       <Input
@@ -1014,9 +1009,6 @@ export default function CreateShowDialog({
                         onChange={(e) => handleInputChange("ownershipPercentage", e.target.value)}
                       />
                     </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="latestCPM">Latest CPM</Label>
                       <Input
@@ -1029,6 +1021,9 @@ export default function CreateShowDialog({
                         onChange={(e) => handleInputChange("latestCPM", e.target.value)}
                       />
                     </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="revenue2023">Revenue 2023</Label>
                       <Input
