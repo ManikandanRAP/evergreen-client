@@ -40,6 +40,9 @@ import {
   RotateCcw,
   MoreVertical,
   AlertTriangle,
+  ArrowUpDown,
+  ArrowUp,
+  ArrowDown,
 } from "lucide-react"
 import {
   Collapsible,
@@ -182,8 +185,46 @@ export default function ShowsManagement() {
   const [isBulkDeleting, setIsBulkDeleting] = useState(false)
   const [showBulkDeleteConfirm, setShowBulkDeleteConfirm] = useState(false)
 
+  // Sorting state
+  type SortField = 'name' | 'show_type' | 'isTentpole' | 'standardSplit' | 'programmaticSplit'
+  type SortDirection = 'asc' | 'desc' | null
+  const [sortField, setSortField] = useState<SortField | null>(null)
+  const [sortDirection, setSortDirection] = useState<SortDirection>(null)
+
   const handleClearFilters = () => {
     setFilters(initialFilters)
+  }
+
+  // Sorting logic
+  const handleSort = (field: SortField) => {
+    if (sortField === field) {
+      // Toggle direction: asc -> desc -> null
+      if (sortDirection === 'asc') {
+        setSortDirection('desc')
+      } else if (sortDirection === 'desc') {
+        setSortDirection(null)
+        setSortField(null)
+      } else {
+        setSortDirection('asc')
+      }
+    } else {
+      // New field, start with ascending
+      setSortField(field)
+      setSortDirection('asc')
+    }
+  }
+
+  const getSortIcon = (field: SortField) => {
+    if (sortField !== field) {
+      return <ArrowUpDown className="h-4 w-4 opacity-50" />
+    }
+    if (sortDirection === 'asc') {
+      return <ArrowUp className="h-4 w-4" />
+    }
+    if (sortDirection === 'desc') {
+      return <ArrowDown className="h-4 w-4" />
+    }
+    return <ArrowUpDown className="h-4 w-4 opacity-50" />
   }
 
   const handleViewShow = (show: Show) => {
@@ -369,9 +410,9 @@ export default function ShowsManagement() {
     }
   }
 
-  /** Filtering */
+  /** Filtering and Sorting */
   const filteredShows = useMemo(() => {
-    return shows.filter((show) => {
+    let filtered = shows.filter((show) => {
       if (filters.search) {
         const searchTerm = filters.search.toLowerCase()
         const searchableFields = [
@@ -463,7 +504,46 @@ export default function ShowsManagement() {
 
       return true
     })
-  }, [shows, filters])
+
+    // Apply sorting if specified
+    if (sortField && sortDirection) {
+      filtered.sort((a, b) => {
+        let aValue: any
+        let bValue: any
+
+        switch (sortField) {
+          case 'name':
+            aValue = a.name?.toLowerCase() || ''
+            bValue = b.name?.toLowerCase() || ''
+            break
+          case 'show_type':
+            aValue = a.show_type?.toLowerCase() || ''
+            bValue = b.show_type?.toLowerCase() || ''
+            break
+          case 'isTentpole':
+            aValue = a.isTentpole ? 1 : 0
+            bValue = b.isTentpole ? 1 : 0
+            break
+          case 'standardSplit':
+            aValue = getStandardSplit(a) || 0
+            bValue = getStandardSplit(b) || 0
+            break
+          case 'programmaticSplit':
+            aValue = getProgrammaticSplit(a) || 0
+            bValue = getProgrammaticSplit(b) || 0
+            break
+          default:
+            return 0
+        }
+
+        if (aValue < bValue) return sortDirection === 'asc' ? -1 : 1
+        if (aValue > bValue) return sortDirection === 'asc' ? 1 : -1
+        return 0
+      })
+    }
+
+    return filtered
+  }, [shows, filters, sortField, sortDirection])
 
   /** Active filter chips with individual clear buttons */
   type ActiveBadge = { label: string; value: string; key: keyof ShowFilters }
@@ -1456,20 +1536,58 @@ export default function ShowsManagement() {
               <table className="w-full text-sm">
                 <thead className="border-b">
                   <tr className="text-left text-sm">
-                    <th className="p-4 w-12">
+                    <th className="px-2 py-4 w-8 border-r bg-muted/50 text-center">
                       <Checkbox
                         checked={selectedShows.size === filteredShows.length && filteredShows.length > 0}
                         onCheckedChange={handleSelectAll}
                       />
                     </th>
-                    <th className="p-2 font-semibold">Show Name</th>
-                    {/* Status column removed; new Tentpole column added */}
-                    <th className="p-2 font-semibold">Type</th>
-                    <th className="p-2 font-semibold">Tentpole</th>
-                    {/* Genre & Format removed */}
-                    <th className="p-2 font-semibold">Standard Split</th>
-                    <th className="p-2 font-semibold">Programmatic Split</th>
-                    <th className="p-2 font-semibold">Actions</th>
+                    <th 
+                      className="pl-6 pr-6 py-4 font-semibold border-r cursor-pointer hover:bg-accent/50 transition-colors bg-muted/50 w-80"
+                      onClick={() => handleSort('name')}
+                    >
+                      <div className="flex items-center gap-2">
+                        Show Name
+                        {getSortIcon('name')}
+                      </div>
+                    </th>
+                    <th 
+                      className="pl-6 pr-6 py-4 font-semibold border-r cursor-pointer hover:bg-accent/50 transition-colors bg-muted/50 w-24"
+                      onClick={() => handleSort('show_type')}
+                    >
+                      <div className="flex items-center gap-2">
+                        Type
+                        {getSortIcon('show_type')}
+                      </div>
+                    </th>
+                    <th 
+                      className="pl-6 pr-6 py-4 font-semibold border-r cursor-pointer hover:bg-accent/50 transition-colors bg-muted/50 w-20"
+                      onClick={() => handleSort('isTentpole')}
+                    >
+                      <div className="flex items-center gap-2">
+                        Tentpole
+                        {getSortIcon('isTentpole')}
+                      </div>
+                    </th>
+                    <th 
+                      className="pl-6 pr-6 py-4 font-semibold border-r cursor-pointer hover:bg-accent/50 transition-colors bg-muted/50 w-32"
+                      onClick={() => handleSort('standardSplit')}
+                    >
+                      <div className="flex items-center gap-2">
+                        Standard Split
+                        {getSortIcon('standardSplit')}
+                      </div>
+                    </th>
+                    <th 
+                      className="pl-6 pr-6 py-4 font-semibold border-r cursor-pointer hover:bg-accent/50 transition-colors bg-muted/50 w-36"
+                      onClick={() => handleSort('programmaticSplit')}
+                    >
+                      <div className="flex items-center gap-2">
+                        Programmatic Split
+                        {getSortIcon('programmaticSplit')}
+                      </div>
+                    </th>
+                    <th className="pl-6 pr-6 py-4 font-semibold bg-muted/50 w-24">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -1482,24 +1600,24 @@ export default function ShowsManagement() {
                           : ""
                       }`}
                     >
-                      <td className="p-4">
+                      <td className="px-2 py-2 border-r w-8 text-center">
                         <Checkbox
                           checked={selectedShows.has(show.id)}
                           onCheckedChange={() => handleSelectShow(show.id)}
                         />
                       </td>
-                      <td className="p-2 font-medium">
-                        <span className="cursor-pointer hover:underline" onClick={() => handleViewShow(show)}>
+                      <td className="pl-6 pr-6 py-2 font-medium border-r cursor-pointer hover:bg-accent/30 transition-colors" onClick={() => handleViewShow(show)}>
+                        <span className="hover:underline">
                           {show.name}
                         </span>
                       </td>
-                      <td className="p-2 capitalize">{show.show_type}</td>
-                      <td className="p-2">{getYesNoBadge(!!show.isTentpole)}</td>
+                      <td className="pl-6 pr-6 py-2 capitalize border-r">{show.show_type}</td>
+                      <td className="pl-6 pr-6 py-2 border-r">{getYesNoBadge(!!show.isTentpole)}</td>
 
-                      <td className="p-2">{formatPercentage(getStandardSplit(show))}</td>
-                      <td className="p-2">{formatPercentage(getProgrammaticSplit(show))}</td>
+                      <td className="pl-6 pr-6 py-2 border-r">{formatPercentage(getStandardSplit(show))}</td>
+                      <td className="pl-6 pr-6 py-2 border-r">{formatPercentage(getProgrammaticSplit(show))}</td>
 
-                      <td className="p-2">
+                      <td className="pl-6 pr-6 py-2">
                         <div className="flex items-center gap-1">
                           <Button
                             variant="outline"
