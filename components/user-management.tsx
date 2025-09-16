@@ -112,6 +112,7 @@ export default function UserManagement({ onBack }: UserManagementProps) {
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [realTimeErrors, setRealTimeErrors] = useState<Record<string, string>>({})
+  const [isCheckingUsername, setIsCheckingUsername] = useState(false)
 
   const isPartner = useMemo(() => (form.role || "").toLowerCase() === "partner", [form.role])
 
@@ -127,6 +128,57 @@ export default function UserManagement({ onBack }: UserManagementProps) {
     
     setRealTimeErrors(newRealTimeErrors)
   }, [form.password, form.confirmPassword])
+
+  // Real-time username availability check for edit dialog
+  useEffect(() => {
+    const checkUsernameAvailability = async () => {
+      if (!form.email || !token || !editing) return
+      
+      // Don't check if email hasn't changed from original
+      if (form.email === editing.email) {
+        setRealTimeErrors(prev => ({ ...prev, email: "" }))
+        return
+      }
+      
+      // Basic email validation first
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
+        setRealTimeErrors(prev => ({ ...prev, email: "" }))
+        return
+      }
+
+      setIsCheckingUsername(true)
+      
+      try {
+        const response = await fetch(`${API_URL}/users/check-username`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+          },
+          body: JSON.stringify({ username: form.email }),
+        })
+
+        if (response.ok) {
+          const data = await response.json()
+          if (data.available) {
+            setRealTimeErrors(prev => ({ ...prev, email: "" }))
+          } else {
+            setRealTimeErrors(prev => ({ ...prev, email: "Username already exists" }))
+          }
+        } else {
+          console.error('Failed to check username availability')
+        }
+      } catch (error) {
+        console.error('Error checking username availability:', error)
+      } finally {
+        setIsCheckingUsername(false)
+      }
+    }
+
+    // Debounce the API call
+    const timeoutId = setTimeout(checkUsernameAvailability, 500)
+    return () => clearTimeout(timeoutId)
+  }, [form.email, token, editing])
 
   // Filter and sort users
   const filteredAndSortedUsers = useMemo(() => {
@@ -236,6 +288,7 @@ export default function UserManagement({ onBack }: UserManagementProps) {
     setShowPassword(false)
     setShowConfirmPassword(false)
     setRealTimeErrors({})
+    setIsCheckingUsername(false)
   }
 
   async function saveEdits() {
@@ -255,6 +308,12 @@ export default function UserManagement({ onBack }: UserManagementProps) {
         toast({ title: "Validation Error", description: "Password must be at least 8 characters", variant: "destructive" })
         return
       }
+    }
+
+    // Check for real-time username validation errors
+    if (realTimeErrors.email) {
+      toast({ title: "Validation Error", description: realTimeErrors.email, variant: "destructive" })
+      return
     }
     
     setSaving(true)
@@ -680,16 +739,25 @@ export default function UserManagement({ onBack }: UserManagementProps) {
                   placeholder="Full name"
                 />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="email">Username (Email)</Label>
+            <div className="space-y-2">
+              <Label htmlFor="email">Username (Email)</Label>
+              <div className="relative">
                 <Input
                   id="email"
                   type="email"
                   value={form.email}
                   onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
                   placeholder="email@example.com"
+                  className={realTimeErrors.email ? "border-red-500" : ""}
                 />
+                {isCheckingUsername && (
+                  <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-900"></div>
+                  </div>
+                )}
               </div>
+              {realTimeErrors.email && <p className="text-sm text-red-500">{realTimeErrors.email}</p>}
+            </div>
             </div>
 
             <div className="space-y-2">

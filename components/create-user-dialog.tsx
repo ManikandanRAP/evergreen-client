@@ -43,6 +43,7 @@ export default function CreateUserDialog({ open, onOpenChange }: CreateUserDialo
   const [isLoading, setIsLoading] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [realTimeErrors, setRealTimeErrors] = useState<Record<string, string>>({})
+  const [isCheckingUsername, setIsCheckingUsername] = useState(false)
   const { toast } = useToast()
 
   const [vendors, setVendors] = useState<Vendor[]>([])
@@ -108,6 +109,8 @@ export default function CreateUserDialog({ open, onOpenChange }: CreateUserDialo
     if (!formData.username) newErrors.username = "Username is required"
     else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.username)) {
       newErrors.username = "Please enter a valid email address"
+    } else if (realTimeErrors.username) {
+      newErrors.username = realTimeErrors.username
     }
     if (!formData.password) newErrors.password = "Password is required"
     else if (formData.password.length < 8) {
@@ -237,6 +240,51 @@ export default function CreateUserDialog({ open, onOpenChange }: CreateUserDialo
     setRealTimeErrors(newRealTimeErrors)
   }, [formData.password, formData.confirmPassword])
 
+  // Real-time username availability check
+  useEffect(() => {
+    const checkUsernameAvailability = async () => {
+      if (!formData.username || !token) return
+      
+      // Basic email validation first
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.username)) {
+        setRealTimeErrors(prev => ({ ...prev, username: "" }))
+        return
+      }
+
+      setIsCheckingUsername(true)
+      
+      try {
+        const response = await fetch(`${API_URL}/users/check-username`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+          },
+          body: JSON.stringify({ username: formData.username }),
+        })
+
+        if (response.ok) {
+          const data = await response.json()
+          if (data.available) {
+            setRealTimeErrors(prev => ({ ...prev, username: "" }))
+          } else {
+            setRealTimeErrors(prev => ({ ...prev, username: "Username already exists" }))
+          }
+        } else {
+          console.error('Failed to check username availability')
+        }
+      } catch (error) {
+        console.error('Error checking username availability:', error)
+      } finally {
+        setIsCheckingUsername(false)
+      }
+    }
+
+    // Debounce the API call
+    const timeoutId = setTimeout(checkUsernameAvailability, 500)
+    return () => clearTimeout(timeoutId)
+  }, [formData.username, token])
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[700px] md:max-w-[800px]">
@@ -275,14 +323,23 @@ export default function CreateUserDialog({ open, onOpenChange }: CreateUserDialo
 
             <div className="space-y-2">
               <Label htmlFor="username">Username (Email ID)</Label>
-              <Input
-                id="username"
-                type="email"
-                placeholder="user@example.com"
-                value={formData.username}
-                onChange={(e) => handleInputChange("username", e.target.value)}
-              />
+              <div className="relative">
+                <Input
+                  id="username"
+                  type="email"
+                  placeholder="user@example.com"
+                  value={formData.username}
+                  onChange={(e) => handleInputChange("username", e.target.value)}
+                  className={realTimeErrors.username ? "border-red-500" : ""}
+                />
+                {isCheckingUsername && (
+                  <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-900"></div>
+                  </div>
+                )}
+              </div>
               {errors.username && <p className="text-sm text-red-500">{errors.username}</p>}
+              {realTimeErrors.username && <p className="text-sm text-red-500">{realTimeErrors.username}</p>}
             </div>
           </div>
 
