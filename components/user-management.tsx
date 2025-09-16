@@ -94,11 +94,12 @@ export default function UserManagement({ onBack }: UserManagementProps) {
   const [isProfileDialogOpen, setIsProfileDialogOpen] = useState(false)
 
   const [editing, setEditing] = useState<UserRow | null>(null)
-  const [form, setForm] = useState<{ name: string; email: string; role: string; password: string; mapped_vendor_qbo_id: number | null }>({
+  const [form, setForm] = useState<{ name: string; email: string; role: string; password: string; confirmPassword: string; mapped_vendor_qbo_id: number | null }>({
     name: "",
     email: "",
     role: "",
     password: "",
+    confirmPassword: "",
     mapped_vendor_qbo_id: null,
   })
   const [saving, setSaving] = useState(false)
@@ -109,8 +110,23 @@ export default function UserManagement({ onBack }: UserManagementProps) {
   const [toDelete, setToDelete] = useState<UserRow | null>(null)
 
   const [showPassword, setShowPassword] = useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+  const [realTimeErrors, setRealTimeErrors] = useState<Record<string, string>>({})
 
   const isPartner = useMemo(() => (form.role || "").toLowerCase() === "partner", [form.role])
+
+  // Real-time password validation for edit dialog
+  useEffect(() => {
+    const newRealTimeErrors: Record<string, string> = {}
+    
+    if (form.password && form.confirmPassword) {
+      if (form.password !== form.confirmPassword) {
+        newRealTimeErrors.confirmPassword = "Passwords do not match"
+      }
+    }
+    
+    setRealTimeErrors(newRealTimeErrors)
+  }, [form.password, form.confirmPassword])
 
   // Filter and sort users
   const filteredAndSortedUsers = useMemo(() => {
@@ -214,13 +230,33 @@ export default function UserManagement({ onBack }: UserManagementProps) {
       email: u.email,
       role: u.role ?? "",
       password: "",
+      confirmPassword: "",
       mapped_vendor_qbo_id: u.mapped_vendor_qbo_id ?? null,
     })
     setShowPassword(false)
+    setShowConfirmPassword(false)
+    setRealTimeErrors({})
   }
 
   async function saveEdits() {
     if (!editing || !token) return
+    
+    // Validate password confirmation if password is provided
+    if (form.password && form.password.trim().length > 0) {
+      if (!form.confirmPassword) {
+        toast({ title: "Validation Error", description: "Please confirm the password", variant: "destructive" })
+        return
+      }
+      if (form.password !== form.confirmPassword) {
+        toast({ title: "Validation Error", description: "Passwords do not match", variant: "destructive" })
+        return
+      }
+      if (form.password.length < 8) {
+        toast({ title: "Validation Error", description: "Password must be at least 8 characters", variant: "destructive" })
+        return
+      }
+    }
+    
     setSaving(true)
     try {
       // only send changed fields
@@ -229,7 +265,7 @@ export default function UserManagement({ onBack }: UserManagementProps) {
 
       if (form.name !== (editing.name ?? "")) {
         payload.name = form.name
-        changed.push(`name → “${form.name || "—"}”`)
+        changed.push(`name → "${form.name || "—"}"`)
       }
       if (form.email !== editing.email) {
         payload.email = form.email
@@ -661,26 +697,55 @@ export default function UserManagement({ onBack }: UserManagementProps) {
               <Input id="role" value={form.role} readOnly className="bg-muted/30" />
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="password">Password (leave blank to keep current)</Label>
-              <div className="relative">
-                <Input
-                  id="password"
-                  type={showPassword ? "text" : "password"}
-                  value={form.password}
-                  onChange={(e) => setForm((f) => ({ ...f, password: e.target.value }))}
-                  placeholder="••••••••"
-                  className="pr-10"
-                />
-                <button
-                  type="button"
-                  aria-label={showPassword ? "Hide password" : "Show password"}
-                  onClick={() => setShowPassword((v) => !v)}
-                  className="absolute inset-y-0 right-0 px-3 grid place-items-center text-muted-foreground hover:text-foreground"
-                >
-                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                </button>
+            <div className={form.password ? "grid grid-cols-1 md:grid-cols-2 gap-4" : "space-y-2"}>
+              <div className="space-y-2">
+                <Label htmlFor="password">Password (leave blank to keep current)</Label>
+                <div className="relative">
+                  <Input
+                    id="password"
+                    type={showPassword ? "text" : "password"}
+                    value={form.password}
+                    onChange={(e) => setForm((f) => ({ ...f, password: e.target.value }))}
+                    placeholder="••••••••"
+                    className="pr-10"
+                  />
+                  <button
+                    type="button"
+                    aria-label={showPassword ? "Hide password" : "Show password"}
+                    onClick={() => setShowPassword((v) => !v)}
+                    className="absolute inset-y-0 right-0 px-3 grid place-items-center text-muted-foreground hover:text-foreground"
+                  >
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
               </div>
+
+              {form.password && (
+                <div className="space-y-2 animate-in slide-in-from-right-4 duration-300 ease-out">
+                  <Label htmlFor="confirmPassword">Confirm Password</Label>
+                  <div className="relative">
+                    <Input
+                      id="confirmPassword"
+                      type={showConfirmPassword ? "text" : "password"}
+                      value={form.confirmPassword}
+                      onChange={(e) => setForm((f) => ({ ...f, confirmPassword: e.target.value }))}
+                      placeholder="Confirm password"
+                      className="pr-10"
+                    />
+                    <button
+                      type="button"
+                      aria-label={showConfirmPassword ? "Hide password" : "Show password"}
+                      onClick={() => setShowConfirmPassword((v) => !v)}
+                      className="absolute inset-y-0 right-0 px-3 grid place-items-center text-muted-foreground hover:text-foreground"
+                    >
+                      {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  </div>
+                  {realTimeErrors.confirmPassword && (
+                    <p className="text-sm text-red-500">{realTimeErrors.confirmPassword}</p>
+                  )}
+                </div>
+              )}
             </div>
 
             {isPartner && (
