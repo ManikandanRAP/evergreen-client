@@ -44,6 +44,7 @@ export default function CreateUserDialog({ open, onOpenChange }: CreateUserDialo
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [realTimeErrors, setRealTimeErrors] = useState<Record<string, string>>({})
   const [isCheckingUsername, setIsCheckingUsername] = useState(false)
+  const [usernameError, setUsernameError] = useState<string>("")
   const { toast } = useToast()
 
   const [vendors, setVendors] = useState<Vendor[]>([])
@@ -109,8 +110,8 @@ export default function CreateUserDialog({ open, onOpenChange }: CreateUserDialo
     if (!formData.username) newErrors.username = "Username is required"
     else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.username)) {
       newErrors.username = "Please enter a valid email address"
-    } else if (realTimeErrors.username) {
-      newErrors.username = realTimeErrors.username
+    } else if (usernameError) {
+      newErrors.username = usernameError
     }
     if (!formData.password) newErrors.password = "Password is required"
     else if (formData.password.length < 8) {
@@ -208,6 +209,7 @@ export default function CreateUserDialog({ open, onOpenChange }: CreateUserDialo
       })
       setErrors({})
       setRealTimeErrors({})
+      setUsernameError("")
       onOpenChange(false)
     } catch (error: any) {
       toast({
@@ -222,22 +224,32 @@ export default function CreateUserDialog({ open, onOpenChange }: CreateUserDialo
 
   const handleInputChange = (field: string, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }))
+    // Only clear regular form errors for the specific field being changed
     if (errors[field]) {
       setErrors((prev) => ({ ...prev, [field]: "" }))
     }
+    // Don't clear real-time errors when typing in other fields
   }
 
   // Real-time password validation
   useEffect(() => {
-    const newRealTimeErrors: Record<string, string> = {}
-    
-    if (formData.password && formData.confirmPassword) {
-      if (formData.password !== formData.confirmPassword) {
-        newRealTimeErrors.confirmPassword = "Passwords do not match"
+    setRealTimeErrors(prev => {
+      const newErrors = { ...prev }
+      
+      if (formData.password && formData.confirmPassword) {
+        if (formData.password !== formData.confirmPassword) {
+          newErrors.confirmPassword = "Passwords do not match"
+        } else {
+          // Clear password error if passwords match
+          delete newErrors.confirmPassword
+        }
+      } else {
+        // Clear password error if either field is empty
+        delete newErrors.confirmPassword
       }
-    }
-    
-    setRealTimeErrors(newRealTimeErrors)
+      
+      return newErrors
+    })
   }, [formData.password, formData.confirmPassword])
 
   // Real-time username availability check
@@ -247,7 +259,7 @@ export default function CreateUserDialog({ open, onOpenChange }: CreateUserDialo
       
       // Basic email validation first
       if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.username)) {
-        setRealTimeErrors(prev => ({ ...prev, username: "" }))
+        setUsernameError("")
         return
       }
 
@@ -266,9 +278,9 @@ export default function CreateUserDialog({ open, onOpenChange }: CreateUserDialo
         if (response.ok) {
           const data = await response.json()
           if (data.available) {
-            setRealTimeErrors(prev => ({ ...prev, username: "" }))
+            setUsernameError("")
           } else {
-            setRealTimeErrors(prev => ({ ...prev, username: "Username already exists" }))
+            setUsernameError("Username already exists")
           }
         } else {
           console.error('Failed to check username availability')
@@ -280,9 +292,12 @@ export default function CreateUserDialog({ open, onOpenChange }: CreateUserDialo
       }
     }
 
-    // Debounce the API call
-    const timeoutId = setTimeout(checkUsernameAvailability, 500)
-    return () => clearTimeout(timeoutId)
+    // Only run if username actually changed and is not empty
+    if (formData.username.trim()) {
+      // Debounce the API call
+      const timeoutId = setTimeout(checkUsernameAvailability, 500)
+      return () => clearTimeout(timeoutId)
+    }
   }, [formData.username, token])
 
   return (
@@ -330,7 +345,7 @@ export default function CreateUserDialog({ open, onOpenChange }: CreateUserDialo
                   placeholder="user@example.com"
                   value={formData.username}
                   onChange={(e) => handleInputChange("username", e.target.value)}
-                  className={realTimeErrors.username ? "border-red-500" : ""}
+                  className={usernameError ? "border-red-500" : ""}
                 />
                 {isCheckingUsername && (
                   <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
@@ -339,7 +354,7 @@ export default function CreateUserDialog({ open, onOpenChange }: CreateUserDialo
                 )}
               </div>
               {errors.username && <p className="text-sm text-red-500">{errors.username}</p>}
-              {realTimeErrors.username && <p className="text-sm text-red-500">{realTimeErrors.username}</p>}
+              {usernameError && <p className="text-sm text-red-500">{usernameError}</p>}
             </div>
           </div>
 

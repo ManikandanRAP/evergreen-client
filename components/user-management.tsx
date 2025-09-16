@@ -113,20 +113,29 @@ export default function UserManagement({ onBack }: UserManagementProps) {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [realTimeErrors, setRealTimeErrors] = useState<Record<string, string>>({})
   const [isCheckingUsername, setIsCheckingUsername] = useState(false)
+  const [emailError, setEmailError] = useState<string>("")
 
   const isPartner = useMemo(() => (form.role || "").toLowerCase() === "partner", [form.role])
 
   // Real-time password validation for edit dialog
   useEffect(() => {
-    const newRealTimeErrors: Record<string, string> = {}
-    
-    if (form.password && form.confirmPassword) {
-      if (form.password !== form.confirmPassword) {
-        newRealTimeErrors.confirmPassword = "Passwords do not match"
+    setRealTimeErrors(prev => {
+      const newErrors = { ...prev }
+      
+      if (form.password && form.confirmPassword) {
+        if (form.password !== form.confirmPassword) {
+          newErrors.confirmPassword = "Passwords do not match"
+        } else {
+          // Clear password error if passwords match
+          delete newErrors.confirmPassword
+        }
+      } else {
+        // Clear password error if either field is empty
+        delete newErrors.confirmPassword
       }
-    }
-    
-    setRealTimeErrors(newRealTimeErrors)
+      
+      return newErrors
+    })
   }, [form.password, form.confirmPassword])
 
   // Real-time username availability check for edit dialog
@@ -136,13 +145,13 @@ export default function UserManagement({ onBack }: UserManagementProps) {
       
       // Don't check if email hasn't changed from original
       if (form.email === editing.email) {
-        setRealTimeErrors(prev => ({ ...prev, email: "" }))
+        setEmailError("")
         return
       }
       
       // Basic email validation first
       if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
-        setRealTimeErrors(prev => ({ ...prev, email: "" }))
+        setEmailError("")
         return
       }
 
@@ -161,9 +170,9 @@ export default function UserManagement({ onBack }: UserManagementProps) {
         if (response.ok) {
           const data = await response.json()
           if (data.available) {
-            setRealTimeErrors(prev => ({ ...prev, email: "" }))
+            setEmailError("")
           } else {
-            setRealTimeErrors(prev => ({ ...prev, email: "Username already exists" }))
+            setEmailError("Username already exists")
           }
         } else {
           console.error('Failed to check username availability')
@@ -289,6 +298,7 @@ export default function UserManagement({ onBack }: UserManagementProps) {
     setShowConfirmPassword(false)
     setRealTimeErrors({})
     setIsCheckingUsername(false)
+    setEmailError("")
   }
 
   async function saveEdits() {
@@ -311,8 +321,8 @@ export default function UserManagement({ onBack }: UserManagementProps) {
     }
 
     // Check for real-time username validation errors
-    if (realTimeErrors.email) {
-      toast({ title: "Validation Error", description: realTimeErrors.email, variant: "destructive" })
+    if (emailError) {
+      toast({ title: "Validation Error", description: emailError, variant: "destructive" })
       return
     }
     
@@ -748,7 +758,7 @@ export default function UserManagement({ onBack }: UserManagementProps) {
                   value={form.email}
                   onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
                   placeholder="email@example.com"
-                  className={realTimeErrors.email ? "border-red-500" : ""}
+                  className={emailError ? "border-red-500" : ""}
                 />
                 {isCheckingUsername && (
                   <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
@@ -756,7 +766,7 @@ export default function UserManagement({ onBack }: UserManagementProps) {
                   </div>
                 )}
               </div>
-              {realTimeErrors.email && <p className="text-sm text-red-500">{realTimeErrors.email}</p>}
+              {emailError && <p className="text-sm text-red-500">{emailError}</p>}
             </div>
             </div>
 

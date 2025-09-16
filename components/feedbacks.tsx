@@ -373,7 +373,7 @@ export default function Feedbacks() {
 
       {/* View Feedback Dialog */}
       <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="text-2xl">Feedback Details</DialogTitle>
             <DialogDescription>Complete information about this feedback submission</DialogDescription>
@@ -435,7 +435,13 @@ export default function Feedbacks() {
               </Card>
 
               {/* Actions */}
-              <div className="flex justify-end">
+              <div className="flex justify-end gap-3">
+                <Button
+                  variant="outline"
+                  onClick={() => setIsViewDialogOpen(false)}
+                >
+                  Cancel
+                </Button>
                 <Button
                   variant="destructive"
                   onClick={() => {
