@@ -7,6 +7,16 @@ import {
   DialogTitle,
   DialogClose,
 } from "@/components/ui/dialog"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -134,6 +144,8 @@ interface ShowViewDialogProps {
   onNavigate: (direction: "next" | "previous") => void
   hasNext: boolean
   hasPrevious: boolean
+  onEdit?: (show: Show) => void
+  onDelete?: (show: Show) => void
 }
 
 export default function ShowViewDialog({
@@ -143,9 +155,12 @@ export default function ShowViewDialog({
   onNavigate,
   hasNext,
   hasPrevious,
+  onEdit,
+  onDelete,
 }: ShowViewDialogProps) {
   const [animationDirection, setAnimationDirection] = useState<"next" | "previous" | null>(null)
   const [isContactOpen, setIsContactOpen] = useState(false)
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
 
   useEffect(() => {
     if (!open) {
@@ -242,10 +257,11 @@ export default function ShowViewDialog({
     "navigation-button rounded-sm opacity-70 transition-opacity hover:opacity-100 disabled:pointer-events-none border-2 border-slate-300 dark:border-slate-700 p-1.5"
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <>
+      <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-none w-full sm:w-[90%] h-screen sm:h-[95vh] flex flex-col p-0 overflow-hidden dark:bg-black border-0 [&>button:not(.navigation-button)]:hidden">
         <DialogHeader className="flex flex-row items-center justify-between px-6 py-4 bg-background dark:bg-[#262626] border-b dark:border-slate-800">
-          <div className="flex flex-none items-center gap-2">
+          <div className="flex flex-none items-center gap-2 w-32">
             {hasPrevious ? (
               <Button
                 variant="ghost"
@@ -276,11 +292,33 @@ export default function ShowViewDialog({
             {show.name}
           </DialogTitle>
 
-          <div className="flex flex-none justify-end">
-            <DialogClose className={buttonStyles}>
-              <X className="h-4 w-4" />
-              <span className="sr-only">Close</span>
-            </DialogClose>
+          <div className="flex flex-none justify-end gap-2 w-32">
+            {onEdit && show && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => onEdit(show)}
+                className="h-8 px-3"
+              >
+                Edit
+              </Button>
+            )}
+            {onDelete && show && (
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={() => setShowDeleteConfirm(true)}
+                className="h-8 px-3"
+              >
+                Delete
+              </Button>
+            )}
+            <div className="ml-4">
+              <DialogClose className={buttonStyles}>
+                <X className="h-4 w-4" />
+                <span className="sr-only">Close</span>
+              </DialogClose>
+            </div>
           </div>
         </DialogHeader>
 
@@ -542,5 +580,35 @@ export default function ShowViewDialog({
         </ScrollArea>
       </DialogContent>
     </Dialog>
+
+    {/* Delete Confirmation Dialog */}
+    <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Delete Show</AlertDialogTitle>
+          <AlertDialogDescription>
+            Are you sure you want to delete this show? This action cannot be undone.
+            <span className="mt-2 p-2 bg-muted rounded text-sm block">
+              <strong>"{show?.name}"</strong>
+            </span>
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogAction 
+            onClick={() => {
+              if (show && onDelete) {
+                onDelete(show)
+                setShowDeleteConfirm(false)
+              }
+            }} 
+            className="bg-red-600 hover:bg-red-700 focus:ring-red-600"
+          >
+            Delete Show
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+    </>
   )
 }

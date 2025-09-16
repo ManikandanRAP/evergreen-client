@@ -1657,6 +1657,8 @@ export default function ShowsManagement() {
         onNavigate={handleNavigate}
         hasNext={viewingShowIndex !== null && viewingShowIndex < filteredShows.length - 1}
         hasPrevious={viewingShowIndex !== null && viewingShowIndex > 0}
+        onEdit={handleEditShow}
+        onDelete={handleDeleteShow}
       />
 
       {/* Bulk Delete Confirmation Dialog */}
