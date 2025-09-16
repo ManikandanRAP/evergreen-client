@@ -39,6 +39,7 @@ import {
   ChevronRight,
   RotateCcw,
   MoreVertical,
+  MoreHorizontal,
   AlertTriangle,
   ArrowUpDown,
   ArrowUp,
@@ -71,6 +72,7 @@ import {
 } from "@/components/ui/alert-dialog"
 import type { Show } from "@/lib/show-types"
 import { Checkbox } from "@/components/ui/checkbox"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 
 /** FILTER MODEL */
 interface ShowFilters {
@@ -666,7 +668,7 @@ export default function ShowsManagement() {
             <p className="text-muted-foreground">Loading shows...</p>
           </div>
         </div>
-        <Card className="evergreen-card">
+        <Card>
           <CardContent className="text-center py-12">
             <Loader2 className="h-12 w-12 text-muted-foreground mx-auto mb-4 animate-spin" />
             <h3 className="text-lg font-medium mb-2">Loading Shows</h3>
@@ -810,7 +812,7 @@ export default function ShowsManagement() {
       )}
 
       {/* Filters */}
-      <Card className="evergreen-card">
+      <Card>
         <Collapsible open={isFiltersOpen} onOpenChange={setIsFiltersOpen}>
           <CollapsibleTrigger asChild>
             <CardHeader className="cursor-pointer hover:bg-accent/50 transition-colors group px-6 py-3">
@@ -1362,83 +1364,87 @@ export default function ShowsManagement() {
         </Collapsible>
       </Card>
 
-      {/* TOP TOOLBAR: Selection (left) + Pagination (right) */}
-      {filteredShows.length > 0 && (
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between p-4 bg-muted/30 rounded-lg">
-          <div className="flex items-center gap-3">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleSelectAll}
-              className="flex items-center gap-2 bg-transparent"
-            >
-              <Check className="h-4 w-4" />
-              {selectedShows.size === filteredShows.length ? "Deselect All" : "Select All"}
-            </Button>
-            <span className="text-sm text-muted-foreground">{selectedShows.size} selected</span>
-            {selectedShows.size > 0 && (
-              <>
-                <Button variant="outline" size="sm" onClick={() => setSelectedShows(new Set())}>
-                  Clear Selection
-                </Button>
-                <Button 
-                  variant="destructive" 
-                  size="sm" 
-                  onClick={handleBulkDelete}
-                  disabled={isBulkDeleting}
-                >
-                  <Trash2 className="h-4 w-4 mr-2" />
-                  {isBulkDeleting ? "Deleting..." : "Delete Selected Shows"}
-                </Button>
-              </>
-            )}
-          </div>
-
-          <div className="flex items-center gap-3">
-            <div className="text-xs text-muted-foreground hidden sm:block">
-              <span className="font-medium">{pageRangeStart}</span>–<span className="font-medium">{pageRangeEnd}</span> of{" "}
-              <span className="font-medium">{filteredShows.length}</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <Button variant="outline" size="sm" onClick={gotoPrev} disabled={page === 1}>
-                <ChevronLeft className="h-4 w-4" />
-                Prev
-              </Button>
-              <span className="text-xs text-muted-foreground">
-                Page {page} / {totalPages}
-              </span>
-              <Button variant="outline" size="sm" onClick={gotoNext} disabled={page === totalPages}>
-                Next
-                <ChevronRight className="h-4 w-4" />
-              </Button>
-              <div className="flex items-center gap-2 ml-2">
-                <Label htmlFor="page-input" className="text-xs text-muted-foreground">Go to</Label>
-                <Input
-                  id="page-input"
-                  type="number"
-                  min={1}
-                  max={totalPages}
-                  value={gotoInput}
-                  onChange={(e) => setGotoInput(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") handleGoto()
-                  }}
-                  className="h-8 w-20"
-                />
-                <Button variant="outline" size="sm" onClick={handleGoto}>Go</Button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Shows Display */}
+      <div className="-mt-2">
       {viewMode === "cards" ? (
-        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-6">
-          {paginatedShows.map((show) => (
+        <Card>
+          <CardContent className="p-6">
+            {/* TOP TOOLBAR: Selection (left) + Pagination (right) */}
+            {filteredShows.length > 0 && (
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between pb-4 rounded-lg mb-2">
+                <div className="flex items-center gap-3">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleSelectAll}
+                    className="flex items-center gap-2 bg-transparent"
+                  >
+                    <Check className="h-4 w-4" />
+                    {selectedShows.size === filteredShows.length ? "Deselect All" : "Select All"}
+                  </Button>
+                  <span className="text-sm text-muted-foreground">{selectedShows.size} selected</span>
+                  {selectedShows.size > 0 && (
+                    <>
+                      <Button variant="outline" size="sm" onClick={() => setSelectedShows(new Set())}>
+                        Clear Selection
+                      </Button>
+                      <Button 
+                        variant="destructive" 
+                        size="sm" 
+                        onClick={handleBulkDelete}
+                        disabled={isBulkDeleting}
+                      >
+                        <Trash2 className="h-4 w-4 mr-2" />
+                        {isBulkDeleting ? "Deleting..." : "Delete Selected Shows"}
+                      </Button>
+                    </>
+                  )}
+                </div>
+
+                <div className="flex items-center gap-3">
+                  <div className="text-xs text-muted-foreground hidden sm:block">
+                    <span className="font-medium">{pageRangeStart}</span>–<span className="font-medium">{pageRangeEnd}</span> of{" "}
+                    <span className="font-medium">{filteredShows.length}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Button variant="outline" size="sm" onClick={gotoPrev} disabled={page === 1}>
+                      <ChevronLeft className="h-4 w-4" />
+                      Prev
+                    </Button>
+                    <span className="text-xs text-muted-foreground">
+                      Page {page} / {totalPages}
+                    </span>
+                    <Button variant="outline" size="sm" onClick={gotoNext} disabled={page === totalPages}>
+                      Next
+                      <ChevronRight className="h-4 w-4" />
+                    </Button>
+                    <div className="flex items-center gap-2 ml-2">
+                      <Label htmlFor="page-input" className="text-xs text-muted-foreground">Go to</Label>
+                      <Input
+                        id="page-input"
+                        type="number"
+                        min={1}
+                        max={totalPages}
+                        value={gotoInput}
+                        onChange={(e) => setGotoInput(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") handleGoto()
+                        }}
+                        className="h-8 w-20"
+                      />
+                      <Button variant="outline" size="sm" onClick={handleGoto}>Go</Button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+            
+            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-6">
+              {paginatedShows.map((show) => (
             <Card
               key={show.id}
-              className={`evergreen-card transition-all duration-200 group flex flex-col h-full ${
+              className={`transition-all duration-200 group flex flex-col h-full ${
                 selectedShows.has(show.id)
                   ? "ring-2 ring-emerald-500 bg-emerald-50/50 dark:bg-emerald-950/20"
                   : ""
@@ -1506,7 +1512,7 @@ export default function ShowsManagement() {
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <Button variant="outline" size="sm" className="h-8 px-2 bg-transparent">
-                          <MoreVertical className="h-4 w-4" />
+                          <MoreHorizontal className="h-4 w-4" />
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
@@ -1527,12 +1533,153 @@ export default function ShowsManagement() {
                 </div>
               </CardContent>
             </Card>
-          ))}
-        </div>
+              ))}
+            </div>
+            
+            {/* BOTTOM TOOLBAR: Selection (left) + Pagination (right) */}
+            {filteredShows.length > 0 && (
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between pt-4 rounded-lg mt-2">
+                <div className="flex items-center gap-3">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleSelectAll}
+                    className="flex items-center gap-2 bg-transparent"
+                  >
+                    <Check className="h-4 w-4" />
+                    {selectedShows.size === filteredShows.length ? "Deselect All" : "Select All"}
+                  </Button>
+                  <span className="text-sm text-muted-foreground">{selectedShows.size} selected</span>
+                  {selectedShows.size > 0 && (
+                    <>
+                      <Button variant="outline" size="sm" onClick={() => setSelectedShows(new Set())}>
+                        Clear Selection
+                      </Button>
+                      <Button 
+                        variant="destructive" 
+                        size="sm" 
+                        onClick={handleBulkDelete}
+                        disabled={isBulkDeleting}
+                      >
+                        <Trash2 className="h-4 w-4 mr-2" />
+                        {isBulkDeleting ? "Deleting..." : "Delete Selected Shows"}
+                      </Button>
+                    </>
+                  )}
+                </div>
+
+                <div className="flex items-center gap-3">
+                  <div className="text-xs text-muted-foreground hidden sm:block">
+                    <span className="font-medium">{pageRangeStart}</span>–<span className="font-medium">{pageRangeEnd}</span> of{" "}
+                    <span className="font-medium">{filteredShows.length}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Button variant="outline" size="sm" onClick={gotoPrev} disabled={page === 1}>
+                      <ChevronLeft className="h-4 w-4" />
+                      Prev
+                    </Button>
+                    <span className="text-xs text-muted-foreground">
+                      Page {page} / {totalPages}
+                    </span>
+                    <Button variant="outline" size="sm" onClick={gotoNext} disabled={page === totalPages}>
+                      Next
+                      <ChevronRight className="h-4 w-4" />
+                    </Button>
+                    <div className="flex items-center gap-2 ml-2">
+                      <Label htmlFor="page-input" className="text-xs text-muted-foreground">Go to</Label>
+                      <Input
+                        id="page-input"
+                        type="number"
+                        min={1}
+                        max={totalPages}
+                        value={gotoInput}
+                        onChange={(e) => setGotoInput(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") handleGoto()
+                        }}
+                        className="h-8 w-20"
+                      />
+                      <Button variant="outline" size="sm" onClick={handleGoto}>Go</Button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
       ) : (
-        <Card className="evergreen-card">
-          <CardContent className="p-0">
-            <div className="overflow-x-auto">
+        <Card>
+          <CardContent className="p-6">
+            {/* TOP TOOLBAR: Selection (left) + Pagination (right) */}
+            {filteredShows.length > 0 && (
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between pb-4 rounded-lg mb-2">
+                <div className="flex items-center gap-3">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleSelectAll}
+                    className="flex items-center gap-2 bg-transparent"
+                  >
+                    <Check className="h-4 w-4" />
+                    {selectedShows.size === filteredShows.length ? "Deselect All" : "Select All"}
+                  </Button>
+                  <span className="text-sm text-muted-foreground">{selectedShows.size} selected</span>
+                  {selectedShows.size > 0 && (
+                    <>
+                      <Button variant="outline" size="sm" onClick={() => setSelectedShows(new Set())}>
+                        Clear Selection
+                      </Button>
+                      <Button 
+                        variant="destructive" 
+                        size="sm" 
+                        onClick={handleBulkDelete}
+                        disabled={isBulkDeleting}
+                      >
+                        <Trash2 className="h-4 w-4 mr-2" />
+                        {isBulkDeleting ? "Deleting..." : "Delete Selected Shows"}
+                      </Button>
+                    </>
+                  )}
+                </div>
+
+                <div className="flex items-center gap-3">
+                  <div className="text-xs text-muted-foreground hidden sm:block">
+                    <span className="font-medium">{pageRangeStart}</span>–<span className="font-medium">{pageRangeEnd}</span> of{" "}
+                    <span className="font-medium">{filteredShows.length}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Button variant="outline" size="sm" onClick={gotoPrev} disabled={page === 1}>
+                      <ChevronLeft className="h-4 w-4" />
+                      Prev
+                    </Button>
+                    <span className="text-xs text-muted-foreground">
+                      Page {page} / {totalPages}
+                    </span>
+                    <Button variant="outline" size="sm" onClick={gotoNext} disabled={page === totalPages}>
+                      Next
+                      <ChevronRight className="h-4 w-4" />
+                    </Button>
+                    <div className="flex items-center gap-2 ml-2">
+                      <Label htmlFor="page-input" className="text-xs text-muted-foreground">Go to</Label>
+                      <Input
+                        id="page-input"
+                        type="number"
+                        min={1}
+                        max={totalPages}
+                        value={gotoInput}
+                        onChange={(e) => setGotoInput(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") handleGoto()
+                        }}
+                        className="h-8 w-20"
+                      />
+                      <Button variant="outline" size="sm" onClick={handleGoto}>Go</Button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+            <div className="rounded-md border">
               <table className="w-full text-sm">
                 <thead className="border-b">
                   <tr className="text-left text-sm">
@@ -1613,10 +1760,8 @@ export default function ShowsManagement() {
                       </td>
                       <td className="pl-6 pr-6 py-2 capitalize border-r">{show.show_type}</td>
                       <td className="pl-6 pr-6 py-2 border-r">{getYesNoBadge(!!show.isTentpole)}</td>
-
                       <td className="pl-6 pr-6 py-2 border-r">{formatPercentage(getStandardSplit(show))}</td>
                       <td className="pl-6 pr-6 py-2 border-r">{formatPercentage(getProgrammaticSplit(show))}</td>
-
                       <td className="pl-6 pr-6 py-2">
                         <div className="flex items-center gap-1">
                           <Button
@@ -1632,7 +1777,7 @@ export default function ShowsManagement() {
                             <DropdownMenu>
                               <DropdownMenuTrigger asChild>
                                 <Button variant="outline" size="sm" className="h-7 px-2 bg-transparent">
-                                  <MoreVertical className="h-4 w-4" />
+                                  <MoreHorizontal className="h-4 w-4" />
                                 </Button>
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="end">
@@ -1657,12 +1802,83 @@ export default function ShowsManagement() {
                 </tbody>
               </table>
             </div>
+            
+            {/* BOTTOM TOOLBAR: Selection (left) + Pagination (right) */}
+            {filteredShows.length > 0 && (
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between pt-4 rounded-lg mt-2">
+                <div className="flex items-center gap-3">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleSelectAll}
+                    className="flex items-center gap-2 bg-transparent"
+                  >
+                    <Check className="h-4 w-4" />
+                    {selectedShows.size === filteredShows.length ? "Deselect All" : "Select All"}
+                  </Button>
+                  <span className="text-sm text-muted-foreground">{selectedShows.size} selected</span>
+                  {selectedShows.size > 0 && (
+                    <>
+                      <Button variant="outline" size="sm" onClick={() => setSelectedShows(new Set())}>
+                        Clear Selection
+                      </Button>
+                      <Button 
+                        variant="destructive" 
+                        size="sm" 
+                        onClick={handleBulkDelete}
+                        disabled={isBulkDeleting}
+                      >
+                        <Trash2 className="h-4 w-4 mr-2" />
+                        {isBulkDeleting ? "Deleting..." : "Delete Selected Shows"}
+                      </Button>
+                    </>
+                  )}
+                </div>
+
+                <div className="flex items-center gap-3">
+                  <div className="text-xs text-muted-foreground hidden sm:block">
+                    <span className="font-medium">{pageRangeStart}</span>–<span className="font-medium">{pageRangeEnd}</span> of{" "}
+                    <span className="font-medium">{filteredShows.length}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Button variant="outline" size="sm" onClick={gotoPrev} disabled={page === 1}>
+                      <ChevronLeft className="h-4 w-4" />
+                      Prev
+                    </Button>
+                    <span className="text-xs text-muted-foreground">
+                      Page {page} / {totalPages}
+                    </span>
+                    <Button variant="outline" size="sm" onClick={gotoNext} disabled={page === totalPages}>
+                      Next
+                      <ChevronRight className="h-4 w-4" />
+                    </Button>
+                    <div className="flex items-center gap-2 ml-2">
+                      <Label htmlFor="page-input" className="text-xs text-muted-foreground">Go to</Label>
+                      <Input
+                        id="page-input"
+                        type="number"
+                        min={1}
+                        max={totalPages}
+                        value={gotoInput}
+                        onChange={(e) => setGotoInput(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") handleGoto()
+                        }}
+                        className="h-8 w-20"
+                      />
+                      <Button variant="outline" size="sm" onClick={handleGoto}>Go</Button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
       )}
+      </div>
 
       {filteredShows.length === 0 && (
-        <Card className="evergreen-card">
+        <Card>
           <CardContent className="text-center py-12">
             <Radio className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
             <h3 className="text-lg font-medium mb-2">No shows found</h3>
@@ -1675,75 +1891,6 @@ export default function ShowsManagement() {
         </Card>
       )}
 
-      {/* BOTTOM TOOLBAR */}
-      {filteredShows.length > 0 && (
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-4 bg-muted/30 rounded-lg">
-          <div className="flex items-center gap-3">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleSelectAll}
-              className="flex items-center gap-2 bg-transparent"
-            >
-              <Check className="h-4 w-4" />
-              {selectedShows.size === filteredShows.length ? "Deselect All" : "Select All"}
-            </Button>
-            <span className="text-sm text-muted-foreground">{selectedShows.size} selected</span>
-            {selectedShows.size > 0 && (
-              <>
-                <Button variant="outline" size="sm" onClick={() => setSelectedShows(new Set())}>
-                  Clear Selection
-                </Button>
-                <Button 
-                  variant="destructive" 
-                  size="sm" 
-                  onClick={handleBulkDelete}
-                  disabled={isBulkDeleting}
-                >
-                  <Trash2 className="h-4 w-4 mr-2" />
-                  {isBulkDeleting ? "Deleting..." : "Delete Selected Shows"}
-                </Button>
-              </>
-            )}
-          </div>
-
-          <div className="flex items-center gap-3">
-            <div className="text-xs text-muted-foreground hidden sm:block">
-              <span className="font-medium">{pageRangeStart}</span>–<span className="font-medium">{pageRangeEnd}</span> of{" "}
-              <span className="font-medium">{filteredShows.length}</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <Button variant="outline" size="sm" onClick={gotoPrev} disabled={page === 1}>
-                <ChevronLeft className="h-4 w-4" />
-                Prev
-              </Button>
-              <span className="text-xs text-muted-foreground">
-                Page {page} / {totalPages}
-              </span>
-              <Button variant="outline" size="sm" onClick={gotoNext} disabled={page === totalPages}>
-                Next
-                <ChevronRight className="h-4 w-4" />
-              </Button>
-              <div className="flex items-center gap-2 ml-2">
-                <Label htmlFor="page-input" className="text-xs text-muted-foreground">Go to</Label>
-                <Input
-                  id="page-input"
-                  type="number"
-                  min={1}
-                  max={totalPages}
-                  value={gotoInput}
-                  onChange={(e) => setGotoInput(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") handleGoto()
-                  }}
-                  className="h-8 w-20"
-                />
-                <Button variant="outline" size="sm" onClick={handleGoto}>Go</Button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Dialogs */}
       <CreateShowDialog

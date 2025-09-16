@@ -36,7 +36,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { Check, ChevronsUpDown, Loader2, Pencil, Trash2, ArrowLeft, Eye, EyeOff, Search, ChevronLeft, ChevronRight, ArrowUpDown, ArrowUp, ArrowDown, Plus, Download, Users, UserCheck, UserX, MoreHorizontal, User as UserIcon, Building, FileText, Calendar, MoreVertical } from "lucide-react"
+import { Check, ChevronsUpDown, Loader2, Pencil, Trash2, ArrowLeft, Eye, EyeOff, Search, ChevronLeft, ChevronRight, ArrowUpDown, ArrowUp, ArrowDown, Plus, Download, Users, UserCheck, UserX, MoreHorizontal, User as UserIcon, Building, FileText, Calendar, MoreVertical, Settings } from "lucide-react"
 import clsx from "clsx"
 import { useToast } from "@/hooks/use-toast"
 import { useAuth } from "@/lib/auth-context"
@@ -506,8 +506,8 @@ export default function UserManagement({ onBack }: UserManagementProps) {
   }
 
   const SortableHeader = ({ field, children }: { field: SortField; children: React.ReactNode }) => (
-    <TableHead className="cursor-pointer hover:bg-muted/50 select-none" onClick={() => handleSort(field)}>
-      <div className="flex items-center space-x-1">
+    <TableHead className="px-4 py-2 font-semibold border-r cursor-pointer hover:bg-accent/50 transition-colors bg-muted/50 select-none" onClick={() => handleSort(field)}>
+      <div className="flex items-center gap-2">
         <span>{children}</span>
         {getSortIcon(field)}
       </div>
@@ -629,27 +629,27 @@ export default function UserManagement({ onBack }: UserManagementProps) {
                       <SortableHeader field="email">Email</SortableHeader>
                       <SortableHeader field="role">Role</SortableHeader>
                       <SortableHeader field="created_at">Created At</SortableHeader>
-                      <TableHead>Mapped Vendor</TableHead>
-                      <TableHead>Actions</TableHead>
+                      <TableHead className="px-4 py-2 font-semibold border-r bg-muted/50">Mapped Vendor</TableHead>
+                      <TableHead className="px-4 py-2 font-semibold bg-muted/50">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {paginatedUsers.map((u) => (
                       <TableRow key={u.id}>
-                        <TableCell className="font-medium">
-                          <span 
-                            className="cursor-pointer hover:underline hover:text-emerald-600 transition-colors"
-                            onClick={() => { setViewingUser(u); setIsProfileDialogOpen(true); }}
-                          >
+                        <TableCell 
+                          className="font-medium border-r px-4 py-2 cursor-pointer hover:bg-accent/30 transition-colors"
+                          onClick={() => { setViewingUser(u); setIsProfileDialogOpen(true); }}
+                        >
+                          <span className="hover:underline hover:text-emerald-600 transition-colors">
                             {u.name || "—"}
                           </span>
                         </TableCell>
-                        <TableCell className="font-mono">{u.email}</TableCell>
-                        <TableCell className="uppercase">{u.role || "—"}</TableCell>
-                        <TableCell>
+                        <TableCell className="font-mono border-r px-4 py-2">{u.email}</TableCell>
+                        <TableCell className="uppercase border-r px-4 py-2">{u.role || "—"}</TableCell>
+                        <TableCell className="border-r px-4 py-2">
                           {u.created_at ? new Date(u.created_at).toLocaleString() : "—"}
                         </TableCell>
-                        <TableCell>
+                        <TableCell className="border-r px-4 py-2">
                           {u.mapped_vendor_qbo_id != null ? (
                             <span>
                               {u.mapped_vendor_name || "Unknown"}{" "}
@@ -659,25 +659,42 @@ export default function UserManagement({ onBack }: UserManagementProps) {
                             "—"
                           )}
                         </TableCell>
-                        <TableCell>
+                        <TableCell className="px-4 py-2">
                           <div className="flex items-center gap-1">
                             <Button
                               variant="outline"
                               size="sm"
-                              onClick={() => openEditor(u)}
+                              className="h-7 px-2"
+                              onClick={() => { setViewingUser(u); setIsProfileDialogOpen(true); }}
                             >
-                              <Pencil className="h-4 w-4 mr-2" />
-                              Edit
+                              <Eye className="h-3 w-3 mr-1" />
+                              View
                             </Button>
-                            <Button
-                              variant="destructive"
-                              size="sm"
-                              onClick={() => requestDelete(u)}
-                              disabled={!canDelete(u)}
-                            >
-                              <Trash2 className="mr-2 h-4 w-4" />
-                              Delete
-                            </Button>
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button variant="outline" size="sm" className="h-7 px-2">
+                                  <MoreHorizontal className="h-3 w-3" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <DropdownMenuItem onClick={() => openEditor(u)}>
+                                  <Pencil className="h-4 w-4 mr-2" />
+                                  Edit
+                                </DropdownMenuItem>
+                                <DropdownMenuItem 
+                                  onClick={() => requestDelete(u)}
+                                  disabled={!canDelete(u)}
+                                  className="text-red-600 focus:text-red-600"
+                                >
+                                  <Trash2 className="h-4 w-4 mr-2" />
+                                  Delete
+                                </DropdownMenuItem>
+                                <DropdownMenuItem>
+                                  <FileText className="h-4 w-4 mr-2" />
+                                  Activity Log
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
                           </div>
                         </TableCell>
                       </TableRow>
@@ -915,94 +932,170 @@ export default function UserManagement({ onBack }: UserManagementProps) {
 
       {/* User Profile Dialog */}
       <Dialog open={isProfileDialogOpen} onOpenChange={setIsProfileDialogOpen}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="text-2xl">User Profile</DialogTitle>
-            <DialogDescription>Complete information about this user</DialogDescription>
+            <DialogTitle className="text-2xl font-bold">User Profile</DialogTitle>
+            <DialogDescription>Complete information and activity for this user</DialogDescription>
           </DialogHeader>
 
           {viewingUser && (
             <div className="space-y-6">
-              {/* Header Section */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <UserIcon className="h-5 w-5" />
-                    {viewingUser.name || viewingUser.email}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-2">
-                        <span className="font-medium">Email:</span>
-                      </div>
-                      <p className="text-muted-foreground font-mono">{viewingUser.email}</p>
-                    </div>
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-2">
-                        <span className="font-medium">Role:</span>
-                      </div>
-                      <Badge variant="outline" className="uppercase">{viewingUser.role || "—"}</Badge>
-                    </div>
+              {/* User Header with Avatar and Basic Info */}
+              <div className="flex items-start gap-6 p-6 bg-gradient-to-r from-emerald-50 to-blue-50 dark:from-emerald-950/20 dark:to-blue-950/20 rounded-lg border">
+                <div className="flex-shrink-0">
+                  <div className="w-16 h-16 bg-emerald-100 dark:bg-emerald-900/30 rounded-full flex items-center justify-center">
+                    <UserIcon className="h-8 w-8 text-emerald-600 dark:text-emerald-400" />
                   </div>
-                </CardContent>
-              </Card>
-
-              {/* Activity Section */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Calendar className="h-5 w-5" />
-                    Account Information
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-2">
-                        <Calendar className="h-4 w-4 text-muted-foreground" />
-                        <span className="font-medium">Created:</span>
-                      </div>
-                      <p className="text-muted-foreground">
-                        {viewingUser.created_at ? new Date(viewingUser.created_at).toLocaleString() : "—"}
-                      </p>
-                    </div>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h2 className="text-2xl font-bold text-foreground truncate">
+                    {viewingUser.name || "Unnamed User"}
+                  </h2>
+                  <p className="text-lg text-muted-foreground font-mono truncate">
+                    {viewingUser.email}
+                  </p>
+                  <div className="flex items-center gap-3 mt-3">
+                    <Badge 
+                      className={`text-xs border pointer-events-none uppercase font-semibold ${
+                        viewingUser.role === 'admin' 
+                          ? "bg-emerald-100 text-emerald-800 border-emerald-300 dark:bg-emerald-900/50 dark:text-emerald-300 dark:border-emerald-700"
+                          : viewingUser.role === 'internal'
+                          ? "bg-orange-100 text-orange-800 border-orange-300 dark:bg-orange-900/50 dark:text-orange-300 dark:border-orange-700"
+                          : viewingUser.role === 'partner'
+                          ? "bg-purple-100 text-purple-800 border-purple-300 dark:bg-purple-900/50 dark:text-purple-300 dark:border-purple-700"
+                          : "bg-gray-100 text-gray-800 border-gray-300 dark:bg-gray-900/50 dark:text-gray-300 dark:border-gray-700"
+                      }`}
+                    >
+                      {viewingUser.role || "—"}
+                    </Badge>
+                    {viewingUser.created_at && (
+                      <span className="text-sm text-muted-foreground">
+                        Member since {new Date(viewingUser.created_at).toLocaleDateString()}
+                      </span>
+                    )}
                   </div>
-                </CardContent>
-              </Card>
+                </div>
+              </div>
 
-              {/* Vendor Mapping Section */}
-              {viewingUser.mapped_vendor_qbo_id && (
+              {/* Information Grid */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Account Details */}
                 <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <Building className="h-5 w-5" />
-                      Vendor Mapping
+                  <CardHeader className="pb-3">
+                    <CardTitle className="flex items-center gap-2 text-lg">
+                      <UserCheck className="h-5 w-5 text-emerald-600" />
+                      Account Details
                     </CardTitle>
                   </CardHeader>
-                  <CardContent>
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-2">
-                        <span className="font-medium">Mapped Vendor:</span>
+                  <CardContent className="space-y-4">
+                    <div className="space-y-3">
+                      <div className="flex justify-between items-center py-2 border-b border-muted/50">
+                        <span className="font-medium text-muted-foreground">User ID</span>
+                        <span className="font-mono text-sm bg-muted px-2 py-1 rounded">
+                          {viewingUser.id}
+                        </span>
                       </div>
-                      <p className="text-muted-foreground">
-                        {viewingUser.mapped_vendor_name || "Unknown"} · ID {viewingUser.mapped_vendor_qbo_id}
-                      </p>
+                      <div className="flex justify-between items-center py-2 border-b border-muted/50">
+                        <span className="font-medium text-muted-foreground">Email Address</span>
+                        <span className="font-mono text-sm">{viewingUser.email}</span>
+                      </div>
+                      <div className="flex justify-between items-center py-2 border-b border-muted/50">
+                        <span className="font-medium text-muted-foreground">Full Name</span>
+                        <span className="text-sm">{viewingUser.name || "Not provided"}</span>
+                      </div>
+                      <div className="flex justify-between items-center py-2">
+                        <span className="font-medium text-muted-foreground">Account Created</span>
+                        <span className="text-sm">
+                          {viewingUser.created_at ? new Date(viewingUser.created_at).toLocaleString() : "—"}
+                        </span>
+                      </div>
                     </div>
                   </CardContent>
                 </Card>
-              )}
 
+                {/* Vendor Information */}
+                <Card>
+                  <CardHeader className="pb-3">
+                  <CardTitle className="flex items-center gap-2 text-lg">
+                    <Building className="h-5 w-5 text-emerald-600" />
+                    Vendor Mapping
+                  </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {viewingUser.mapped_vendor_qbo_id ? (
+                      <div className="space-y-3">
+                        <div className="p-4 bg-emerald-50 dark:bg-emerald-950/20 rounded-lg border border-emerald-200 dark:border-emerald-800">
+                          <div className="flex items-center gap-2 mb-2">
+                            <Building className="h-4 w-4 text-emerald-600" />
+                            <span className="font-semibold text-emerald-900 dark:text-emerald-100">
+                              {viewingUser.mapped_vendor_name || "Unknown Vendor"}
+                            </span>
+                          </div>
+                          <p className="text-sm text-emerald-700 dark:text-emerald-300 font-mono">
+                            QBO ID: {viewingUser.mapped_vendor_qbo_id}
+                          </p>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="text-center py-8">
+                        <Building className="h-12 w-12 text-muted-foreground mx-auto mb-3 opacity-50" />
+                        {viewingUser.role === 'admin' ? (
+                          <>
+                            <p className="text-muted-foreground font-medium">Admin users cannot be assigned to vendors</p>
+                            <p className="text-sm text-muted-foreground mt-1">
+                              Admin users have system-wide access and don't require vendor mapping
+                            </p>
+                          </>
+                        ) : viewingUser.role === 'internal' ? (
+                          <>
+                            <p className="text-muted-foreground font-medium">Internal users cannot be assigned to vendors</p>
+                            <p className="text-sm text-muted-foreground mt-1">
+                              Internal users are company employees and don't need vendor mapping
+                            </p>
+                          </>
+                        ) : (
+                          <>
+                            <p className="text-muted-foreground">No vendor mapping assigned</p>
+                            <p className="text-sm text-muted-foreground mt-1">
+                              This partner user is not linked to any vendor in QuickBooks
+                            </p>
+                          </>
+                        )}
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Quick Actions */}
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle className="flex items-center gap-2 text-lg">
+                    <Settings className="h-5 w-5 text-emerald-600" />
+                    Quick Actions
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex flex-wrap gap-3">
+                    <Button 
+                      onClick={() => { setIsProfileDialogOpen(false); openEditor(viewingUser); }}
+                      className="flex items-center gap-2"
+                    >
+                      <Pencil className="h-4 w-4" />
+                      Edit User Details
+                    </Button>
+                    <Button variant="outline" className="flex items-center gap-2">
+                      <FileText className="h-4 w-4" />
+                      View Activity Log
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
 
               {/* Actions */}
-              <div className="flex justify-end gap-2">
+              <div className="flex justify-end gap-3 pt-4 border-t">
                 <Button variant="outline" onClick={() => setIsProfileDialogOpen(false)}>
                   Close
-                </Button>
-                <Button onClick={() => { setIsProfileDialogOpen(false); openEditor(viewingUser); }}>
-                  <Pencil className="h-4 w-4 mr-2" />
-                  Edit User
                 </Button>
               </div>
             </div>
