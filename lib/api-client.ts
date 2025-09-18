@@ -30,13 +30,14 @@ interface User {
 interface Show {
   id: string;
   title: string;
-  minimum_guarantee: number;
+  minimum_guarantee: boolean;
   annual_usd: Record<string, any>;
   subnetwork_id: string;
   media_type: "video" | "audio" | "both";
-  tentpole: boolean;
+  rate_card: boolean;
   relationship_level: "strong" | "medium" | "weak";
   show_type: "Branded" | "Original" | "Partner";
+  ranking_category: "1" | "2" | "3" | "4" | "5" | null;
   evergreen_ownership_pct: number;
   has_sponsorship_revenue: boolean;
   has_non_evergreen_revenue: boolean;
@@ -46,7 +47,7 @@ interface Show {
   has_web_mgmt_revenue: boolean;
   genre_name: string;
   is_original: boolean;
-  shows_per_year: number;
+  cadence: "Daily" | "Weekly" | "Biweekly" | "Monthly" | "Ad hoc";
   latest_cpm_usd: number;
   ad_slots: number;
   avg_show_length_mins: number;
@@ -84,13 +85,14 @@ interface Show {
 
 interface ShowCreate {
   title: string;
-  minimum_guarantee?: number;
+  minimum_guarantee?: boolean;
   annual_usd?: Record<string, any>;
   subnetwork_id?: string;
   media_type?: "video" | "audio" | "both";
-  tentpole?: boolean;
+  rate_card?: boolean;
   relationship_level?: "strong" | "medium" | "weak";
   show_type?: "Branded" | "Original" | "Partner";
+  ranking_category?: "1" | "2" | "3" | "4" | "5" | null;
   evergreen_ownership_pct?: number;
   has_sponsorship_revenue?: boolean;
   has_non_evergreen_revenue?: boolean;
@@ -100,7 +102,7 @@ interface ShowCreate {
   has_web_mgmt_revenue?: boolean;
   genre_name?: string;
   is_original?: boolean;
-  shows_per_year?: number;
+  cadence?: "Daily" | "Weekly" | "Biweekly" | "Monthly" | "Ad hoc";
   latest_cpm_usd?: number;
   ad_slots?: number;
   avg_show_length_mins?: number;
@@ -138,11 +140,11 @@ interface ShowCreate {
 
 interface ShowUpdate {
   title: string;
-  minimum_guarantee?: number;
+  minimum_guarantee?: boolean;
   annual_usd?: Record<string, any>;
   subnetwork_id?: string;
   media_type?: "video" | "audio" | "both";
-  tentpole?: boolean;
+  rate_card?: boolean;
   relationship_level?: "strong" | "medium" | "weak";
   show_type?: "Branded" | "Original" | "Partner";
   evergreen_ownership_pct?: number;
@@ -154,7 +156,7 @@ interface ShowUpdate {
   has_web_mgmt_revenue?: boolean;
   genre_name?: string;
   is_original?: boolean;
-  shows_per_year?: number;
+  cadence?: "Daily" | "Weekly" | "Biweekly" | "Monthly" | "Ad hoc";
   latest_cpm_usd?: number;
   ad_slots?: number;
   avg_show_length_mins?: number;
@@ -203,7 +205,7 @@ interface PasswordUpdate {
 interface FilterParams {
   title?: string | null
   media_type?: "video" | "audio" | "both" | null
-  tentpole?: boolean | null
+  rate_card?: boolean | null
   relationship_level?: "strong" | "medium" | "weak" | null
   show_type?: "Branded" | "Original" | "Partner" | null
   has_sponsorship_revenue?: boolean | null

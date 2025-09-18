@@ -22,6 +22,8 @@ import {
   Check,
   RotateCcw,
   Download,
+  Radio,
+  Users,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
@@ -42,43 +44,30 @@ type SortDirection = "asc" | "desc" | null
 type SortConfig = { key: string; direction: SortDirection }
 
 type LedgerItem = {
-  payment_id: number
-  payment_line_linkedtxn_txnid: string | null
+  show_name: string
   customer: string
-  invoice_doc_number: string | null
-  payment_amount: number | null
-  invoice_amount: number | null
-  pending_payments: number | null
   invoice_date: string | null
   invoice_description: string
-  invoice_classref_name: string
-  invoice_classref_value: string | null
-  invoice_itemrefname: string | null
-  split_evergreen_pct_ads?: number | null
-  split_evergreen_pct_programmatic?: number | null
-  effective_date?: string | null
-  vendor_qbo_id?: number | null
-  evergreen_percentage?: number | null
-  partner_percentage?: number | null
-  evergreen_compensation?: number | null
-  partner_compensation?: number | null
+  invoice_amount: number | null
+  evergreen_percentage: number | null
+  partner_percentage: number | null
+  evergreen_compensation: number | null
+  partner_compensation: number | null
+  effective_payment_received: number | null
+  outstanding_balance: number | null
+  partner_comp_waiting: number | null
 }
 
 type PartnerPayout = {
-  bill_id: number
-  docnumber: string | null
-  txndate: string
-  vendor_qbo_id: number
-  vendor_qbo_name: string
-  bill_line_classref_value: string | null
-  linked_paymentid: string | null
+  bill_number: string | null
+  bill_date: string
+  partner_name: string
   bill_amount: number | null
-  sum_of_related_bill_amts: number | null
-  paid_amount: number | null
-  payment_date: string | null
-  balance_billpayments: number | null
-  show_qbo_id: number | null
-  show_qbo_name: string
+  payment_id: string | null
+  date_of_payment: string | null
+  effective_billed_amount_paid: number | null
+  billed_amount_outstanding: number | null
+  show_name: string
 }
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL
@@ -94,6 +83,11 @@ export default function RevenueLedger() {
 
   const [ledger, setLedger] = useState<LedgerItem[]>([])
   const [payouts, setPayouts] = useState<PartnerPayout[]>([])
+  const [stats, setStats] = useState<{
+    total_effective_billed_paid: number | null
+    total_billed_outstanding: number | null
+    total_comp_waiting: number | null
+  } | null>(null)
   const [fetching, setFetching] = useState<boolean>(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -117,6 +111,7 @@ export default function RevenueLedger() {
     if (!token) {
       setLedger([])
       setPayouts([])
+      setStats(null)
       return
     }
     setFetching(true)
@@ -124,17 +119,21 @@ export default function RevenueLedger() {
     try {
       const headers: HeadersInit = { "Content-Type": "application/json", Authorization: `Bearer ${token}` }
       const base = API_URL?.replace(/\/$/, "") || ""
-      const [ledgerRes, payoutRes] = await Promise.all([
+      const [ledgerRes, payoutRes, statsRes] = await Promise.all([
         fetch(`${base}/ledger`, { headers }),
         fetch(`${base}/partner_payouts`, { headers }),
+        fetch(`${base}/revenue_ledger_stats`, { headers }),
       ])
       if (!ledgerRes.ok) throw new Error(await readErr(ledgerRes, "Ledger request failed"))
       if (!payoutRes.ok) throw new Error(await readErr(payoutRes, "Partner payouts request failed"))
+      if (!statsRes.ok) throw new Error(await readErr(statsRes, "Stats request failed"))
 
       const ledgerJson: LedgerItem[] = await ledgerRes.json()
       const payoutsJson: PartnerPayout[] = await payoutRes.json()
+      const statsJson = await statsRes.json()
       setLedger(Array.isArray(ledgerJson) ? ledgerJson : [])
       setPayouts(Array.isArray(payoutsJson) ? payoutsJson : [])
+      setStats(statsJson)
     } catch (e: any) {
       setError(e?.message || "Failed to load ledger data")
     } finally {
@@ -158,14 +157,14 @@ export default function RevenueLedger() {
 
   const availableShows = useMemo(() => {
     const set = new Set<string>()
-    for (const r of ledger) if (r.invoice_classref_name) set.add(r.invoice_classref_name)
-    for (const p of payouts) if (p.show_qbo_name) set.add(p.show_qbo_name)
+    for (const r of ledger) if (r.show_name) set.add(r.show_name)
+    for (const p of payouts) if (p.show_name) set.add(p.show_name)
     return Array.from(set).sort((a, b) => a.localeCompare(b))
   }, [ledger, payouts])
 
   const filteredRevenueData = useMemo(() => {
     let filtered = ledger
-    if (selectedShow !== "all") filtered = filtered.filter((i) => i.invoice_classref_name === selectedShow)
+    if (selectedShow !== "all") filtered = filtered.filter((i) => i.show_name === selectedShow)
     if (dateFrom || dateTo) {
       filtered = filtered.filter((i) => {
         const d = toDate(i.invoice_date)
@@ -179,11 +178,11 @@ export default function RevenueLedger() {
 
   const filteredPartnerPayments = useMemo(() => {
     let filtered = payouts
-    if (selectedShow !== "all") filtered = filtered.filter((i) => i.show_qbo_name === selectedShow)
+    if (selectedShow !== "all") filtered = filtered.filter((i) => i.show_name === selectedShow)
     if (dateFrom || dateTo) {
       filtered = filtered.filter((i) => {
-        const bill = toDate(i.txndate)
-        const pay = i.payment_date ? toDate(i.payment_date) : null
+        const bill = toDate(i.bill_date)
+        const pay = i.date_of_payment ? toDate(i.date_of_payment) : null
         const from = dateFrom ? toDate(dateFrom) : new Date("1900-01-01")
         const to = dateTo ? toDate(dateTo, true) : new Date("2100-12-31")
         const billIn = bill >= from && bill <= to
@@ -253,13 +252,13 @@ export default function RevenueLedger() {
   useEffect(() => setPaymentsPageInput(String(paymentsPageSafe)), [paymentsPageSafe])
 
   const summaryData = useMemo(() => {
-    const totalNetRevenue = filteredRevenueData.reduce((s, i) => s + num(i.payment_amount), 0)
+    const totalNetRevenue = filteredRevenueData.reduce((s, i) => s + num(i.effective_payment_received), 0)
     const totalPartnerCompensation = filteredRevenueData.reduce((s, i) => s + num(i.partner_compensation), 0)
     const seen = new Set<string>()
     const totalPaymentsMade = filteredPartnerPayments.reduce((s, i) => {
-      if (i.linked_paymentid && !seen.has(i.linked_paymentid)) {
-        seen.add(i.linked_paymentid)
-        return s + num(i.paid_amount)
+      if (i.payment_id && !seen.has(i.payment_id)) {
+        seen.add(i.payment_id)
+        return s + num(i.effective_billed_amount_paid)
       }
       return s
     }, 0)
@@ -270,6 +269,32 @@ export default function RevenueLedger() {
     new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(num(v))
   const formatDate = (s: string | null) => (s ? toDate(s).toLocaleDateString() : "-")
   const formatPct = (f: number | null | undefined) => (f == null ? "-" : `${Math.round(num(f) * 100)}%`)
+  
+  const formatPaymentId = (paymentId: string | null) => {
+    if (!paymentId) return "-"
+    try {
+      const parsed = JSON.parse(paymentId)
+      if (parsed.TxnId && Array.isArray(parsed.TxnId)) {
+        return parsed.TxnId.join(", ")
+      }
+      return paymentId
+    } catch {
+      return paymentId
+    }
+  }
+  
+  const formatPaymentDates = (dates: string | null) => {
+    if (!dates) return "-"
+    try {
+      const parsed = JSON.parse(dates)
+      if (Array.isArray(parsed)) {
+        return parsed.map(date => toDate(date).toLocaleDateString()).join(", ")
+      }
+      return toDate(dates).toLocaleDateString()
+    } catch {
+      return toDate(dates).toLocaleDateString()
+    }
+  }
   const renderSortIcon = (key: string, isRevenue: boolean) => {
     const cfg = isRevenue ? revenueSortConfig : paymentsSortConfig
     if (cfg.key !== key || !cfg.direction) return <ArrowUpDown className="ml-2 h-4 w-4 text-muted-foreground" />
@@ -294,32 +319,30 @@ export default function RevenueLedger() {
     const XLSX = await import("xlsx")
 
     const revenueRows = sortedRevenueData.map((i) => ({
-      "Show Name": i.invoice_classref_name,
+      "Show Name": i.show_name,
       Customer: i.customer,
       Description: i.invoice_description,
       "Invoice Date": i.invoice_date ? toDate(i.invoice_date).toISOString().slice(0, 10) : "",
-      "Payment Amount": num(i.payment_amount),
-      "Comp Type": i.invoice_itemrefname || "",
+      "Invoice Amount": num(i.invoice_amount),
       "% Evergreen": i.evergreen_percentage != null ? num(i.evergreen_percentage) : null,
       "Evergreen Comp": num(i.evergreen_compensation),
       "% Partner": i.partner_percentage != null ? num(i.partner_percentage) : null,
       "Partner Comp": num(i.partner_compensation),
-      "Invoice #": i.invoice_doc_number || "",
-      "Payment Line Txn ID": i.payment_line_linkedtxn_txnid || "",
-      "Pending Payments": num(i.pending_payments),
+      "Effective Payment Received": num(i.effective_payment_received),
+      "Outstanding Balance": num(i.outstanding_balance),
+      "Partner Comp Waiting": num(i.partner_comp_waiting),
     }))
 
     const partnerRows = sortedPartnerPayments.map((i) => ({
-      "Show Name": i.show_qbo_name,
-      "Partner Name": i.vendor_qbo_name,
-      "Bill Number": i.docnumber || "",
-      "Bill Date": i.txndate ? toDate(i.txndate).toISOString().slice(0, 10) : "",
+      "Show Name": i.show_name,
+      "Partner Name": i.partner_name,
+      "Bill Number": i.bill_number || "",
+      "Bill Date": i.bill_date ? toDate(i.bill_date).toISOString().slice(0, 10) : "",
       "Bill Amount": num(i.bill_amount),
-      "Payment ID": i.linked_paymentid || "",
-      "Payment Date": i.payment_date ? toDate(i.payment_date).toISOString().slice(0, 10) : "",
-      "Amount Paid": num(i.paid_amount),
-      "Related Bills Sum": num(i.sum_of_related_bill_amts),
-      Balance: num(i.balance_billpayments),
+      "Payment ID": formatPaymentId(i.payment_id),
+      "Payment Date": formatPaymentDates(i.date_of_payment),
+      "Effective Billed Amount Paid": num(i.effective_billed_amount_paid),
+      "Billed Amount Outstanding": num(i.billed_amount_outstanding),
     }))
 
     const revenueSheet = XLSX.utils.json_to_sheet(revenueRows)
@@ -386,36 +409,36 @@ export default function RevenueLedger() {
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card>
+        <Card className="evergreen-card bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-950/20 dark:to-emerald-900/20 border-emerald-200 dark:border-emerald-800">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Net Revenue</CardTitle>
+            <CardTitle className="text-sm font-medium text-emerald-700 dark:text-emerald-300">Completed Partner Payments</CardTitle>
             <DollarSign className="h-4 w-4 text-emerald-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-emerald-600">{formatCurrency(summaryData.totalNetRevenue)}</div>
-            <p className="text-xs text-muted-foreground">Sum of all payment amounts</p>
+            <div className="text-2xl font-bold text-emerald-600">{formatCurrency(stats?.total_effective_billed_paid || 0)}</div>
+            <p className="text-xs text-emerald-600/70 dark:text-emerald-400/70">Billed and Paid</p>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="evergreen-card bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950/20 dark:to-blue-900/20 border-blue-200 dark:border-blue-800">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Partner Compensation</CardTitle>
+            <CardTitle className="text-sm font-medium text-blue-700 dark:text-blue-300">Partner Payments to be included Next Payout</CardTitle>
             <TrendingUp className="h-4 w-4 text-blue-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-blue-600">{formatCurrency(summaryData.totalPartnerCompensation)}</div>
-            <p className="text-xs text-muted-foreground">Sum of partner compensation</p>
+            <div className="text-2xl font-bold text-blue-600">{formatCurrency(stats?.total_billed_outstanding || 0)}</div>
+            <p className="text-xs text-blue-600/70 dark:text-blue-400/70">Revenue Received and awaiting Partner Payment</p>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="evergreen-card bg-gradient-to-br from-green-50 to-green-100 dark:from-green-950/20 dark:to-green-900/20 border-green-200 dark:border-green-800">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Payments Made</CardTitle>
+            <CardTitle className="text-sm font-medium text-green-700 dark:text-green-300">Pending Invoices from Customers</CardTitle>
             <CreditCard className="h-4 w-4 text-green-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">{formatCurrency(summaryData.totalPaymentsMade)}</div>
-            <p className="text-xs text-muted-foreground">Sum of unique payment amounts</p>
+            <div className="text-2xl font-bold text-green-600">{formatCurrency(stats?.total_comp_waiting || 0)}</div>
+            <p className="text-xs text-green-600/70 dark:text-green-400/70">Partner share awaiting for Invoice Payment from Customer</p>
           </CardContent>
         </Card>
       </div>
@@ -504,25 +527,27 @@ export default function RevenueLedger() {
 
         <CardContent>
           <div className="border rounded-lg overflow-hidden">
-            <Table className="table-fixed min-w-[1880px]">
+            <Table className="table-fixed w-[1800px]">
               <colgroup>
+                <col className="w-[200px]" />
+                <col className="w-[150px]" />
+                <col className="w-[100px]" />
+                <col className="w-[130px]" />
+                <col className="w-[100px]" />
+                <col className="w-[120px]" />
+                <col className="w-[130px]" />
                 <col className="w-[120px]" />
                 <col className="w-[120px]" />
-                <col className="w-[85px]" />
-                <col className="w-[90px]" />
-                <col className="w-[60px]" />
-                <col className="w-[75px]" />
-                <col className="w-[75px]" />
-                <col className="w-[90px]" />
-                <col className="w-[90px]" />
-                <col className="w-[250px]" />
+                <col className="w-[150px]" />
+                <col className="w-[120px]" />
+                <col className="w-[500px]" />
               </colgroup>
 
               <TableHeader>
                 <TableRow>
                   <TableHead className="border-r p-0 bg-muted/50">
-                    <Button variant="ghost" className="w-full justify-start text-left font-semibold hover:bg-transparent px-4 py-4" onClick={() => handleSort("invoice_classref_name", true)}>
-                      Show Name {renderSortIcon("invoice_classref_name", true)}
+                    <Button variant="ghost" className="w-full justify-start text-left font-semibold hover:bg-transparent px-4 py-4" onClick={() => handleSort("show_name", true)}>
+                      Show Name {renderSortIcon("show_name", true)}
                     </Button>
                   </TableHead>
                   <TableHead className="border-r p-0 bg-muted/50">
@@ -531,23 +556,23 @@ export default function RevenueLedger() {
                     </Button>
                   </TableHead>
                   <TableHead className="border-r p-0 bg-muted/50">
-                    <Button variant="ghost" className="w-full justify-start text-left font-semibold hover:bg-transparent px-4 py-4" onClick={() => handleSort("invoice_date", true)}>
-                      Invoice Date {renderSortIcon("invoice_date", true)}
+                    <Button variant="ghost" className="w-full justify-start text-left font-semibold hover:bg-transparent px-4 py-4" onClick={() => handleSort("invoice_date", true)} title="Invoice Date">
+                      Date {renderSortIcon("invoice_date", true)}
                     </Button>
                   </TableHead>
                   <TableHead className="border-r p-0 bg-muted/50">
-                    <Button variant="ghost" className="w-full justify-end text-right font-semibold hover:bg-transparent px-4 py-4" onClick={() => handleSort("payment_amount", true)}>
-                      Payment Amt {renderSortIcon("payment_amount", true)}
+                    <Button variant="ghost" className="w-full justify-end text-right font-semibold hover:bg-transparent px-4 py-4" onClick={() => handleSort("invoice_amount", true)} title="Invoice Amount">
+                      Amount {renderSortIcon("invoice_amount", true)}
                     </Button>
                   </TableHead>
                   <TableHead className="border-r p-0 bg-muted/50">
-                    <Button variant="ghost" className="w-full justify-end text-right font-semibold hover:bg-transparent px-4 py-4" onClick={() => handleSort("evergreen_percentage", true)}>
+                    <Button variant="ghost" className="w-full justify-end text-right font-semibold hover:bg-transparent px-4 py-4" onClick={() => handleSort("evergreen_percentage", true)} title="Evergreen Percentage">
                       EG % {renderSortIcon("evergreen_percentage", true)}
                     </Button>
                   </TableHead>
                   <TableHead className="border-r p-0 bg-muted/50">
-                    <Button variant="ghost" className="w-full justify-end text-right font-semibold hover:bg-transparent px-4 py-4" onClick={() => handleSort("evergreen_compensation", true)}>
-                      EG Comp {renderSortIcon("evergreen_compensation", true)}
+                    <Button variant="ghost" className="w-full justify-end text-right font-semibold hover:bg-transparent px-4 py-4" onClick={() => handleSort("evergreen_compensation", true)} title="Effective Evergreen Compensation">
+                      EEC {renderSortIcon("evergreen_compensation", true)}
                     </Button>
                   </TableHead>
                   <TableHead className="border-r p-0 bg-muted/50">
@@ -556,13 +581,23 @@ export default function RevenueLedger() {
                     </Button>
                   </TableHead>
                   <TableHead className="border-r p-0 bg-muted/50">
-                    <Button variant="ghost" className="w-full justify-end text-right font-semibold hover:bg-transparent px-4 py-4" onClick={() => handleSort("partner_compensation", true)}>
-                      Partner Comp {renderSortIcon("partner_compensation", true)}
+                    <Button variant="ghost" className="w-full justify-end text-right font-semibold hover:bg-transparent px-4 py-4" onClick={() => handleSort("partner_compensation", true)} title="Effective Partner Compensation">
+                      EPC {renderSortIcon("partner_compensation", true)}
                     </Button>
                   </TableHead>
                   <TableHead className="border-r p-0 bg-muted/50">
-                    <Button variant="ghost" className="w-full justify-start text-left font-semibold hover:bg-transparent px-4 py-4" onClick={() => handleSort("invoice_itemrefname", true)}>
-                      Comp Type {renderSortIcon("invoice_itemrefname", true)}
+                    <Button variant="ghost" className="w-full justify-end text-right font-semibold hover:bg-transparent px-4 py-4" onClick={() => handleSort("effective_payment_received", true)} title="Effective Payment Received">
+                      EPR {renderSortIcon("effective_payment_received", true)}
+                    </Button>
+                  </TableHead>
+                  <TableHead className="border-r p-0 bg-muted/50">
+                    <Button variant="ghost" className="w-full justify-end text-right font-semibold hover:bg-transparent px-4 py-4" onClick={() => handleSort("outstanding_balance", true)}>
+                      Outstanding {renderSortIcon("outstanding_balance", true)}
+                    </Button>
+                  </TableHead>
+                  <TableHead className="border-r p-0 bg-muted/50">
+                    <Button variant="ghost" className="w-full justify-end text-right font-semibold hover:bg-transparent px-4 py-4" onClick={() => handleSort("partner_comp_waiting", true)} title="Partner Compensation Awaiting Customer Payment">
+                      PCACP {renderSortIcon("partner_comp_waiting", true)}
                     </Button>
                   </TableHead>
                   <TableHead className="p-0 bg-muted/50">
@@ -575,23 +610,25 @@ export default function RevenueLedger() {
 
               <TableBody>
                 {revenueSlice.length > 0 ? (
-                  revenueSlice.map((item) => (
-                    <TableRow key={`${item.payment_id}-${item.invoice_doc_number}-${item.invoice_date}`}>
-                      <TableCell className="font-medium border-r px-4 py-3">{item.invoice_classref_name}</TableCell>
+                  revenueSlice.map((item, index) => (
+                    <TableRow key={`${item.show_name}-${item.customer}-${item.invoice_date}-${index}`}>
+                      <TableCell className="font-medium border-r px-4 py-3">{item.show_name}</TableCell>
                       <TableCell className="border-r px-4 py-3">{item.customer}</TableCell>
                       <TableCell className="border-r px-4 py-3">{formatDate(item.invoice_date)}</TableCell>
-                      <TableCell className="text-right font-mono border-r px-4 py-3">{formatCurrency(item.payment_amount)}</TableCell>
+                      <TableCell className="text-right font-mono border-r px-4 py-3">{formatCurrency(item.invoice_amount)}</TableCell>
                       <TableCell className="text-right border-r px-4 py-3">{formatPct(item.evergreen_percentage)}</TableCell>
                       <TableCell className="text-right font-mono text-emerald-600 border-r px-4 py-3">{formatCurrency(item.evergreen_compensation)}</TableCell>
                       <TableCell className="text-right border-r px-4 py-3">{formatPct(item.partner_percentage)}</TableCell>
                       <TableCell className="border-r text-right font-mono text-blue-600 px-4 py-3">{formatCurrency(item.partner_compensation)}</TableCell>
-                      <TableCell className="border-r px-4 py-3">{item.invoice_itemrefname || "-"}</TableCell>
+                      <TableCell className="text-right font-mono text-green-600 border-r px-4 py-3">{formatCurrency(item.effective_payment_received)}</TableCell>
+                      <TableCell className="text-right font-mono text-orange-600 border-r px-4 py-3">{formatCurrency(item.outstanding_balance)}</TableCell>
+                      <TableCell className="text-right font-mono text-purple-600 border-r px-4 py-3">{formatCurrency(item.partner_comp_waiting)}</TableCell>
                       <TableCell className="px-4 py-3 whitespace-normal break-words">{item.invoice_description}</TableCell>
                     </TableRow>
                   ))
                 ) : (
                   <TableRow>
-                    <TableCell colSpan={10} className="h-24 text-center">
+                    <TableCell colSpan={12} className="h-24 text-center">
                       No revenue data found matching your criteria.
                     </TableCell>
                   </TableRow>
@@ -636,27 +673,27 @@ export default function RevenueLedger() {
 
         <CardContent>
           <div className="border rounded-lg overflow-x-auto">
-            <Table>
+            <Table className="w-full">
               <TableHeader>
                 <TableRow>
                   <TableHead className="border-r p-0 bg-muted/50">
-                    <Button variant="ghost" className="w-full justify-start text-left font-semibold hover:bg-transparent px-4 py-4" onClick={() => handleSort("show_qbo_name", false)}>
-                      Show Name {renderSortIcon("show_qbo_name", false)}
+                    <Button variant="ghost" className="w-full justify-start text-left font-semibold hover:bg-transparent px-4 py-4" onClick={() => handleSort("show_name", false)}>
+                      Show Name {renderSortIcon("show_name", false)}
                     </Button>
                   </TableHead>
                   <TableHead className="border-r p-0 bg-muted/50">
-                    <Button variant="ghost" className="w-full justify-start text-left font-semibold hover:bg-transparent px-4 py-4" onClick={() => handleSort("vendor_qbo_name", false)}>
-                      Partner Name {renderSortIcon("vendor_qbo_name", false)}
+                    <Button variant="ghost" className="w-full justify-start text-left font-semibold hover:bg-transparent px-4 py-4" onClick={() => handleSort("partner_name", false)}>
+                      Partner Name {renderSortIcon("partner_name", false)}
                     </Button>
                   </TableHead>
                   <TableHead className="border-r p-0 bg-muted/50">
-                    <Button variant="ghost" className="w-full justify-start text-left font-semibold hover:bg-transparent px-4 py-4" onClick={() => handleSort("docnumber", false)}>
-                      Bill Number {renderSortIcon("docnumber", false)}
+                    <Button variant="ghost" className="w-full justify-start text-left font-semibold hover:bg-transparent px-4 py-4" onClick={() => handleSort("bill_number", false)}>
+                      Bill Number {renderSortIcon("bill_number", false)}
                     </Button>
                   </TableHead>
                   <TableHead className="border-r p-0 bg-muted/50">
-                    <Button variant="ghost" className="w-full justify-start text-left font-semibold hover:bg-transparent px-4 py-4" onClick={() => handleSort("txndate", false)}>
-                      Bill Date {renderSortIcon("txndate", false)}
+                    <Button variant="ghost" className="w-full justify-start text-left font-semibold hover:bg-transparent px-4 py-4" onClick={() => handleSort("bill_date", false)}>
+                      Bill Date {renderSortIcon("bill_date", false)}
                     </Button>
                   </TableHead>
                   <TableHead className="border-r p-0 bg-muted/50">
@@ -665,51 +702,45 @@ export default function RevenueLedger() {
                     </Button>
                   </TableHead>
                   <TableHead className="border-r p-0 bg-muted/50">
-                    <Button variant="ghost" className="w-full justify-start text-left font-semibold hover:bg-transparent px-4 py-4" onClick={() => handleSort("linked_paymentid", false)}>
-                      Payment ID {renderSortIcon("linked_paymentid", false)}
+                    <Button variant="ghost" className="w-full justify-start text-left font-semibold hover:bg-transparent px-4 py-4" onClick={() => handleSort("payment_id", false)}>
+                      Payment ID {renderSortIcon("payment_id", false)}
                     </Button>
                   </TableHead>
                   <TableHead className="border-r p-0 bg-muted/50">
-                    <Button variant="ghost" className="w-full justify-start text-left font-semibold hover:bg-transparent px-4 py-4" onClick={() => handleSort("payment_date", false)}>
-                      Payment Date {renderSortIcon("payment_date", false)}
+                    <Button variant="ghost" className="w-full justify-start text-left font-semibold hover:bg-transparent px-4 py-4" onClick={() => handleSort("date_of_payment", false)} title="Date of Payment">
+                      DoP {renderSortIcon("date_of_payment", false)}
                     </Button>
                   </TableHead>
                   <TableHead className="border-r p-0 bg-muted/50">
-                    <Button variant="ghost" className="w-full justify-end text-right font-semibold hover:bg-transparent px-4 py-4" onClick={() => handleSort("paid_amount", false)}>
-                      Amount Paid {renderSortIcon("paid_amount", false)}
-                    </Button>
-                  </TableHead>
-                  <TableHead className="border-r p-0 bg-muted/50">
-                    <Button variant="ghost" className="w-full justify-end text-right font-semibold hover:bg-transparent px-4 py-4" onClick={() => handleSort("sum_of_related_bill_amts", false)}>
-                      Related Bills Sum {renderSortIcon("sum_of_related_bill_amts", false)}
+                    <Button variant="ghost" className="w-full justify-end text-right font-semibold hover:bg-transparent px-4 py-4" onClick={() => handleSort("effective_billed_amount_paid", false)} title="Effective Billed Payment Completed">
+                      EBPC {renderSortIcon("effective_billed_amount_paid", false)}
                     </Button>
                   </TableHead>
                   <TableHead className="p-0 bg-muted/50">
-                    <Button variant="ghost" className="w-full justify-end text-right font-semibold hover:bg-transparent px-4 py-4" onClick={() => handleSort("balance_billpayments", false)}>
-                      Balance {renderSortIcon("balance_billpayments", false)}
+                    <Button variant="ghost" className="w-full justify-end text-right font-semibold hover:bg-transparent px-4 py-4" onClick={() => handleSort("billed_amount_outstanding", false)} title="Billed Amount Outstanding">
+                      BAO {renderSortIcon("billed_amount_outstanding", false)}
                     </Button>
                   </TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {paymentsSlice.length > 0 ? (
-                  paymentsSlice.map((item) => (
-                    <TableRow key={`${item.bill_id}-${item.docnumber}-${item.txndate}`}>
-                      <TableCell className="font-medium border-r px-4 py-3">{item.show_qbo_name}</TableCell>
-                      <TableCell className="border-r px-4 py-3">{item.vendor_qbo_name}</TableCell>
-                      <TableCell className="border-r px-4 py-3">{item.docnumber || "-"}</TableCell>
-                      <TableCell className="border-r px-4 py-3">{formatDate(item.txndate)}</TableCell>
+                  paymentsSlice.map((item, index) => (
+                    <TableRow key={`${item.show_name}-${item.bill_number}-${item.bill_date}-${index}`}>
+                      <TableCell className="font-medium border-r px-4 py-3">{item.show_name}</TableCell>
+                      <TableCell className="border-r px-4 py-3">{item.partner_name}</TableCell>
+                      <TableCell className="border-r px-4 py-3">{item.bill_number || "-"}</TableCell>
+                      <TableCell className="border-r px-4 py-3">{formatDate(item.bill_date)}</TableCell>
                       <TableCell className="text-right font-mono border-r px-4 py-3">{formatCurrency(item.bill_amount)}</TableCell>
-                      <TableCell className="border-r px-4 py-3">{item.linked_paymentid || "-"}</TableCell>
-                      <TableCell className="border-r px-4 py-3">{formatDate(item.payment_date)}</TableCell>
-                      <TableCell className="text-right font-mono text-green-600 border-r px-4 py-3">{formatCurrency(item.paid_amount)}</TableCell>
-                      <TableCell className="text-right font-mono border-r px-4 py-3">{formatCurrency(item.sum_of_related_bill_amts)}</TableCell>
-                      <TableCell className="text-right font-mono px-4 py-3">{formatCurrency(item.balance_billpayments)}</TableCell>
+                      <TableCell className="border-r px-4 py-3">{formatPaymentId(item.payment_id)}</TableCell>
+                      <TableCell className="border-r px-4 py-3">{formatPaymentDates(item.date_of_payment)}</TableCell>
+                      <TableCell className="text-right font-mono text-green-600 border-r px-4 py-3">{formatCurrency(item.effective_billed_amount_paid)}</TableCell>
+                      <TableCell className="text-right font-mono text-orange-600 px-4 py-3">{formatCurrency(item.billed_amount_outstanding)}</TableCell>
                     </TableRow>
                   ))
                 ) : (
                   <TableRow>
-                    <TableCell colSpan={10} className="h-24 text-center">
+                    <TableCell colSpan={9} className="h-24 text-center">
                       No partner payment data found matching your criteria.
                     </TableCell>
                   </TableRow>

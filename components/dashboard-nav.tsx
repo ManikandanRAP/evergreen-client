@@ -27,6 +27,7 @@ import {
   Shield,
   Lightbulb,
   MessageSquare,
+  BarChart3,
 } from "lucide-react"
 import { useTheme } from "next-themes"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"

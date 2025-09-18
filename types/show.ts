@@ -14,11 +14,12 @@ export interface Show {
   format: "Video" | "Audio" | "Both"
   relationship: "Strong" | "Medium" | "Weak"
   ageMonths: number
-  isTentpole: boolean
+  isRateCard: boolean
   isOriginal: boolean
+  rankingCategory: "1" | "2" | "3" | "4" | "5" | null
 
   // Financial
-  minimumGuarantee: number
+  minimumGuarantee: boolean
   ownershipPercentage: number
   brandedRevenueAmount: number
   marketingRevenueAmount: number
@@ -33,7 +34,7 @@ export interface Show {
 
   // Content Details
   genre_name: string
-  showsPerYear: number
+  cadence: "Daily" | "Weekly" | "Biweekly" | "Monthly" | "Ad hoc"
   adSlots: number
   averageLength: number
   primaryContactHost: string

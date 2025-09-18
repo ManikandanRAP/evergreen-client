@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
 import { Alert, AlertDescription } from "@/components/ui/alert"
+import { getRankingInfo } from "@/lib/ranking-utils"
 import {
   Plus,
   Filter,
@@ -80,7 +81,7 @@ interface ShowFilters {
   minimumGuarantee: string
   subnetwork: string
   format: string
-  tentpole: string
+  rate_card: string
   relationship: string
   show_type: string
   genre_name: string
@@ -94,7 +95,7 @@ interface ShowFilters {
   ownershipPercentage: string
   region: string
   is_undersized: string
-  showsPerYear: string
+  cadence: string
   averageLength: string
   adSlots: string
   revenue2023: string
@@ -110,7 +111,7 @@ const initialFilters: ShowFilters = {
   minimumGuarantee: "",
   subnetwork: "",
   format: "",
-  tentpole: "",
+  rate_card: "",
   relationship: "",
   show_type: "",
   genre_name: "",
@@ -124,7 +125,7 @@ const initialFilters: ShowFilters = {
   ownershipPercentage: "",
   region: "",
   is_undersized: "",
-  showsPerYear: "",
+  cadence: "all",
   averageLength: "",
   adSlots: "",
   revenue2023: "",
@@ -188,7 +189,7 @@ export default function ShowsManagement() {
   const [showBulkDeleteConfirm, setShowBulkDeleteConfirm] = useState(false)
 
   // Sorting state
-  type SortField = 'name' | 'show_type' | 'isTentpole' | 'standardSplit' | 'programmaticSplit'
+  type SortField = 'name' | 'show_type' | 'isRateCard' | 'standardSplit' | 'programmaticSplit'
   type SortDirection = 'asc' | 'desc' | null
   const [sortField, setSortField] = useState<SortField | null>(null)
   const [sortDirection, setSortDirection] = useState<SortDirection>(null)
@@ -334,13 +335,13 @@ export default function ShowsManagement() {
       "Relationship",
       "Age (Months)",
       "Genre",
-      "Shows per Year",
+      "Cadence",
       "Minimum Guarantee",
       "Ownership %",
       "Revenue 2023",
       "Revenue 2024",
       "Revenue 2025",
-      "Is Tentpole",
+      "Is Rate Card",
       "Is Original",
       "Is Active",
       "Age Demographic",
@@ -367,13 +368,13 @@ export default function ShowsManagement() {
       show.relationship,
       show.ageMonths,
       show.genre_name,
-      show.showsPerYear,
-      show.minimumGuarantee,
+      show.cadence,
+      show.minimumGuarantee ? "Yes" : "No",
       show.ownershipPercentage,
       show.revenue2023,
       show.revenue2024,
       show.revenue2025,
-      show.isTentpole ? "Yes" : "No",
+      show.isRateCard ? "Yes" : "No",
       show.isOriginal ? "Yes" : "No",
       show.is_active ? "Yes" : "No",
       show.age_demographic,
@@ -456,12 +457,15 @@ export default function ShowsManagement() {
         return false
       if (filters.region && filters.region !== "all" && show.region !== filters.region)
         return false
+      if (filters.cadence && filters.cadence !== "all" && show.cadence !== filters.cadence)
+        return false
 
       const booleanFilters: (keyof ShowFilters)[] = [
-        "tentpole",
+        "rate_card",
         "isOriginal",
         "is_active",
         "is_undersized",
+        "minimumGuarantee",
         "hasSponsorshipRevenue",
         "hasNonEvergreenRevenue",
         "requiresPartnerLedgerAccess",
@@ -470,7 +474,7 @@ export default function ShowsManagement() {
         "hasWebManagementRevenue",
       ]
       const showToFilterKeyMap: Record<string, keyof Show> = {
-        tentpole: "isTentpole",
+        rate_card: "isRateCard",
         is_undersized: "is_undersized",
       }
 
@@ -483,8 +487,6 @@ export default function ShowsManagement() {
       }
 
       const numericFilters: { filterKey: keyof ShowFilters; showKey: keyof Show }[] = [
-        { filterKey: "minimumGuarantee", showKey: "minimumGuarantee" },
-        { filterKey: "showsPerYear", showKey: "showsPerYear" },
         { filterKey: "adSlots", showKey: "adSlots" },
         { filterKey: "averageLength", showKey: "averageLength" },
         { filterKey: "revenue2023", showKey: "revenue2023" },
@@ -522,9 +524,9 @@ export default function ShowsManagement() {
             aValue = a.show_type?.toLowerCase() || ''
             bValue = b.show_type?.toLowerCase() || ''
             break
-          case 'isTentpole':
-            aValue = a.isTentpole ? 1 : 0
-            bValue = b.isTentpole ? 1 : 0
+          case 'isRateCard':
+            aValue = a.isRateCard ? 1 : 0
+            bValue = b.isRateCard ? 1 : 0
             break
           case 'standardSplit':
             aValue = getStandardSplit(a) || 0
@@ -570,7 +572,7 @@ export default function ShowsManagement() {
     pushKey("Show Status", "is_active")
     pushKey("Show Type", "show_type")
     pushKey("Subnetwork", "subnetwork")
-    pushKey("Tentpole", "tentpole")
+    pushKey("Rate Card", "rate_card")
     pushKey("Undersized", "is_undersized")
     pushKey("Requires Partner Access", "requiresPartnerLedgerAccess")
 
@@ -581,7 +583,7 @@ export default function ShowsManagement() {
     pushKey("Revenue 2023 ≥", "revenue2023")
     pushKey("Revenue 2024 ≥", "revenue2024")
     pushKey("Revenue 2025 ≥", "revenue2025")
-    pushKey("Shows/Year ≥", "showsPerYear")
+    pushKey("Cadence", "cadence")
     pushKey("Ownership %", "ownershipPercentage")
     pushKey("Branded Revenue", "hasBrandedRevenue")
     pushKey("Marketing Revenue", "hasMarketingRevenue")
@@ -722,20 +724,28 @@ export default function ShowsManagement() {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <div className="flex items-center border rounded-lg p-1">
+          <div className="flex items-center border rounded-lg p-1 bg-gradient-to-r from-emerald-50 to-cyan-50 dark:from-emerald-950/20 dark:to-cyan-950/20 border-emerald-200 dark:border-emerald-800">
             <Button
-              variant={viewMode === "cards" ? "default" : "ghost"}
+              variant="ghost"
               size="sm"
               onClick={() => setViewMode("cards")}
-              className="h-8 px-3"
+              className={`h-8 px-3 ${
+                viewMode === "cards" 
+                  ? "bg-emerald-100 dark:bg-emerald-900/50 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-200 dark:hover:bg-emerald-800/50" 
+                  : "text-emerald-600 dark:text-emerald-400 hover:bg-emerald-100/50 dark:hover:bg-emerald-900/30"
+              }`}
             >
               <Grid3X3 className="h-4 w-4" />
             </Button>
             <Button
-              variant={viewMode === "list" ? "default" : "ghost"}
+              variant="ghost"
               size="sm"
               onClick={() => setViewMode("list")}
-              className="h-8 px-3"
+              className={`h-8 px-3 ${
+                viewMode === "list" 
+                  ? "bg-cyan-100 dark:bg-cyan-900/50 text-cyan-700 dark:text-cyan-300 hover:bg-cyan-200 dark:hover:bg-cyan-800/50" 
+                  : "text-cyan-600 dark:text-cyan-400 hover:bg-cyan-100/50 dark:hover:bg-cyan-900/30"
+              }`}
             >
               <List className="h-4 w-4" />
             </Button>
@@ -833,27 +843,24 @@ export default function ShowsManagement() {
           <CollapsibleContent>
             <CardContent className="space-y-4 pt-4">
 
-              {/* ---- Divider + Search ---- */}
+
+               {/* ---- Divider + Show Information (alphabetical) ---- */}
+               <div className="space-y-2">      {/* Section 2 */}
+               <SectionDivider label="Show Information" />
               <div className="space-y-2">
-                {/* <SectionDivider label="Search Shows" /> */}
-                <div className="grid grid-cols-1 gap-4">
+                 {/* <h4 className="text-sm font-semibold text-muted-foreground">Show Information</h4>  -- replaced by divider */}
+                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-7 gap-4">
+                   {/* Search Shows */}
                   <div className="space-y-2">
                     <Label htmlFor="search">Search Shows</Label>
                     <Input
                     id="search"
-                    placeholder="Search by name, type, genre, contact, etc..."
+                       placeholder="Search by Anything..."
                     value={filters.search}
                     onChange={(e) => setFilters((prev) => ({ ...prev, search: e.target.value }))}
                   />
-                </div>
               </div>
 
-              {/* ---- Divider + Show Information (alphabetical) ---- */}
-              <div className="space-y-2">      {/* Section 2 */}
-              <SectionDivider label="Show Information" />
-              <div className="space-y-2">
-                {/* <h4 className="text-sm font-semibold text-muted-foreground">Show Information</h4>  -- replaced by divider */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                   {/* Age Demographic */}
                   <div className="space-y-2">
                     <Label>Age Demographic</Label>
@@ -864,7 +871,7 @@ export default function ShowsManagement() {
                       }
                     >
                       <SelectTrigger className={filters.age_demographic && filters.age_demographic !== "all" ? "ring-1 ring-emerald-400" : ""}>
-                        <SelectValue placeholder="All ages" />
+                        <SelectValue placeholder="All Ages" />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="all">All Ages</SelectItem>
@@ -885,7 +892,7 @@ export default function ShowsManagement() {
                       onValueChange={(value) => setFilters((prev) => ({ ...prev, format: value }))}
                     >
                       <SelectTrigger className={filters.format && filters.format !== "all" ? "ring-1 ring-emerald-400" : ""}>
-                        <SelectValue placeholder="All formats" />
+                        <SelectValue placeholder="All Formats" />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="all">All Formats</SelectItem>
@@ -906,7 +913,7 @@ export default function ShowsManagement() {
                       }
                     >
                       <SelectTrigger className={filters.genderDemographic && filters.genderDemographic !== "all" ? "ring-1 ring-emerald-400" : ""}>
-                        <SelectValue placeholder="All genders" />
+                        <SelectValue placeholder="All Genders" />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="all">All Genders</SelectItem>
@@ -948,7 +955,7 @@ export default function ShowsManagement() {
                       onValueChange={(value) => setFilters((prev) => ({ ...prev, isOriginal: value }))}
                     >
                       <SelectTrigger className={filters.isOriginal && filters.isOriginal !== "all" ? "ring-1 ring-emerald-400" : ""}>
-                        <SelectValue placeholder="All content" />
+                        <SelectValue placeholder="All Content" />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="all">All Content</SelectItem>
@@ -979,6 +986,29 @@ export default function ShowsManagement() {
                     </Select>
                   </div>
 
+
+                 </div>
+                 
+                 {/* Second row for remaining filters */}
+                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-7 gap-4">
+                   {/* Cadence */}
+                   <div className="space-y-2">
+                     <Label>Cadence</Label>
+                     <Select value={filters.cadence} onValueChange={(value) => setFilters((prev) => ({ ...prev, cadence: value }))}>
+                       <SelectTrigger className={filters.cadence && filters.cadence !== "all" ? "ring-1 ring-emerald-400" : ""}>
+                         <SelectValue placeholder="All Cadences" />
+                       </SelectTrigger>
+                       <SelectContent>
+                         <SelectItem value="all">All Cadences</SelectItem>
+                         <SelectItem value="Daily">Daily</SelectItem>
+                         <SelectItem value="Weekly">Weekly</SelectItem>
+                         <SelectItem value="Biweekly">Biweekly</SelectItem>
+                         <SelectItem value="Monthly">Monthly</SelectItem>
+                         <SelectItem value="Ad hoc">Ad hoc</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
                   {/* Relationship */}
                   <div className="space-y-2">
                     <Label>Relationship</Label>
@@ -987,7 +1017,7 @@ export default function ShowsManagement() {
                       onValueChange={(value) => setFilters((prev) => ({ ...prev, relationship: value }))}
                     >
                       <SelectTrigger className={filters.relationship && filters.relationship !== "all" ? "ring-1 ring-emerald-400" : ""}>
-                        <SelectValue placeholder="All relationships" />
+                         <SelectValue placeholder="All Relationships" />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="all">All Relationships</SelectItem>
@@ -1006,7 +1036,7 @@ export default function ShowsManagement() {
                       onValueChange={(value) => setFilters((prev) => ({ ...prev, is_active: value }))}
                     >
                       <SelectTrigger className={filters.is_active && filters.is_active !== "all" ? "ring-1 ring-emerald-400" : ""}>
-                        <SelectValue placeholder="All statuses" />
+                         <SelectValue placeholder="All Statuses" />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="all">All Statuses</SelectItem>
@@ -1024,7 +1054,7 @@ export default function ShowsManagement() {
                       onValueChange={(value) => setFilters((prev) => ({ ...prev, show_type: value }))}
                     >
                       <SelectTrigger className={filters.show_type && filters.show_type !== "all" ? "ring-1 ring-emerald-400" : ""}>
-                        <SelectValue placeholder="All show types" />
+                         <SelectValue placeholder="All Show Types" />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="all">All Show Types</SelectItem>
@@ -1043,7 +1073,7 @@ export default function ShowsManagement() {
                       onValueChange={(value) => setFilters((prev) => ({ ...prev, subnetwork: value }))}
                     >
                       <SelectTrigger className={filters.subnetwork && filters.subnetwork !== "all" ? "ring-1 ring-emerald-400" : ""}>
-                        <SelectValue placeholder="All subnetworks" />
+                         <SelectValue placeholder="All Subnetworks" />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="all">All Subnetworks</SelectItem>
@@ -1056,15 +1086,15 @@ export default function ShowsManagement() {
                     </Select>
                   </div>
 
-                  {/* Tentpole */}
+                  {/* Rate Card */}
                   <div className="space-y-2">
-                    <Label>Tentpole Show</Label>
+                    <Label>Rate Card Show</Label>
                     <Select
-                      value={filters.tentpole}
-                      onValueChange={(value) => setFilters((prev) => ({ ...prev, tentpole: value }))}
+                      value={filters.rate_card}
+                      onValueChange={(value) => setFilters((prev) => ({ ...prev, rate_card: value }))}
                     >
-                      <SelectTrigger className={filters.tentpole && filters.tentpole !== "all" ? "ring-1 ring-emerald-400" : ""}>
-                        <SelectValue placeholder="All shows" />
+                      <SelectTrigger className={filters.rate_card && filters.rate_card !== "all" ? "ring-1 ring-emerald-400" : ""}>
+                         <SelectValue placeholder="All Shows" />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="all">All Shows</SelectItem>
@@ -1082,32 +1112,12 @@ export default function ShowsManagement() {
                       onValueChange={(value) => setFilters((prev) => ({ ...prev, is_undersized: value }))}
                     >
                       <SelectTrigger className={filters.is_undersized && filters.is_undersized !== "all" ? "ring-1 ring-emerald-400" : ""}>
-                        <SelectValue placeholder="All sizes" />
+                         <SelectValue placeholder="All Sizes" />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="all">All Sizes</SelectItem>
                         <SelectItem value="yes">Undersized</SelectItem>
                         <SelectItem value="no">Not Undersized</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  {/* Requires Partner Ledger Access */}
-                  <div className="space-y-2">
-                    <Label>Requires Partner Ledger Access</Label>
-                    <Select
-                      value={filters.requiresPartnerLedgerAccess}
-                      onValueChange={(value) =>
-                        setFilters((prev) => ({ ...prev, requiresPartnerLedgerAccess: value }))
-                      }
-                    >
-                      <SelectTrigger className={filters.requiresPartnerLedgerAccess && filters.requiresPartnerLedgerAccess !== "all" ? "ring-1 ring-emerald-400" : ""}>
-                        <SelectValue placeholder="Any" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">Any</SelectItem>
-                        <SelectItem value="yes">Yes</SelectItem>
-                        <SelectItem value="no">No</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -1120,20 +1130,28 @@ export default function ShowsManagement() {
               <SectionDivider label="Financial Information" />
               <div className="space-y-2">
                 {/* <h4 className="text-sm font-semibold text-muted-foreground">Financial Information</h4> -- replaced by divider */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                  {/* Ad Slots */}
-                  <div className="space-y-2">
-                    <Label>Ad Slots</Label>
-                    <Input
-                      type="number"
-                      placeholder="e.g. 3"
-                      value={filters.adSlots}
-                      onChange={(e) => setFilters((prev) => ({ ...prev, adSlots: e.target.value }))}
-                      className={filters.adSlots ? "ring-1 ring-emerald-400" : ""}
-                    />
-                  </div>
+                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-7 gap-4">
+                   {/* Partner Ledger Access */}
+                   <div className="space-y-2">
+                     <Label>Partner Ledger Access</Label>
+                     <Select
+                       value={filters.requiresPartnerLedgerAccess}
+                       onValueChange={(value) =>
+                         setFilters((prev) => ({ ...prev, requiresPartnerLedgerAccess: value }))
+                       }
+                     >
+                       <SelectTrigger className={filters.requiresPartnerLedgerAccess && filters.requiresPartnerLedgerAccess !== "all" ? "ring-1 ring-emerald-400" : ""}>
+                         <SelectValue placeholder="Any" />
+                       </SelectTrigger>
+                       <SelectContent>
+                         <SelectItem value="all">Any</SelectItem>
+                         <SelectItem value="yes">Yes</SelectItem>
+                         <SelectItem value="no">No</SelectItem>
+                       </SelectContent>
+                     </Select>
+                   </div>
 
-                  {/* Average Length */}
+                   {/* Average Length */}
                   <div className="space-y-2">
                     <Label>Average Length (min)</Label>
                     <Input
@@ -1149,7 +1167,7 @@ export default function ShowsManagement() {
 
                   {/* Branded Revenue */}
                   <div className="space-y-2">
-                    <Label>Has Branded Revenue</Label>
+                    <Label>Branded Revenue</Label>
                     <Select
                       value={filters.hasBrandedRevenue}
                       onValueChange={(value) =>
@@ -1169,7 +1187,7 @@ export default function ShowsManagement() {
 
                   {/* Marketing Revenue */}
                   <div className="space-y-2">
-                    <Label>Has Marketing Revenue</Label>
+                    <Label>Marketing Revenue</Label>
                     <Select
                       value={filters.hasMarketingRevenue}
                       onValueChange={(value) =>
@@ -1189,7 +1207,7 @@ export default function ShowsManagement() {
 
                   {/* Sponsorship Revenue */}
                   <div className="space-y-2">
-                    <Label>Has Sponsorship Revenue</Label>
+                    <Label>Sponsorship Revenue</Label>
                     <Select
                       value={filters.hasSponsorshipRevenue}
                       onValueChange={(value) =>
@@ -1209,7 +1227,7 @@ export default function ShowsManagement() {
 
                   {/* Web Mgmt Revenue */}
                   <div className="space-y-2">
-                    <Label>Has Web Mngmt Revenue</Label>
+                    <Label>Web Mngmt Revenue</Label>
                     <Select
                       value={filters.hasWebManagementRevenue}
                       onValueChange={(value) =>
@@ -1229,16 +1247,22 @@ export default function ShowsManagement() {
 
                   {/* Minimum Guarantee */}
                   <div className="space-y-2">
-                    <Label>Minimum Guarantee ($)</Label>
-                    <Input
-                      type="number"
-                      placeholder="e.g. 5000"
+                    <Label>Minimum Guarantee</Label>
+                    <Select
                       value={filters.minimumGuarantee}
-                      onChange={(e) =>
-                        setFilters((prev) => ({ ...prev, minimumGuarantee: e.target.value }))
+                      onValueChange={(value) =>
+                        setFilters((prev) => ({ ...prev, minimumGuarantee: value }))
                       }
-                      className={filters.minimumGuarantee ? "ring-1 ring-emerald-400" : ""}
-                    />
+                    >
+                      <SelectTrigger className={filters.minimumGuarantee && filters.minimumGuarantee !== "all" ? "ring-1 ring-emerald-400" : ""}>
+                        <SelectValue placeholder="Any" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">Any</SelectItem>
+                        <SelectItem value="yes">Yes</SelectItem>
+                        <SelectItem value="no">No</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
 
                   {/* Ownership % */}
@@ -1251,7 +1275,7 @@ export default function ShowsManagement() {
                       }
                     >
                       <SelectTrigger className={filters.ownershipPercentage && filters.ownershipPercentage !== "all" ? "ring-1 ring-emerald-400" : ""}>
-                        <SelectValue placeholder="All ownership" />
+                        <SelectValue placeholder="All Ownership" />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="all">All Ownership</SelectItem>
@@ -1306,22 +1330,8 @@ export default function ShowsManagement() {
                     />
                   </div>
 
-                  {/* Shows/Year */}
-                  <div className="space-y-2">
-                    <Label>Shows/Year ≥</Label>
-                    <Input
-                      type="number"
-                      placeholder="e.g. 52"
-                      value={filters.showsPerYear}
-                      onChange={(e) =>
-                        setFilters((prev) => ({ ...prev, showsPerYear: e.target.value }))
-                      }
-                      className={filters.showsPerYear ? "ring-1 ring-emerald-400" : ""}
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
+                 </div>
+               </div>
           </div>
 
           
@@ -1440,7 +1450,7 @@ export default function ShowsManagement() {
               </div>
             )}
             
-            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-7 gap-6">
               {paginatedShows.map((show) => (
             <Card
               key={show.id}
@@ -1468,12 +1478,12 @@ export default function ShowsManagement() {
                     </Badge>
                     <Badge
                       className={`text-xs border pointer-events-none ${
-                        show.isTentpole
+                        show.isRateCard
                           ? "bg-emerald-100 text-emerald-800 border-emerald-300 dark:bg-emerald-900/50 dark:text-emerald-300 dark:border-emerald-700"
                           : "bg-red-100 text-red-800 border-red-300 dark:bg-red-900/50 dark:text-red-300 dark:border-red-700"
                       }`}
                     >
-                      {`Tentpole - ${show.isTentpole ? "Yes" : "No"}`}
+                      {`Rate Card - ${show.isRateCard ? "Yes" : "No"}`}
                     </Badge>
                   </div>
                 </div>
@@ -1708,12 +1718,21 @@ export default function ShowsManagement() {
                       </div>
                     </th>
                     <th 
-                      className="pl-6 pr-6 py-4 font-semibold border-r cursor-pointer hover:bg-accent/50 transition-colors bg-muted/50 w-20"
-                      onClick={() => handleSort('isTentpole')}
+                      className="pl-6 pr-6 py-4 font-semibold border-r cursor-pointer hover:bg-accent/50 transition-colors bg-muted/50 w-32"
+                      onClick={() => handleSort('ranking_category')}
                     >
                       <div className="flex items-center gap-2">
-                        Tentpole
-                        {getSortIcon('isTentpole')}
+                        Ranking
+                        {getSortIcon('ranking_category')}
+                      </div>
+                    </th>
+                    <th 
+                      className="pl-6 pr-6 py-4 font-semibold border-r cursor-pointer hover:bg-accent/50 transition-colors bg-muted/50 w-20"
+                      onClick={() => handleSort('isRateCard')}
+                    >
+                      <div className="flex items-center gap-2">
+                        Rate Card
+                        {getSortIcon('isRateCard')}
                       </div>
                     </th>
                     <th 
@@ -1721,7 +1740,7 @@ export default function ShowsManagement() {
                       onClick={() => handleSort('standardSplit')}
                     >
                       <div className="flex items-center gap-2">
-                        Standard Split
+                        Standard
                         {getSortIcon('standardSplit')}
                       </div>
                     </th>
@@ -1730,7 +1749,7 @@ export default function ShowsManagement() {
                       onClick={() => handleSort('programmaticSplit')}
                     >
                       <div className="flex items-center gap-2">
-                        Programmatic Split
+                        Programmatic
                         {getSortIcon('programmaticSplit')}
                       </div>
                     </th>
@@ -1759,7 +1778,19 @@ export default function ShowsManagement() {
                         </span>
                       </td>
                       <td className="pl-6 pr-6 py-2 capitalize border-r">{show.show_type}</td>
-                      <td className="pl-6 pr-6 py-2 border-r">{getYesNoBadge(!!show.isTentpole)}</td>
+        <td className="pl-6 pr-6 py-2 border-r">
+          {(() => {
+            const rankingInfo = getRankingInfo(show.ranking_category);
+            return rankingInfo.hasRanking ? (
+              <Badge variant="secondary" className={rankingInfo.badgeClasses}>
+                {rankingInfo.displayText}
+              </Badge>
+            ) : (
+              <span className="text-muted-foreground">—</span>
+            );
+          })()}
+        </td>
+                      <td className="pl-6 pr-6 py-2 border-r">{getYesNoBadge(!!show.isRateCard)}</td>
                       <td className="pl-6 pr-6 py-2 border-r">{formatPercentage(getStandardSplit(show))}</td>
                       <td className="pl-6 pr-6 py-2 border-r">{formatPercentage(getProgrammaticSplit(show))}</td>
                       <td className="pl-6 pr-6 py-2">

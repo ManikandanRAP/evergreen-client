@@ -7,7 +7,24 @@ const config = {
     "./components/**/*.{ts,tsx}",
     "./app/**/*.{ts,tsx}",
     "./src/**/*.{ts,tsx}",
+    "./lib/**/*.{ts,tsx}",
     "*.{js,ts,jsx,tsx,mdx}",
+  ],
+  safelist: [
+    // Ranking badge colors - light theme
+    'bg-red-100', 'text-red-800', 'border-red-300',
+    'bg-orange-100', 'text-orange-800', 'border-orange-300',
+    'bg-yellow-100', 'text-yellow-800', 'border-yellow-300',
+    'bg-blue-100', 'text-blue-800', 'border-blue-300',
+    'bg-purple-100', 'text-purple-800', 'border-purple-300',
+    'bg-gray-100', 'text-gray-800', 'border-gray-300',
+    // Ranking badge colors - dark theme
+    'dark:bg-red-900/50', 'dark:text-red-300', 'dark:border-red-700',
+    'dark:bg-orange-900/50', 'dark:text-orange-300', 'dark:border-orange-700',
+    'dark:bg-yellow-900/50', 'dark:text-yellow-300', 'dark:border-yellow-700',
+    'dark:bg-blue-900/50', 'dark:text-blue-300', 'dark:border-blue-700',
+    'dark:bg-purple-900/50', 'dark:text-purple-300', 'dark:border-purple-700',
+    'dark:bg-gray-800/50', 'dark:text-gray-300', 'dark:border-gray-700',
   ],
   prefix: "",
   theme: {

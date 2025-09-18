@@ -64,17 +64,18 @@ export interface ShowFormData {
   // Basic Info
   title: string
   show_type: "Branded" | "Original" | "Partner" | ""
+  ranking_category: "1" | "2" | "3" | "4" | "5" | ""
   subnetwork_id: string
   format: "Video" | "Audio" | "Both" | ""
   relationship: "Strong" | "Medium" | "Weak" | ""
   start_date: string
-  isTentpole: boolean
+  isRateCard: boolean
   isOriginal: boolean
   qbo_show_id?: string // keep as string for Select value; will convert on save
   qbo_show_name?: string
 
   // Financial
-  minimumGuarantee: string
+  minimumGuarantee: boolean
   ownershipPercentage: string
   hasBrandedRevenue: boolean
   hasMarketingRevenue: boolean
@@ -107,7 +108,7 @@ export interface ShowFormData {
 
   // Content Details
   genre_name: string
-  showsPerYear: string
+  cadence: string
   adSlots: string
   averageLength: string
   primaryContactHost: string
@@ -132,17 +133,18 @@ const initialFormData: ShowFormData = {
   // Basic Info
   title: "",
   show_type: "",
+  ranking_category: "",
   subnetwork_id: "",
   format: "",
   relationship: "",
   start_date: "",
-  isTentpole: false,
+  isRateCard: false,
   isOriginal: false,
   qbo_show_id: "",
   qbo_show_name: "",
 
   // Financial
-  minimumGuarantee: "",
+  minimumGuarantee: false,
   ownershipPercentage: "",
   hasBrandedRevenue: false,
   hasMarketingRevenue: false,
@@ -175,7 +177,7 @@ const initialFormData: ShowFormData = {
 
   // Content Details
   genre_name: "",
-  showsPerYear: "",
+  cadence: "",
   adSlots: "",
   averageLength: "",
   primaryContactHost: "",
@@ -288,13 +290,14 @@ export default function CreateShowDialog({
       setFormData({
         title: editingShow.name ?? "",
         show_type: editingShow.show_type as "" | "Branded" | "Original" | "Partner",
+        ranking_category: editingShow.ranking_category ?? "",
         subnetwork_id: editingShow.subnetwork_id ?? "",
         format: editingShow.format ?? "",
         relationship: editingShow.relationship ?? "",
         start_date: editingShow.start_date ? new Date(editingShow.start_date).toISOString().split('T')[0] : "",
-        isTentpole: !!editingShow.isTentpole,
+        isRateCard: !!editingShow.isRateCard,
         isOriginal: !!editingShow.isOriginal,
-        minimumGuarantee: editingShow.minimumGuarantee?.toString() ?? "",
+        minimumGuarantee: !!editingShow.minimumGuarantee,
         ownershipPercentage: editingShow.ownershipPercentage?.toString() ?? "",
         hasBrandedRevenue: !!editingShow.hasBrandedRevenue,
         hasMarketingRevenue: !!editingShow.hasMarketingRevenue,
@@ -321,7 +324,7 @@ export default function CreateShowDialog({
         youtubeHandsOffPercent: editingShow.youtubeHandsOffPercent?.toString() ?? "",
         subscriptionHandsOffPercent: editingShow.subscriptionHandsOffPercent?.toString() ?? "",
         genre_name: editingShow.genre_name ?? "",
-        showsPerYear: editingShow.showsPerYear?.toString() ?? "",
+        cadence: editingShow.cadence ?? "",
         adSlots: editingShow.adSlots?.toString() ?? "",
         averageLength: editingShow.averageLength?.toString() ?? "",
         primaryContactHost: editingShow.primaryContactHost ?? "",
@@ -381,7 +384,7 @@ export default function CreateShowDialog({
 
     const numberFields = [
       "ownershipPercentage", "minimumGuarantee", "latestCPM", "revenue2023",
-      "revenue2024", "revenue2025", "showsPerYear", "adSlots", "averageLength",
+      "revenue2024", "revenue2025", "adSlots", "averageLength",
       "sideBonusPercent", "youtubeAdsPercent", "subscriptionsPercent", "standardAdsPercent",
       "sponsorshipAdFpLeadPercent", "sponsorshipAdPartnerLeadPercent", "sponsorshipAdPartnerSoldPercent",
       "programmaticAdsSpanPercent", "merchandisePercent", "brandedRevenuePercent",
@@ -400,9 +403,6 @@ export default function CreateShowDialog({
       }
     }
 
-    if (field === "showsPerYear" && value !== "" && Number(value) < 1) {
-      return "Shows per year must be at least 1"
-    }
 
     if (field === "gender" && value && !/^\d{1,3}\/\d{1,3}$/.test(value)) {
       return "Format must be MM/FF (e.g., 60/40)"
@@ -516,11 +516,12 @@ export default function CreateShowDialog({
     // Convert form data to use exact field names that match your database schema
     const showData: Partial<ShowCreate | ShowUpdate> = {
       title: formData.title,
-      minimum_guarantee: toFloatOrUndef(formData.minimumGuarantee),
+      minimum_guarantee: formData.minimumGuarantee,
       media_type: formData.format === "Video" ? "video" : formData.format === "Audio" ? "audio" : formData.format === "Both" ? "both" : undefined,
-      tentpole: formData.isTentpole,
+      rate_card: formData.isRateCard,
       relationship_level: formData.relationship === "Strong" ? "strong" : formData.relationship === "Medium" ? "medium" : formData.relationship === "Weak" ? "weak" : undefined,
       show_type: formData.show_type || undefined,
+      ranking_category: formData.ranking_category || undefined,
       evergreen_ownership_pct: toFloatOrUndef(formData.ownershipPercentage),
       has_sponsorship_revenue: formData.hasSponsorshipRevenue,
       has_non_evergreen_revenue: formData.hasNonEvergreenRevenue,
@@ -530,7 +531,7 @@ export default function CreateShowDialog({
       has_web_mgmt_revenue: formData.hasWebManagementRevenue,
       genre_name: formData.genre_name || undefined,
       is_original: formData.isOriginal,
-      shows_per_year: toIntOrUndef(formData.showsPerYear),
+      cadence: formData.cadence || undefined,
       latest_cpm_usd: toFloatOrUndef(formData.latestCPM),
       ad_slots: toIntOrUndef(formData.adSlots),
       avg_show_length_mins: toIntOrUndef(formData.averageLength),
@@ -604,15 +605,16 @@ export default function CreateShowDialog({
         partnerUsers: [],
         revenueSplit: { evergreen: 0, partner: 0 },
         show_type: duplicateCheckResult.existingShow.show_type || "Original",
+        ranking_category: duplicateCheckResult.existingShow.ranking_category || null,
         subnetwork_id: duplicateCheckResult.existingShow.subnetwork_id || "",
         format: duplicateCheckResult.existingShow.media_type === "video" ? "Video" : 
                 duplicateCheckResult.existingShow.media_type === "audio" ? "Audio" : "Both",
         relationship: duplicateCheckResult.existingShow.relationship_level === "strong" ? "Strong" :
                      duplicateCheckResult.existingShow.relationship_level === "medium" ? "Medium" : "Weak",
         ageMonths: 0,
-        isTentpole: duplicateCheckResult.existingShow.tentpole || false,
+        isRateCard: duplicateCheckResult.existingShow.rate_card || false,
         isOriginal: duplicateCheckResult.existingShow.is_original || false,
-        minimumGuarantee: duplicateCheckResult.existingShow.minimum_guarantee || 0,
+        minimumGuarantee: !!duplicateCheckResult.existingShow.minimum_guarantee,
         ownershipPercentage: duplicateCheckResult.existingShow.evergreen_ownership_pct || 0,
         brandedRevenueAmount: 0,
         marketingRevenueAmount: 0,
@@ -625,7 +627,7 @@ export default function CreateShowDialog({
         hasNonEvergreenRevenue: duplicateCheckResult.existingShow.has_non_evergreen_revenue || false,
         requiresPartnerLedgerAccess: duplicateCheckResult.existingShow.requires_partner_access || false,
         genre_name: duplicateCheckResult.existingShow.genre_name || null,
-        showsPerYear: duplicateCheckResult.existingShow.shows_per_year || 0,
+        cadence: duplicateCheckResult.existingShow.cadence || "Weekly",
         adSlots: duplicateCheckResult.existingShow.ad_slots || 0,
         averageLength: duplicateCheckResult.existingShow.avg_show_length_mins || 0,
         primaryContactHost: duplicateCheckResult.existingShow.show_host_contact || "",
@@ -756,7 +758,7 @@ export default function CreateShowDialog({
                         placeholder="Enter show name"
                         value={formData.title}
                         onChange={(e) => handleInputChange("title", e.target.value)}
-                        className={cn(getFieldError("title") && "border-red-500")}
+                        className={cn("h-10", getFieldError("title") && "border-red-500")}
                       />
                       {getFieldError("title") && (
                         <p className="text-sm text-red-500 flex items-center gap-1">
@@ -803,7 +805,7 @@ export default function CreateShowDialog({
                           handleInputChange("show_type", value)
                         }
                       >
-                        <SelectTrigger>
+                        <SelectTrigger className="h-10">
                           <SelectValue placeholder="Choose show type" />
                         </SelectTrigger>
                         <SelectContent>
@@ -817,21 +819,34 @@ export default function CreateShowDialog({
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="subnetwork_id">Subnetwork Name</Label>
-                      <Input
-                        id="subnetwork_id"
-                        placeholder="Enter Subnetwork Name or None"
-                        value={formData.subnetwork_id}
-                        onChange={(e) => handleInputChange("subnetwork_id", e.target.value)}
-                      />
+                      <Label>Ranking Category</Label>
+                      <Select
+                        value={formData.ranking_category}
+                        onValueChange={(value: "1" | "2" | "3" | "4" | "5" | "") =>
+                          handleInputChange("ranking_category", value)
+                        }
+                      >
+                        <SelectTrigger className="h-10">
+                          <SelectValue placeholder="Choose ranking level" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="1">Level 1</SelectItem>
+                          <SelectItem value="2">Level 2</SelectItem>
+                          <SelectItem value="3">Level 3</SelectItem>
+                          <SelectItem value="4">Level 4</SelectItem>
+                          <SelectItem value="5">Level 5</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
                     <div className="space-y-2">
                       <Label>Format</Label>
                       <Select
                         value={formData.format}
-                        onValueChange={(value: "Video" | "Audio" | "Both" | "") => handleInputChange("format", value)}
+                        onValueChange={(value: "Video" | "Audio" | "Both" | "") =>
+                          handleInputChange("format", value)
+                        }
                       >
-                        <SelectTrigger>
+                        <SelectTrigger className="h-10">
                           <SelectValue placeholder="Choose format" />
                         </SelectTrigger>
                         <SelectContent>
@@ -845,6 +860,32 @@ export default function CreateShowDialog({
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
+                      <Label htmlFor="subnetwork_id">Subnetwork Name</Label>
+                      <Input
+                        id="subnetwork_id"
+                        placeholder="Enter Subnetwork Name or None"
+                        value={formData.subnetwork_id}
+                        onChange={(e) => handleInputChange("subnetwork_id", e.target.value)}
+                        className="h-10"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="start_date">Start Date</Label>
+                      <Input
+                        id="start_date"
+                        type="date"
+                        placeholder=", dd -------- yyyy"
+                        value={formData.start_date}
+                        onChange={(e) => handleDateOnly(e, handleInputChange)}
+                        min={DATE_MIN}
+                        max={DATE_MAX}
+                        className="h-10"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
                       <Label>Relationship</Label>
                       <Select
                         value={formData.relationship}
@@ -852,7 +893,7 @@ export default function CreateShowDialog({
                           handleInputChange("relationship", value)
                         }
                       >
-                        <SelectTrigger>
+                        <SelectTrigger className="h-10">
                           <SelectValue placeholder="Choose relationship" />
                         </SelectTrigger>
                         <SelectContent>
@@ -863,33 +904,13 @@ export default function CreateShowDialog({
                       </Select>
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="start_date">Start Date</Label>
-                      <Input
-                        id="start_date"
-                        type="date"
-                        value={formData.start_date}
-                        min={DATE_MIN}
-                        max={DATE_MAX}
-                        pattern="\d{4}-\d{2}-\d{2}"
-                        onChange={(e) => handleDateOnly(e, (f, v) => handleInputChange(f, v))}
-                        className={cn(getFieldError("start_date") && "border-red-500")}
-                      />
-                      {getFieldError("start_date") && (
-                        <p className="text-sm text-red-500 flex items-center gap-1">
-                          <AlertCircle className="h-3 w-3" />
-                          {getFieldError("start_date")}
-                        </p>
-                      )}
-                    </div>
-
-                    <div className="space-y-2">
                       <Label>QBO Show (Name – ID)</Label>
                       <Popover open={isQboOpen} onOpenChange={setIsQboOpen}>
                         <PopoverTrigger asChild>
                           <Button
                             variant="outline"
                             role="combobox"
-                            className="w-full justify-between"
+                            className="w-full justify-between h-10"
                           >
                             {formData.qbo_show_id
                               ? `${formData.qbo_show_name} – ${formData.qbo_show_id}`
@@ -942,11 +963,11 @@ export default function CreateShowDialog({
                   <div className="flex gap-6">
                     <div className="flex items-center space-x-2">
                       <Checkbox
-                        id="isTentpole"
-                        checked={formData.isTentpole}
-                        onCheckedChange={(checked) => handleInputChange("isTentpole", checked)}
+                        id="isRateCard"
+                        checked={formData.isRateCard}
+                        onCheckedChange={(checked) => handleInputChange("isRateCard", checked)}
                       />
-                      <Label htmlFor="isTentpole">Is Tentpole Show</Label>
+                      <Label htmlFor="isRateCard">Is Rate Card Show</Label>
                     </div>
                     <div className="flex items-center space-x-2">
                       <Checkbox
@@ -985,18 +1006,7 @@ export default function CreateShowDialog({
                   <CardDescription>Configure revenue and financial details</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="minimumGuarantee">Minimum Guarantee (Annual)</Label>
-                      <Input
-                        id="minimumGuarantee"
-                        type="number"
-                        placeholder="0"
-                        min="0"
-                        value={formData.minimumGuarantee}
-                        onChange={(e) => handleInputChange("minimumGuarantee", e.target.value)}
-                      />
-                    </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="ownershipPercentage">Ownership by Evergreen (%)</Label>
                       <Input
@@ -1059,7 +1069,15 @@ export default function CreateShowDialog({
                     </div>
                   </div>
 
-                  <div className="flex flex-wrap gap-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id="minimumGuarantee"
+                        checked={formData.minimumGuarantee}
+                        onCheckedChange={(checked) => handleInputChange("minimumGuarantee", checked)}
+                      />
+                      <Label htmlFor="minimumGuarantee">Minimum Guarantee</Label>
+                    </div>
                     <div className="flex items-center space-x-2">
                       <Checkbox
                         id="hasSponsorshipRevenue"
@@ -1084,9 +1102,6 @@ export default function CreateShowDialog({
                       />
                       <Label htmlFor="requiresPartnerLedgerAccess">Requires Partner Ledger Access</Label>
                     </div>
-                  </div>
-
-                  <div className="flex flex-wrap gap-6">
                     <div className="flex items-center space-x-2">
                       <Checkbox
                         id="hasBrandedRevenue"
@@ -1345,15 +1360,19 @@ export default function CreateShowDialog({
                       </Select>
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="showsPerYear">Shows per Year</Label>
-                      <Input
-                        id="showsPerYear"
-                        type="number"
-                        placeholder="0"
-                        min="1"
-                        value={formData.showsPerYear}
-                        onChange={(e) => handleInputChange("showsPerYear", e.target.value)}
-                      />
+                      <Label htmlFor="cadence">Cadence</Label>
+                      <Select value={formData.cadence} onValueChange={(value) => handleInputChange("cadence", value)}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Choose Cadence" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Daily">Daily</SelectItem>
+                          <SelectItem value="Weekly">Weekly</SelectItem>
+                          <SelectItem value="Biweekly">Biweekly</SelectItem>
+                          <SelectItem value="Monthly">Monthly</SelectItem>
+                          <SelectItem value="Ad hoc">Ad hoc</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
                   </div>
 

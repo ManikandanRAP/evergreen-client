@@ -17,11 +17,12 @@ export interface Show {
   format: "Video" | "Audio" | "Both"
   relationship: "Strong" | "Medium" | "Weak"
   ageMonths: number
-  isTentpole: boolean
+  isRateCard: boolean
   isOriginal: boolean
+  ranking_category: "1" | "2" | "3" | "4" | "5" | null
 
   // Financial
-  minimumGuarantee: number
+  minimumGuarantee: boolean
   ownershipPercentage: number
   brandedRevenueAmount: number
   marketingRevenueAmount: number
@@ -36,7 +37,7 @@ export interface Show {
 
   // Content Details
   genre_name: string | null
-  showsPerYear: number
+  cadence: "Daily" | "Weekly" | "Biweekly" | "Monthly" | "Ad hoc"
   adSlots: number
   averageLength: number
   primaryContactHost: string
@@ -124,8 +125,9 @@ export function convertApiShowToLegacy(apiShow: ApiShow): Show {
     format: formatMap[apiShow.media_type || "audio"] || "Audio",
     relationship: relationshipMap[apiShow.relationship_level || "medium"] || "Medium",
     ageMonths,
-    isTentpole: apiShow.tentpole || false,
+    isRateCard: apiShow.rate_card || false,
     isOriginal: apiShow.is_original || false,
+    ranking_category: apiShow.ranking_category || null,
     minimumGuarantee: apiShow.minimum_guarantee || 0,
     ownershipPercentage: apiShow.evergreen_ownership_pct || 0,
     brandedRevenueAmount: apiShow.branded_revenue_percent ? (apiShow.branded_revenue_percent * (apiShow.revenue_2024 || 0)) / 100 : 0,
@@ -139,7 +141,7 @@ export function convertApiShowToLegacy(apiShow: ApiShow): Show {
     hasNonEvergreenRevenue: apiShow.has_non_evergreen_revenue || false,
     requiresPartnerLedgerAccess: apiShow.requires_partner_access || false,
     genre_name: apiShow.genre_name?.trim() ? apiShow.genre_name : null,
-    showsPerYear: apiShow.shows_per_year || 0,
+    cadence: apiShow.cadence || "Weekly",
     adSlots: apiShow.ad_slots || 0,
     averageLength: apiShow.avg_show_length_mins || 0,
     primaryContactHost: apiShow.show_host_contact || "",
@@ -203,7 +205,7 @@ export function convertLegacyShowToApiCreate(legacyShow: Partial<Show>): any {
     minimum_guarantee: legacyShow.minimumGuarantee || 0,
     subnetwork_id: legacyShow.subnetwork_id || null,
     media_type: formatMap[legacyShow.format || "Audio"] || "audio",
-    tentpole: legacyShow.isTentpole || false,
+    rate_card: legacyShow.isRateCard || false,
     relationship_level: relationshipMap[legacyShow.relationship || "Medium"] || "medium",
     show_type: showTypeMap[legacyShow.show_type || "Original"] || "Original",
     evergreen_ownership_pct: legacyShow.ownershipPercentage || 0,
@@ -215,7 +217,7 @@ export function convertLegacyShowToApiCreate(legacyShow: Partial<Show>): any {
     has_web_mgmt_revenue: (legacyShow.webManagementRevenue || 0) > 0,
     genre_name: legacyShow.genre_name || null,
     is_original: legacyShow.isOriginal || false,
-    shows_per_year: legacyShow.showsPerYear || null,
+    cadence: legacyShow.cadence || null,
     latest_cpm_usd: legacyShow.latestCPM || null,
     ad_slots: legacyShow.adSlots || null,
     avg_show_length_mins: legacyShow.averageLength || null,

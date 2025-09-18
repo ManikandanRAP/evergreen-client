@@ -38,8 +38,8 @@ interface ImportPreviewRow {
 // These are the headers for the CSV file template - matching your exact database schema
 const CSV_HEADERS = [
   "title", "show_type", "media_type", "relationship_level", "start_date", "minimum_guarantee",
-  "evergreen_ownership_pct", "genre_name", "shows_per_year", "show_primary_contact",
-  "age_demographic", "subnetwork_id", "tentpole", "is_original", "latest_cpm_usd",
+  "evergreen_ownership_pct", "genre_name", "cadence", "show_primary_contact",
+  "age_demographic", "subnetwork_id", "rate_card", "is_original", "latest_cpm_usd",
   "revenue_2023", "revenue_2024", "revenue_2025", "ad_slots", "avg_show_length_mins",
   "gender", "region", "is_active", "is_undersized", "show_host_contact",
   "evergreen_production_staff_name", "side_bonus_percent", "youtube_ads_percent",
@@ -172,8 +172,8 @@ export default function ImportCSVDialog({ open, onOpenChange, onImportComplete }
       }
 
       const numericFields = [
-        "minimum_guarantee", "evergreen_ownership_pct", "latest_cpm_usd", "revenue_2023", "revenue_2024", "revenue_2025",
-        "shows_per_year", "ad_slots", "avg_show_length_mins", "side_bonus_percent", "youtube_ads_percent",
+        "evergreen_ownership_pct", "latest_cpm_usd", "revenue_2023", "revenue_2024", "revenue_2025",
+        "ad_slots", "avg_show_length_mins", "side_bonus_percent", "youtube_ads_percent",
         "subscriptions_percent", "standard_ads_percent", "sponsorship_ad_fp_lead_percent",
         "sponsorship_ad_partner_lead_percent", "sponsorship_ad_partner_sold_percent",
         "programmatic_ads_span_percent", "merchandise_percent", "branded_revenue_percent",
@@ -202,14 +202,14 @@ export default function ImportCSVDialog({ open, onOpenChange, onImportComplete }
         media_type: mediaVal ? (mediaVal as "video" | "audio" | "both") : undefined,
         relationship_level: relVal ? (relVal as "strong" | "medium" | "weak") : undefined,
         start_date: row.start_date || undefined,
-        minimum_guarantee: row.minimum_guarantee ? parseFloat(row.minimum_guarantee) : undefined,
+        minimum_guarantee: row.minimum_guarantee?.toLowerCase() === 'yes' || row.minimum_guarantee?.toLowerCase() === 'true' || false,
         evergreen_ownership_pct: row.evergreen_ownership_pct ? parseFloat(row.evergreen_ownership_pct) : undefined,
         genre_name: row.genre_name || undefined,
-        shows_per_year: row.shows_per_year ? parseInt(row.shows_per_year) : undefined,
+        cadence: row.cadence || undefined,
         show_primary_contact: row.show_primary_contact || undefined,
         age_demographic: row.age_demographic || undefined,
         subnetwork_id: row.subnetwork_id || undefined,
-        tentpole: row.tentpole?.toLowerCase() === 'yes' || row.tentpole?.toLowerCase() === 'true' || false,
+        rate_card: row.rate_card?.toLowerCase() === 'yes' || row.rate_card?.toLowerCase() === 'true' || false,
         is_original: row.is_original?.toLowerCase() === 'yes' || row.is_original?.toLowerCase() === 'true' || false,
         latest_cpm_usd: row.latest_cpm_usd ? parseFloat(row.latest_cpm_usd) : undefined,
         revenue_2023: row.revenue_2023 ? parseFloat(row.revenue_2023) : undefined,

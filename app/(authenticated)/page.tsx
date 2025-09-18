@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Radio, DollarSign, TrendingUp, Users, CreditCard, Loader2 } from "lucide-react"
+import { getRankingInfo } from "@/lib/ranking-utils"
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL
 
@@ -16,15 +17,30 @@ export default function HomePage() {
   const { shows, loading } = useShows()
 
   type LedgerItem = {
-    payment_amount: number | null
-    evergreen_compensation: number | null
+    show_name: string
+    customer: string
     invoice_date: string | null
-    invoice_classref_name: string | null
+    invoice_description: string
+    invoice_amount: number | null
+    evergreen_percentage: number | null
+    partner_percentage: number | null
+    evergreen_compensation: number | null
+    partner_compensation: number | null
+    effective_payment_received: number | null
+    outstanding_balance: number | null
+    partner_comp_waiting: number | null
   }
 
   type PartnerPayout = {
-    linked_paymentid: string | null
-    paid_amount: number | null
+    bill_number: string | null
+    bill_date: string
+    partner_name: string
+    bill_amount: number | null
+    payment_id: string | null
+    date_of_payment: string | null
+    effective_billed_amount_paid: number | null
+    billed_amount_outstanding: number | null
+    show_name: string
   }
 
   const [fetching, setFetching] = useState<boolean>(false)
@@ -76,13 +92,13 @@ export default function HomePage() {
   }, [token])
 
   const summary = useMemo(() => {
-    const totalNetRevenue = ledger.reduce((s, i) => s + num(i.payment_amount), 0)
+    const totalNetRevenue = ledger.reduce((s, i) => s + num(i.effective_payment_received), 0)
     const totalEvergreenShare = ledger.reduce((s, i) => s + num(i.evergreen_compensation), 0)
     const seen = new Set<string>()
     const totalPaymentsMade = payouts.reduce((s, i) => {
-      if (i.linked_paymentid && !seen.has(i.linked_paymentid)) {
-        seen.add(i.linked_paymentid)
-        return s + num(i.paid_amount)
+      if (i.payment_id && !seen.has(i.payment_id)) {
+        seen.add(i.payment_id)
+        return s + num(i.effective_billed_amount_paid)
       }
       return s
     }, 0)
@@ -209,12 +225,13 @@ export default function HomePage() {
                     <th className="p-3 px-6 font-semibold">Show Name</th>
                     <th className="p-3 font-semibold">Status</th>
                     <th className="p-3 font-semibold">Type</th>
+                    <th className="p-3 font-semibold">Ranking</th>
                     <th className="p-3 font-semibold">Genre</th>
                     <th className="p-3 font-semibold">Format</th>
                     <th className="p-3 font-semibold">Relationship</th>
                     <th className="p-3 font-semibold">Min Guarantee</th>
                     <th className="p-3 font-semibold">Age</th>
-                    <th className="p-3 font-semibold">Shows/Year</th>
+                    <th className="p-3 font-semibold">Cadence</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -225,12 +242,12 @@ export default function HomePage() {
                         <div className="flex flex-col gap-1 items-start">
                           <Badge
                             className={`text-xs border pointer-events-none ${
-                              (show as any).isTentpole
+                              (show as any).isRateCard
                                 ? "bg-emerald-100 text-emerald-800 border-emerald-300 dark:bg-emerald-900/50 dark:text-emerald-300 dark:border-emerald-700"
                                 : "bg-red-100 text-red-800 border-red-300 dark:bg-red-900/50 dark:text-red-300 dark:border-red-700"
                             }`}
                           >
-                            Tentpole - {(show as any).isTentpole ? "Yes" : "No"}
+                            Rate Card - {(show as any).isRateCard ? "Yes" : "No"}
                           </Badge>
                           <Badge
                             className={`text-xs border pointer-events-none ${
@@ -244,6 +261,16 @@ export default function HomePage() {
                         </div>
                       </td>
                       <td className="p-3 capitalize">{(show as any).show_type ?? "—"}</td>
+        <td className="p-3">
+          {(() => {
+            const rankingInfo = getRankingInfo((show as any).ranking_category);
+            return rankingInfo.hasRanking ? (
+              <Badge variant="secondary" className={rankingInfo.badgeClasses}>
+                {rankingInfo.displayText}
+              </Badge>
+            ) : "—";
+          })()}
+        </td>
                       <td className="p-3">{(show as any).genre_name ?? "—"}</td>
                       <td className="p-3">{(show as any).format ?? "—"}</td>
                       <td className="p-3">
@@ -255,7 +282,7 @@ export default function HomePage() {
                         {formatCurrency(Number((show as any).minimumGuarantee || 0))}
                       </td>
                       <td className="p-3">{(show as any).ageMonths ?? "—"}m</td>
-                      <td className="p-3">{(show as any).showsPerYear ?? "—"}</td>
+                      <td className="p-3">{(show as any).cadence ?? "—"}</td>
                     </tr>
                   ))}
                 </tbody>

@@ -527,46 +527,46 @@ export default function UserManagement({ onBack }: UserManagementProps) {
 
       {/* User Statistics */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card>
+        <Card className="bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-950/20 dark:to-slate-900/20 border-slate-200 dark:border-slate-800">
           <CardContent className="p-4">
             <div className="flex items-center space-x-2">
-              <Users className="h-4 w-4 text-blue-600" />
+              <Users className="h-4 w-4 text-slate-600" />
               <div>
-                <p className="text-sm font-medium">Total Users</p>
-                <p className="text-2xl font-bold">{userStats.total}</p>
+                <p className="text-sm font-medium text-slate-700 dark:text-slate-300">Total Users</p>
+                <p className="text-2xl font-bold text-slate-600">{userStats.total}</p>
               </div>
             </div>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-950/20 dark:to-emerald-900/20 border-emerald-200 dark:border-emerald-800">
           <CardContent className="p-4">
             <div className="flex items-center space-x-2">
-              <UserIcon className="h-4 w-4 text-purple-600" />
+              <UserIcon className="h-4 w-4 text-emerald-600" />
               <div>
-                <p className="text-sm font-medium">Admins</p>
-                <p className="text-2xl font-bold">{userStats.admins}</p>
+                <p className="text-sm font-medium text-emerald-700 dark:text-emerald-300">Admins</p>
+                <p className="text-2xl font-bold text-emerald-600">{userStats.admins}</p>
               </div>
             </div>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-950/20 dark:to-purple-900/20 border-purple-200 dark:border-purple-800">
           <CardContent className="p-4">
             <div className="flex items-center space-x-2">
-              <UserCheck className="h-4 w-4 text-green-600" />
+              <UserCheck className="h-4 w-4 text-purple-600" />
               <div>
-                <p className="text-sm font-medium">Partners</p>
-                <p className="text-2xl font-bold">{userStats.partners}</p>
+                <p className="text-sm font-medium text-purple-700 dark:text-purple-300">Partners</p>
+                <p className="text-2xl font-bold text-purple-600">{userStats.partners}</p>
               </div>
             </div>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-950/20 dark:to-orange-900/20 border-orange-200 dark:border-orange-800">
           <CardContent className="p-4">
             <div className="flex items-center space-x-2">
-              <Users className="h-4 w-4 text-emerald-600" />
+              <Users className="h-4 w-4 text-orange-600" />
               <div>
-                <p className="text-sm font-medium">Internals</p>
-                <p className="text-2xl font-bold">{userStats.internals}</p>
+                <p className="text-sm font-medium text-orange-700 dark:text-orange-300">Internals</p>
+                <p className="text-2xl font-bold text-orange-600">{userStats.internals}</p>
               </div>
             </div>
           </CardContent>
@@ -645,7 +645,21 @@ export default function UserManagement({ onBack }: UserManagementProps) {
                           </span>
                         </TableCell>
                         <TableCell className="font-mono border-r px-4 py-2">{u.email}</TableCell>
-                        <TableCell className="uppercase border-r px-4 py-2">{u.role || "—"}</TableCell>
+                        <TableCell className="border-r px-4 py-2">
+                          <Badge 
+                            className={`text-xs border pointer-events-none uppercase font-semibold ${
+                              u.role === 'admin' 
+                                ? "bg-emerald-100 text-emerald-800 border-emerald-300 dark:bg-emerald-900/50 dark:text-emerald-300 dark:border-emerald-700"
+                                : u.role === 'internal'
+                                ? "bg-orange-100 text-orange-800 border-orange-300 dark:bg-orange-900/50 dark:text-orange-300 dark:border-orange-700"
+                                : u.role === 'partner'
+                                ? "bg-purple-100 text-purple-800 border-purple-300 dark:bg-purple-900/50 dark:text-purple-300 dark:border-purple-700"
+                                : "bg-gray-100 text-gray-800 border-gray-300 dark:bg-gray-900/50 dark:text-gray-300 dark:border-gray-700"
+                            }`}
+                          >
+                            {u.role || "—"}
+                          </Badge>
+                        </TableCell>
                         <TableCell className="border-r px-4 py-2">
                           {u.created_at ? new Date(u.created_at).toLocaleString() : "—"}
                         </TableCell>
@@ -941,10 +955,34 @@ export default function UserManagement({ onBack }: UserManagementProps) {
           {viewingUser && (
             <div className="space-y-6">
               {/* User Header with Avatar and Basic Info */}
-              <div className="flex items-start gap-6 p-6 bg-gradient-to-r from-emerald-50 to-blue-50 dark:from-emerald-950/20 dark:to-blue-950/20 rounded-lg border">
+              <div className={`flex items-start gap-6 p-6 rounded-lg border ${
+                viewingUser.role === 'admin' 
+                  ? "bg-gradient-to-r from-emerald-50 to-emerald-100 dark:from-emerald-950/20 dark:to-emerald-900/20 border-emerald-200 dark:border-emerald-800"
+                  : viewingUser.role === 'internal'
+                  ? "bg-gradient-to-r from-orange-50 to-orange-100 dark:from-orange-950/20 dark:to-orange-900/20 border-orange-200 dark:border-orange-800"
+                  : viewingUser.role === 'partner'
+                  ? "bg-gradient-to-r from-purple-50 to-purple-100 dark:from-purple-950/20 dark:to-purple-900/20 border-purple-200 dark:border-purple-800"
+                  : "bg-gradient-to-r from-slate-50 to-slate-100 dark:from-slate-950/20 dark:to-slate-900/20 border-slate-200 dark:border-slate-800"
+              }`}>
                 <div className="flex-shrink-0">
-                  <div className="w-16 h-16 bg-emerald-100 dark:bg-emerald-900/30 rounded-full flex items-center justify-center">
-                    <UserIcon className="h-8 w-8 text-emerald-600 dark:text-emerald-400" />
+                  <div className={`w-16 h-16 rounded-full flex items-center justify-center ${
+                    viewingUser.role === 'admin' 
+                      ? "bg-emerald-100 dark:bg-emerald-900/30"
+                      : viewingUser.role === 'internal'
+                      ? "bg-orange-100 dark:bg-orange-900/30"
+                      : viewingUser.role === 'partner'
+                      ? "bg-purple-100 dark:bg-purple-900/30"
+                      : "bg-slate-100 dark:bg-slate-900/30"
+                  }`}>
+                    <UserIcon className={`h-8 w-8 ${
+                      viewingUser.role === 'admin' 
+                        ? "text-emerald-600 dark:text-emerald-400"
+                        : viewingUser.role === 'internal'
+                        ? "text-orange-600 dark:text-orange-400"
+                        : viewingUser.role === 'partner'
+                        ? "text-purple-600 dark:text-purple-400"
+                        : "text-slate-600 dark:text-slate-400"
+                    }`} />
                   </div>
                 </div>
                 <div className="flex-1 min-w-0">
@@ -1079,12 +1117,23 @@ export default function UserManagement({ onBack }: UserManagementProps) {
                   <div className="flex flex-wrap gap-3">
                     <Button 
                       onClick={() => { setIsProfileDialogOpen(false); openEditor(viewingUser); }}
-                      className="flex items-center gap-2"
+                      className={`flex items-center gap-2 ${
+                        viewingUser.role === 'admin' 
+                          ? "bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-950/20 dark:to-emerald-900/20 border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300 hover:from-emerald-100 hover:to-emerald-200 dark:hover:from-emerald-900/30 dark:hover:to-emerald-800/30"
+                          : viewingUser.role === 'internal'
+                          ? "bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-950/20 dark:to-orange-900/20 border-orange-200 dark:border-orange-800 text-orange-700 dark:text-orange-300 hover:from-orange-100 hover:to-orange-200 dark:hover:from-orange-900/30 dark:hover:to-orange-800/30"
+                          : viewingUser.role === 'partner'
+                          ? "bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-950/20 dark:to-purple-900/20 border-purple-200 dark:border-purple-800 text-purple-700 dark:text-purple-300 hover:from-purple-100 hover:to-purple-200 dark:hover:from-purple-900/30 dark:hover:to-purple-800/30"
+                          : "bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-950/20 dark:to-slate-900/20 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:from-slate-100 hover:to-slate-200 dark:hover:from-slate-900/30 dark:hover:to-slate-800/30"
+                      }`}
                     >
                       <Pencil className="h-4 w-4" />
                       Edit User Details
                     </Button>
-                    <Button variant="outline" className="flex items-center gap-2">
+                    <Button 
+                      variant="outline" 
+                      className="flex items-center gap-2 bg-gradient-to-br from-cyan-50 to-cyan-100 dark:from-cyan-950/20 dark:to-cyan-900/20 border-cyan-200 dark:border-cyan-800 text-cyan-700 dark:text-cyan-300 hover:from-cyan-100 hover:to-cyan-200 dark:hover:from-cyan-900/30 dark:hover:to-cyan-800/30"
+                    >
                       <FileText className="h-4 w-4" />
                       View Activity Log
                     </Button>
@@ -1094,7 +1143,11 @@ export default function UserManagement({ onBack }: UserManagementProps) {
 
               {/* Actions */}
               <div className="flex justify-end gap-3 pt-4 border-t">
-                <Button variant="outline" onClick={() => setIsProfileDialogOpen(false)}>
+                <Button 
+                  variant="outline" 
+                  onClick={() => setIsProfileDialogOpen(false)}
+                  className="bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-950/20 dark:to-slate-900/20 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:from-slate-100 hover:to-slate-200 dark:hover:from-slate-900/30 dark:hover:to-slate-800/30"
+                >
                   Close
                 </Button>
               </div>

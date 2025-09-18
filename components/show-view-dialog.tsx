@@ -45,6 +45,7 @@ import {
   ChevronDown,
 } from "lucide-react"
 import type { Show } from "@/lib/show-types"
+import { getRankingInfo } from "@/lib/ranking-utils"
 import React, { useEffect, useState } from "react"
 
 // --- Reusable Sub-components for Cleaner Layout ---
@@ -64,16 +65,26 @@ const DetailItem = ({
   badgeVariant?: "default" | "secondary" | "destructive" | "outline"
 }) => {
   const Icon = icon
+  
+  // Check if the value is a React element (like a Badge component)
+  const isReactElement = React.isValidElement(value)
+  
   return (
     <div>
       <label className="text-xs font-medium text-muted-foreground flex items-center gap-1.5">
         {Icon && <Icon className="h-3.5 w-3.5" />}
         {label}
       </label>
-      {isBadge ? (
-        <Badge variant={badgeVariant} className="mt-1 text-xs md:text-sm">
-          {value}
-        </Badge>
+      {isBadge || isReactElement ? (
+        <div className="mt-1">
+          {isBadge ? (
+            <Badge variant={badgeVariant} className="text-xs md:text-sm">
+              {value}
+            </Badge>
+          ) : (
+            value
+          )}
+        </div>
       ) : (
         <p className="text-sm md:text-base font-semibold">{value || "N/A"}</p>
       )}
@@ -205,13 +216,14 @@ export default function ShowViewDialog({
     { label: "Branded Revenue", value: show.hasBrandedRevenue },
     { label: "Marketing Revenue", value: show.hasMarketingRevenue },
     { label: "Web Management Revenue", value: show.hasWebManagementRevenue },
+    { label: "Minimum Guarantee", value: show.minimumGuarantee },
     { label: "Sponsorship Revenue", value: show.hasSponsorshipRevenue },
     { label: "Non Evergreen Revenue", value: show.hasNonEvergreenRevenue },
     { label: "Partner Ledger Access", value: show.requiresPartnerLedgerAccess },
   ]
 
   const statusFlags = [
-    { label: "Tentpole", value: show.isTentpole },
+    { label: "Rate Card", value: show.isRateCard },
     { label: "Original", value: show.isOriginal },
     { label: "Active", value: show.is_active },
     { label: "Undersized", value: show.is_undersized },
@@ -336,6 +348,17 @@ export default function ShowViewDialog({
                   <DetailItem label="Show Type" value={show.show_type} />
                   <DetailItem label="Format" value={show.format} />
                   <DetailItem label="Relationship" value={show.relationship} />
+                  <DetailItem 
+                    label="Ranking Category" 
+                    value={(() => {
+                      const rankingInfo = getRankingInfo(show.ranking_category);
+                      return rankingInfo.hasRanking ? (
+                        <Badge variant="secondary" className={rankingInfo.badgeClasses}>
+                          {rankingInfo.displayText}
+                        </Badge>
+                      ) : "—";
+                    })()} 
+                  />
                   <DetailItem label="Subnetwork" value={show.subnetwork_id} />
                   <DetailItem
                     label="Created Date"
@@ -424,11 +447,7 @@ export default function ShowViewDialog({
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="grid grid-cols-3 gap-6 mb-6">
-                    <DetailItem
-                      label="Minimum Guarantee"
-                      value={formatCurrency(show.minimumGuarantee)}
-                    />
+                  <div className="grid grid-cols-2 gap-6 mb-6">
                     <DetailItem label="Ownership %" value={`${show.ownershipPercentage}%`} />
                     <DetailItem label="Latest CPM" value={`$${show.latestCPM}`} />
                   </div>
@@ -438,20 +457,20 @@ export default function ShowViewDialog({
                         <BarChart3 className="h-4 w-4" /> Revenue by Year
                       </h4>
                       <div className="grid grid-cols-3 gap-3">
-                        <div className="text-center p-3 bg-muted/50 dark:bg-black rounded-lg">
-                          <p className="text-xs text-muted-foreground">2023</p>
+                        <div className="text-center p-3 bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-950/20 dark:to-emerald-900/20 rounded-lg border border-emerald-200 dark:border-emerald-800">
+                          <p className="text-xs text-emerald-700 dark:text-emerald-300">2023</p>
                           <p className="text-base font-bold text-emerald-600">
                             {formatCurrency(show.revenue2023)}
                           </p>
                         </div>
-                        <div className="text-center p-3 bg-muted/50 dark:bg-black rounded-lg">
-                          <p className="text-xs text-muted-foreground">2024</p>
+                        <div className="text-center p-3 bg-gradient-to-br from-cyan-50 to-cyan-100 dark:from-cyan-950/20 dark:to-cyan-900/20 rounded-lg border border-cyan-200 dark:border-cyan-800">
+                          <p className="text-xs text-cyan-700 dark:text-cyan-300">2024</p>
                           <p className="text-base font-bold text-cyan-600">
                             {formatCurrency(show.revenue2024)}
                           </p>
                         </div>
-                        <div className="text-center p-3 bg-muted/50 dark:bg-black rounded-lg">
-                          <p className="text-xs text-muted-foreground">2025</p>
+                        <div className="text-center p-3 bg-gradient-to-br from-green-50 to-green-100 dark:from-green-950/20 dark:to-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
+                          <p className="text-xs text-green-700 dark:text-green-300">2025</p>
                           <p className="text-base font-bold text-green-600">
                             {formatCurrency(show.revenue2025)}
                           </p>
@@ -463,15 +482,15 @@ export default function ShowViewDialog({
                         <Percent className="h-4 w-4" /> Revenue Split
                       </h4>
                       <div className="grid grid-cols-2 gap-3">
-                        <div className="text-center p-3 bg-muted/50 dark:bg-black rounded-lg">
-                          <p className="text-xs text-muted-foreground">Standard Ads</p>
-                          <p className="text-base font-bold text-emerald-600">
+                        <div className="text-center p-3 bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950/20 dark:to-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                          <p className="text-xs text-blue-700 dark:text-blue-300">Standard Ads</p>
+                          <p className="text-base font-bold text-blue-600">
                             {show.standardAdsPercent}%
                           </p>
                         </div>
-                        <div className="text-center p-3 bg-muted/50 dark:bg-black rounded-lg">
-                          <p className="text-xs text-muted-foreground">Programmatic Ads</p>
-                          <p className="text-base font-bold text-cyan-600">
+                        <div className="text-center p-3 bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-950/20 dark:to-purple-900/20 rounded-lg border border-purple-200 dark:border-purple-800">
+                          <p className="text-xs text-purple-700 dark:text-purple-300">Programmatic Ads</p>
+                          <p className="text-base font-bold text-purple-600">
                             {show.programmaticAdsSpanPercent}%
                           </p>
                         </div>
@@ -554,7 +573,7 @@ export default function ShowViewDialog({
                 </CardHeader>
                 <CardContent className="grid grid-cols-2 gap-6">
                   <DetailItem label="Genre" value={show.genre_name} />
-                  <DetailItem label="Shows per Year" value={show.showsPerYear} />
+                  <DetailItem label="Cadence" value={show.cadence} />
                   <DetailItem label="Ad Slots" value={show.adSlots} />
                   <DetailItem label="Average Length" value={`${show.averageLength} min`} />
                 </CardContent>
