@@ -83,11 +83,7 @@ export default function RevenueLedger() {
 
   const [ledger, setLedger] = useState<LedgerItem[]>([])
   const [payouts, setPayouts] = useState<PartnerPayout[]>([])
-  const [stats, setStats] = useState<{
-    total_effective_billed_paid: number | null
-    total_billed_outstanding: number | null
-    total_comp_waiting: number | null
-  } | null>(null)
+  // Removed static stats state - now calculated from filtered data
   const [fetching, setFetching] = useState<boolean>(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -111,7 +107,6 @@ export default function RevenueLedger() {
     if (!token) {
       setLedger([])
       setPayouts([])
-      setStats(null)
       return
     }
     setFetching(true)
@@ -119,21 +114,17 @@ export default function RevenueLedger() {
     try {
       const headers: HeadersInit = { "Content-Type": "application/json", Authorization: `Bearer ${token}` }
       const base = API_URL?.replace(/\/$/, "") || ""
-      const [ledgerRes, payoutRes, statsRes] = await Promise.all([
+      const [ledgerRes, payoutRes] = await Promise.all([
         fetch(`${base}/ledger`, { headers }),
         fetch(`${base}/partner_payouts`, { headers }),
-        fetch(`${base}/revenue_ledger_stats`, { headers }),
       ])
       if (!ledgerRes.ok) throw new Error(await readErr(ledgerRes, "Ledger request failed"))
       if (!payoutRes.ok) throw new Error(await readErr(payoutRes, "Partner payouts request failed"))
-      if (!statsRes.ok) throw new Error(await readErr(statsRes, "Stats request failed"))
 
       const ledgerJson: LedgerItem[] = await ledgerRes.json()
       const payoutsJson: PartnerPayout[] = await payoutRes.json()
-      const statsJson = await statsRes.json()
       setLedger(Array.isArray(ledgerJson) ? ledgerJson : [])
       setPayouts(Array.isArray(payoutsJson) ? payoutsJson : [])
-      setStats(statsJson)
     } catch (e: any) {
       setError(e?.message || "Failed to load ledger data")
     } finally {
@@ -263,6 +254,30 @@ export default function RevenueLedger() {
       return s
     }, 0)
     return { totalNetRevenue, totalPartnerCompensation, totalPaymentsMade }
+  }, [filteredRevenueData, filteredPartnerPayments])
+
+  // Calculate filtered stats based on the same logic as the database view
+  const filteredStats = useMemo(() => {
+    // total_effective_billed_paid: sum of effective_billed_amount_paid from filtered partner payouts
+    const total_effective_billed_paid = filteredPartnerPayments.reduce((sum, payout) => 
+      sum + num(payout.effective_billed_amount_paid), 0
+    )
+    
+    // total_billed_outstanding: sum of billed_amount_outstanding from filtered partner payouts
+    const total_billed_outstanding = filteredPartnerPayments.reduce((sum, payout) => 
+      sum + num(payout.billed_amount_outstanding), 0
+    )
+    
+    // total_comp_waiting: sum of partner_comp_waiting from filtered revenue ledger
+    const total_comp_waiting = filteredRevenueData.reduce((sum, item) => 
+      sum + num(item.partner_comp_waiting), 0
+    )
+    
+    return {
+      total_effective_billed_paid,
+      total_billed_outstanding,
+      total_comp_waiting
+    }
   }, [filteredRevenueData, filteredPartnerPayments])
 
   const formatCurrency = (v: number | null | undefined) =>
@@ -415,7 +430,7 @@ export default function RevenueLedger() {
             <DollarSign className="h-4 w-4 text-emerald-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-emerald-600">{formatCurrency(stats?.total_effective_billed_paid || 0)}</div>
+            <div className="text-2xl font-bold text-emerald-600">{formatCurrency(filteredStats.total_effective_billed_paid)}</div>
             <p className="text-xs text-emerald-600/70 dark:text-emerald-400/70">Billed and Paid</p>
           </CardContent>
         </Card>
@@ -426,7 +441,7 @@ export default function RevenueLedger() {
             <TrendingUp className="h-4 w-4 text-blue-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-blue-600">{formatCurrency(stats?.total_billed_outstanding || 0)}</div>
+            <div className="text-2xl font-bold text-blue-600">{formatCurrency(filteredStats.total_billed_outstanding)}</div>
             <p className="text-xs text-blue-600/70 dark:text-blue-400/70">Revenue Received and awaiting Partner Payment</p>
           </CardContent>
         </Card>
@@ -437,7 +452,7 @@ export default function RevenueLedger() {
             <CreditCard className="h-4 w-4 text-green-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">{formatCurrency(stats?.total_comp_waiting || 0)}</div>
+            <div className="text-2xl font-bold text-green-600">{formatCurrency(filteredStats.total_comp_waiting)}</div>
             <p className="text-xs text-green-600/70 dark:text-green-400/70">Partner share awaiting for Invoice Payment from Customer</p>
           </CardContent>
         </Card>
