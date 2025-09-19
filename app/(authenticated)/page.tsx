@@ -237,7 +237,7 @@ export default function HomePage() {
                 <tbody>
                   {shows.slice(0, 5).map((show) => (
                     <tr key={show.id} className="border-b hover:bg-accent/50 transition-colors">
-                      <td className="p-3 px-6 font-medium">{show.title ?? "—"}</td>
+                      <td className="p-3 px-6 font-medium">{show.title ?? "N/A"}</td>
                       <td className="p-3">
                         <div className="flex flex-col gap-1 items-start">
                           <Badge
@@ -260,7 +260,7 @@ export default function HomePage() {
                           </Badge>
                         </div>
                       </td>
-                      <td className="p-3 capitalize">{(show as any).show_type ?? "—"}</td>
+                      <td className="p-3 capitalize">{(show as any).show_type ?? "N/A"}</td>
         <td className="p-3">
           {(() => {
             const rankingInfo = getRankingInfo((show as any).ranking_category);
@@ -268,21 +268,21 @@ export default function HomePage() {
               <Badge variant="secondary" className={rankingInfo.badgeClasses}>
                 {rankingInfo.displayText}
               </Badge>
-            ) : "—";
+            ) : "N/A";
           })()}
         </td>
-                      <td className="p-3">{(show as any).genre_name ?? "—"}</td>
-                      <td className="p-3">{show.media_type ? show.media_type.charAt(0).toUpperCase() + show.media_type.slice(1) : "—"}</td>
+                      <td className="p-3">{(show as any).genre_name ?? "N/A"}</td>
+                      <td className="p-3">{show.media_type ? show.media_type.charAt(0).toUpperCase() + show.media_type.slice(1) : "N/A"}</td>
                       <td className="p-3">
                         <Badge className={`text-xs border pointer-events-none ${getRelationshipBadgeClass(show.relationship_level)}`}>
-                          {show.relationship_level ? show.relationship_level.charAt(0).toUpperCase() + show.relationship_level.slice(1) : "—"}
+                          {show.relationship_level ? show.relationship_level.charAt(0).toUpperCase() + show.relationship_level.slice(1) : "N/A"}
                         </Badge>
                       </td>
                       <td className="p-3 font-medium text-emerald-600">
                         {show.minimum_guarantee ? "Yes" : "No"}
                       </td>
-                      <td className="p-3">{Math.floor((new Date().getTime() - new Date(show.start_date).getTime()) / (1000 * 60 * 60 * 24 * 30)) ?? "—"}m</td>
-                      <td className="p-3">{show.cadence ?? "—"}</td>
+                      <td className="p-3">{Math.floor((new Date().getTime() - new Date(show.start_date).getTime()) / (1000 * 60 * 60 * 24 * 30)) ?? "N/A"}m</td>
+                      <td className="p-3">{show.cadence ?? "N/A"}</td>
                     </tr>
                   ))}
                 </tbody>

@@ -526,7 +526,7 @@ export default function RevenueLedger() {
         <CardHeader className="flex-row items-start justify-between space-y-0">
           <div>
             <CardTitle>Revenue</CardTitle>
-            <CardDescription>Transactions between Evergreen and Ad Agencies</CardDescription>
+            <CardDescription>Transactions between Evergreen and Customers</CardDescription>
           </div>
           <PaginationControls
             page={revenuePageSafe}

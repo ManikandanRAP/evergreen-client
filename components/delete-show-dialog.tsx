@@ -109,10 +109,10 @@ export default function DeleteShowDialog({
                   <strong>Genre:</strong> {show.genre_name}
                 </p>
                 <p>
-                  <strong>Format:</strong> {show.media_type ? show.media_type.charAt(0).toUpperCase() + show.media_type.slice(1) : "—"}
+                  <strong>Format:</strong> {show.media_type ? show.media_type.charAt(0).toUpperCase() + show.media_type.slice(1) : "N/A"}
                 </p>
                 <p>
-                  <strong>Relationship:</strong> {show.relationship_level ? show.relationship_level.charAt(0).toUpperCase() + show.relationship_level.slice(1) : "—"}
+                  <strong>Relationship:</strong> {show.relationship_level ? show.relationship_level.charAt(0).toUpperCase() + show.relationship_level.slice(1) : "N/A"}
                 </p>
               </div>
             </div>

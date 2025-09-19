@@ -394,12 +394,12 @@ export default function EnhancedDashboard() {
   // Show creation handler
   const createShow = async (showData: any) => {
     try {
-      const newShow = await apiClient.createShow(showData)
+      const newShow = await apiClient.createPodcast(showData)
       if (newShow) {
         toast.success("Show created successfully!")
         setIsCreateShowDialogOpen(false)
-        // Refresh shows data
-        window.location.reload()
+        // Redirect to shows management page
+        router.push('/shows-management')
       }
     } catch (error) {
       toast.error("Failed to create show")
@@ -411,7 +411,7 @@ export default function EnhancedDashboard() {
   // Show update handler
   const updateShow = async (showId: string, showData: any) => {
     try {
-      const updatedShow = await apiClient.updateShow(showId, showData)
+      const updatedShow = await apiClient.updatePodcast(showId, showData)
       if (updatedShow) {
         toast.success("Show updated successfully!")
         setIsCreateShowDialogOpen(false)
@@ -430,8 +430,8 @@ export default function EnhancedDashboard() {
     if (result.success) {
       toast.success(result.message)
       setIsImportDialogOpen(false)
-      // Refresh shows data
-      window.location.reload()
+      // Redirect to shows management page
+      router.push('/shows-management')
     } else {
       toast.error(result.message)
     }

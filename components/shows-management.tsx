@@ -1521,7 +1521,7 @@ export default function ShowsManagement() {
                   </div>
                   <div className="flex items-center gap-2 flex-wrap">
                     <Badge className="text-xs border bg-purple-100 text-purple-800 border-purple-300 dark:bg-purple-900/50 dark:text-purple-300 dark:border-purple-700 capitalize pointer-events-none">
-                      {show.show_type}
+                      {show.show_type || "N/A"}
                     </Badge>
                     <Badge
                       className={`text-xs border pointer-events-none ${
@@ -1824,7 +1824,7 @@ export default function ShowsManagement() {
                           {show.title}
                         </span>
                       </td>
-                      <td className="pl-6 pr-6 py-2 capitalize border-r">{show.show_type}</td>
+                      <td className="pl-6 pr-6 py-2 capitalize border-r">{show.show_type || "N/A"}</td>
         <td className="pl-6 pr-6 py-2 border-r">
           {(() => {
             const rankingInfo = getRankingInfo(show.ranking_category);
@@ -1833,7 +1833,7 @@ export default function ShowsManagement() {
                 {rankingInfo.displayText}
               </Badge>
             ) : (
-              <span className="text-muted-foreground">—</span>
+              <span className="text-muted-foreground">N/A</span>
             );
           })()}
         </td>

@@ -346,8 +346,8 @@ export default function ShowViewDialog({
                 </CardHeader>
                 <CardContent className="grid grid-cols-3 gap-x-6 gap-y-6">
                   <DetailItem label="Show Type" value={show.show_type} />
-                  <DetailItem label="Format" value={show.media_type ? show.media_type.charAt(0).toUpperCase() + show.media_type.slice(1) : "—"} />
-                  <DetailItem label="Relationship" value={show.relationship_level ? show.relationship_level.charAt(0).toUpperCase() + show.relationship_level.slice(1) : "—"} />
+                  <DetailItem label="Format" value={show.media_type ? show.media_type.charAt(0).toUpperCase() + show.media_type.slice(1) : "N/A"} />
+                  <DetailItem label="Relationship" value={show.relationship_level ? show.relationship_level.charAt(0).toUpperCase() + show.relationship_level.slice(1) : "N/A"} />
                   <DetailItem 
                     label="Ranking Category" 
                     value={(() => {
@@ -356,15 +356,15 @@ export default function ShowViewDialog({
                         <Badge variant="secondary" className={rankingInfo.badgeClasses}>
                           {rankingInfo.displayText}
                         </Badge>
-                      ) : "—";
+                      ) : "N/A";
                     })()} 
                   />
-                  <DetailItem label="Subnetwork" value={show.subnetwork_id} />
                   <DetailItem
                     label="Created Date"
-                    value={new Date(show.start_date).toLocaleDateString()}
+                    value={show.start_date ? new Date(show.start_date).toLocaleDateString() : "N/A"}
                   />
-                  <DetailItem label="Age" value={`${Math.floor((new Date().getTime() - new Date(show.start_date).getTime()) / (1000 * 60 * 60 * 24 * 30))} months`} />
+                  <DetailItem label="Age" value={show.start_date ? `${Math.floor((new Date().getTime() - new Date(show.start_date).getTime()) / (1000 * 60 * 60 * 24 * 30))} months` : "N/A"} />
+                  <DetailItem label="Subnetwork" value={show.subnetwork_id} />
                   <div className="col-span-3">
                     <label className="text-xs font-medium text-muted-foreground">
                       Status Flags
@@ -448,8 +448,8 @@ export default function ShowViewDialog({
                 </CardHeader>
                 <CardContent>
                   <div className="grid grid-cols-2 gap-6 mb-6">
-                    <DetailItem label="Ownership %" value={`${show.evergreen_ownership_pct}%`} />
-                    <DetailItem label="Latest CPM" value={`$${show.latest_cpm_usd}`} />
+                    <DetailItem label="Ownership %" value={show.evergreen_ownership_pct ? `${show.evergreen_ownership_pct}%` : "N/A"} />
+                    <DetailItem label="Latest CPM" value={show.latest_cpm_usd ? `$${show.latest_cpm_usd}` : "N/A"} />
                   </div>
                   <div className="space-y-6">
                     <div>
@@ -485,13 +485,13 @@ export default function ShowViewDialog({
                         <div className="text-center p-3 bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950/20 dark:to-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
                           <p className="text-xs text-blue-700 dark:text-blue-300">Standard Ads</p>
                           <p className="text-base font-bold text-blue-600">
-                            {show.standard_ads_percent}%
+                            {show.standard_ads_percent ? `${show.standard_ads_percent}%` : "N/A"}
                           </p>
                         </div>
                         <div className="text-center p-3 bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-950/20 dark:to-purple-900/20 rounded-lg border border-purple-200 dark:border-purple-800">
                           <p className="text-xs text-purple-700 dark:text-purple-300">Programmatic Ads</p>
                           <p className="text-base font-bold text-purple-600">
-                            {show.programmatic_ads_span_percent}%
+                            {show.programmatic_ads_span_percent ? `${show.programmatic_ads_span_percent}%` : "N/A"}
                           </p>
                         </div>
                       </div>
@@ -575,7 +575,7 @@ export default function ShowViewDialog({
                   <DetailItem label="Genre" value={show.genre_name} />
                   <DetailItem label="Cadence" value={show.cadence} />
                   <DetailItem label="Ad Slots" value={show.ad_slots} />
-                  <DetailItem label="Average Length" value={`${show.avg_show_length_mins} min`} />
+                  <DetailItem label="Average Length" value={show.avg_show_length_mins ? `${show.avg_show_length_mins} min` : "N/A"} />
                 </CardContent>
               </Card>
               <Card className="dark:bg-[#262626]">
