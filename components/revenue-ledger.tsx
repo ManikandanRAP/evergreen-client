@@ -123,6 +123,15 @@ export default function RevenueLedger() {
 
       const ledgerJson: LedgerItem[] = await ledgerRes.json()
       const payoutsJson: PartnerPayout[] = await payoutRes.json()
+      
+      // DEBUG: Log the raw API responses
+      console.log('=== DEBUG: API Response Data ===')
+      console.log('Ledger response:', ledgerJson)
+      console.log('Payouts response:', payoutsJson)
+      console.log('Payouts count:', payoutsJson?.length || 0)
+      console.log('Sample payout:', payoutsJson?.[0])
+      console.log('===============================')
+      
       setLedger(Array.isArray(ledgerJson) ? ledgerJson : [])
       setPayouts(Array.isArray(payoutsJson) ? payoutsJson : [])
     } catch (e: any) {
@@ -273,12 +282,21 @@ export default function RevenueLedger() {
       sum + num(item.partner_comp_waiting), 0
     )
     
+    // DEBUG: Log the calculation details
+    console.log('=== DEBUG: Partner Payments Calculation ===')
+    console.log('Total partner payouts:', payouts.length)
+    console.log('Filtered partner payouts:', filteredPartnerPayments.length)
+    console.log('Sample payout data:', filteredPartnerPayments.slice(0, 3))
+    console.log('effective_billed_amount_paid values:', filteredPartnerPayments.map(p => p.effective_billed_amount_paid))
+    console.log('Total effective billed paid:', total_effective_billed_paid)
+    console.log('==========================================')
+    
     return {
       total_effective_billed_paid,
       total_billed_outstanding,
       total_comp_waiting
     }
-  }, [filteredRevenueData, filteredPartnerPayments])
+  }, [filteredRevenueData, filteredPartnerPayments, payouts])
 
   const formatCurrency = (v: number | null | undefined) =>
     new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(num(v))
