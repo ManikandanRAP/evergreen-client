@@ -237,17 +237,17 @@ export default function HomePage() {
                 <tbody>
                   {shows.slice(0, 5).map((show) => (
                     <tr key={show.id} className="border-b hover:bg-accent/50 transition-colors">
-                      <td className="p-3 px-6 font-medium">{(show as any).name ?? (show as any).title ?? "—"}</td>
+                      <td className="p-3 px-6 font-medium">{show.title ?? "—"}</td>
                       <td className="p-3">
                         <div className="flex flex-col gap-1 items-start">
                           <Badge
                             className={`text-xs border pointer-events-none ${
-                              (show as any).isRateCard
+                              show.rate_card
                                 ? "bg-emerald-100 text-emerald-800 border-emerald-300 dark:bg-emerald-900/50 dark:text-emerald-300 dark:border-emerald-700"
                                 : "bg-red-100 text-red-800 border-red-300 dark:bg-red-900/50 dark:text-red-300 dark:border-red-700"
                             }`}
                           >
-                            Rate Card - {(show as any).isRateCard ? "Yes" : "No"}
+                            Rate Card - {show.rate_card ? "Yes" : "No"}
                           </Badge>
                           <Badge
                             className={`text-xs border pointer-events-none ${
@@ -272,17 +272,17 @@ export default function HomePage() {
           })()}
         </td>
                       <td className="p-3">{(show as any).genre_name ?? "—"}</td>
-                      <td className="p-3">{(show as any).format ?? "—"}</td>
+                      <td className="p-3">{show.media_type ? show.media_type.charAt(0).toUpperCase() + show.media_type.slice(1) : "—"}</td>
                       <td className="p-3">
-                        <Badge className={`text-xs border pointer-events-none ${getRelationshipBadgeClass((show as any).relationship)}`}>
-                          {(show as any).relationship ?? "—"}
+                        <Badge className={`text-xs border pointer-events-none ${getRelationshipBadgeClass(show.relationship_level)}`}>
+                          {show.relationship_level ? show.relationship_level.charAt(0).toUpperCase() + show.relationship_level.slice(1) : "—"}
                         </Badge>
                       </td>
                       <td className="p-3 font-medium text-emerald-600">
-                        {(show as any).minimumGuarantee ? "Yes" : "No"}
+                        {show.minimum_guarantee ? "Yes" : "No"}
                       </td>
-                      <td className="p-3">{(show as any).ageMonths ?? "—"}m</td>
-                      <td className="p-3">{(show as any).cadence ?? "—"}</td>
+                      <td className="p-3">{Math.floor((new Date().getTime() - new Date(show.start_date).getTime()) / (1000 * 60 * 60 * 24 * 30)) ?? "—"}m</td>
+                      <td className="p-3">{show.cadence ?? "—"}</td>
                     </tr>
                   ))}
                 </tbody>

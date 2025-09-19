@@ -22,7 +22,7 @@ import {
 } from "@/components/ui/alert-dialog"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Trash2, AlertTriangle } from "lucide-react"
-import type { Show } from "@/lib/show-types"
+import type { Show } from "@/lib/api-client"
 
 interface DeleteShowDialogProps {
   open: boolean
@@ -89,7 +89,7 @@ export default function DeleteShowDialog({
             <Alert variant="destructive">
               <AlertTriangle className="h-4 w-4" />
               <AlertDescription>
-                <strong>Warning:</strong> Deleting "{show.name}" will permanently remove:
+                <strong>Warning:</strong> Deleting "{show.title}" will permanently remove:
                 <ul className="mt-2 ml-4 list-disc space-y-1">
                   <li>All show data and settings</li>
                   <li>Associated revenue records</li>
@@ -103,16 +103,16 @@ export default function DeleteShowDialog({
               <h4 className="font-medium mb-2">Show Details:</h4>
               <div className="space-y-1 text-sm">
                 <p>
-                  <strong>Name:</strong> {show.name}
+                  <strong>Name:</strong> {show.title}
                 </p>
                 <p>
                   <strong>Genre:</strong> {show.genre_name}
                 </p>
                 <p>
-                  <strong>Format:</strong> {show.format}
+                  <strong>Format:</strong> {show.media_type ? show.media_type.charAt(0).toUpperCase() + show.media_type.slice(1) : "—"}
                 </p>
                 <p>
-                  <strong>Relationship:</strong> {show.relationship}
+                  <strong>Relationship:</strong> {show.relationship_level ? show.relationship_level.charAt(0).toUpperCase() + show.relationship_level.slice(1) : "—"}
                 </p>
               </div>
             </div>
@@ -138,7 +138,7 @@ export default function DeleteShowDialog({
               Confirm Deletion
             </AlertDialogTitle>
             <AlertDialogDescription>
-              This action cannot be undone. Are you absolutely sure you want to delete "{show.name}"?
+              This action cannot be undone. Are you absolutely sure you want to delete "{show.title}"?
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

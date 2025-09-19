@@ -44,7 +44,7 @@ import {
   ChevronRight,
   ChevronDown,
 } from "lucide-react"
-import type { Show } from "@/lib/show-types"
+import type { Show } from "@/lib/api-client"
 import { getRankingInfo } from "@/lib/ranking-utils"
 import React, { useEffect, useState } from "react"
 
@@ -213,49 +213,49 @@ export default function ShowViewDialog({
     amount === null || typeof amount === "undefined" ? "N/A" : `${amount}%`
 
   const revenueFlags = [
-    { label: "Branded Revenue", value: show.hasBrandedRevenue },
-    { label: "Marketing Revenue", value: show.hasMarketingRevenue },
-    { label: "Web Management Revenue", value: show.hasWebManagementRevenue },
-    { label: "Minimum Guarantee", value: show.minimumGuarantee },
-    { label: "Sponsorship Revenue", value: show.hasSponsorshipRevenue },
-    { label: "Non Evergreen Revenue", value: show.hasNonEvergreenRevenue },
-    { label: "Partner Ledger Access", value: show.requiresPartnerLedgerAccess },
+    { label: "Branded Revenue", value: show.has_branded_revenue },
+    { label: "Marketing Revenue", value: show.has_marketing_revenue },
+    { label: "Web Management Revenue", value: show.has_web_mgmt_revenue },
+    { label: "Minimum Guarantee", value: show.minimum_guarantee },
+    { label: "Sponsorship Revenue", value: show.has_sponsorship_revenue },
+    { label: "Non Evergreen Revenue", value: show.has_non_evergreen_revenue },
+    { label: "Partner Ledger Access", value: show.requires_partner_access },
   ]
 
   const statusFlags = [
-    { label: "Rate Card", value: show.isRateCard },
-    { label: "Original", value: show.isOriginal },
+    { label: "Rate Card", value: show.rate_card },
+    { label: "Original", value: show.is_original },
     { label: "Active", value: show.is_active },
     { label: "Undersized", value: show.is_undersized },
   ]
 
   const contractSplits = [
-    { label: "Side Bonus", value: formatPercentage(show.sideBonusPercent) },
-    { label: "YouTube Ads", value: formatPercentage(show.youtubeAdsPercent) },
-    { label: "Subscriptions", value: formatPercentage(show.subscriptionsPercent) },
-    { label: "Standard Ads", value: formatPercentage(show.standardAdsPercent) },
-    { label: "Sponsorship (FP Lead)", value: formatPercentage(show.sponsorshipAdFpLeadPercent) },
+    { label: "Side Bonus", value: formatPercentage(show.side_bonus_percent) },
+    { label: "YouTube Ads", value: formatPercentage(show.youtube_ads_percent) },
+    { label: "Subscriptions", value: formatPercentage(show.subscriptions_percent) },
+    { label: "Standard Ads", value: formatPercentage(show.standard_ads_percent) },
+    { label: "Sponsorship (FP Lead)", value: formatPercentage(show.sponsorship_ad_fp_lead_percent) },
     {
       label: "Sponsorship (Partner Lead)",
-      value: formatPercentage(show.sponsorshipAdPartnerLeadPercent),
+      value: formatPercentage(show.sponsorship_ad_partner_lead_percent),
     },
     {
       label: "Sponsorship (Partner Sold)",
-      value: formatPercentage(show.sponsorshipAdPartnerSoldPercent),
+      value: formatPercentage(show.sponsorship_ad_partner_sold_percent),
     },
-    { label: "Programmatic Ads", value: formatPercentage(show.programmaticAdsSpanPercent) },
-    { label: "Merchandise", value: formatPercentage(show.merchandisePercent) },
-    { label: "Branded Revenue", value: formatPercentage(show.brandedRevenuePercent) },
+    { label: "Programmatic Ads", value: formatPercentage(show.programmatic_ads_span_percent) },
+    { label: "Merchandise", value: formatPercentage(show.merchandise_percent) },
+    { label: "Branded Revenue", value: formatPercentage(show.branded_revenue_percent) },
     {
       label: "Marketing Services",
-      value: formatPercentage(show.marketingServicesRevenuePercent),
+      value: formatPercentage(show.marketing_services_revenue_percent),
     },
   ]
 
   const handsOffSplits = [
-    { label: "Direct Customer", value: formatPercentage(show.directCustomerHandsOffPercent) },
-    { label: "YouTube", value: formatPercentage(show.youtubeHandsOffPercent) },
-    { label: "Subscriptions", value: formatPercentage(show.subscriptionHandsOffPercent) },
+    { label: "Direct Customer", value: formatPercentage(show.direct_customer_hands_off_percent) },
+    { label: "YouTube", value: formatPercentage(show.youtube_hands_off_percent) },
+    { label: "Subscriptions", value: formatPercentage(show.subscription_hands_off_percent) },
   ]
 
   const animationClass =
@@ -301,7 +301,7 @@ export default function ShowViewDialog({
           </div>
 
           <DialogTitle className="flex-1 text-2xl font-semibold text-center truncate px-4">
-            {show.name}
+            {show.title}
           </DialogTitle>
 
           <div className="flex flex-none justify-end gap-2 w-32">
@@ -346,8 +346,8 @@ export default function ShowViewDialog({
                 </CardHeader>
                 <CardContent className="grid grid-cols-3 gap-x-6 gap-y-6">
                   <DetailItem label="Show Type" value={show.show_type} />
-                  <DetailItem label="Format" value={show.format} />
-                  <DetailItem label="Relationship" value={show.relationship} />
+                  <DetailItem label="Format" value={show.media_type ? show.media_type.charAt(0).toUpperCase() + show.media_type.slice(1) : "—"} />
+                  <DetailItem label="Relationship" value={show.relationship_level ? show.relationship_level.charAt(0).toUpperCase() + show.relationship_level.slice(1) : "—"} />
                   <DetailItem 
                     label="Ranking Category" 
                     value={(() => {
@@ -364,7 +364,7 @@ export default function ShowViewDialog({
                     label="Created Date"
                     value={new Date(show.start_date).toLocaleDateString()}
                   />
-                  <DetailItem label="Age" value={`${show.ageMonths} months`} />
+                  <DetailItem label="Age" value={`${Math.floor((new Date().getTime() - new Date(show.start_date).getTime()) / (1000 * 60 * 60 * 24 * 30))} months`} />
                   <div className="col-span-3">
                     <label className="text-xs font-medium text-muted-foreground">
                       Status Flags
@@ -418,15 +418,15 @@ export default function ShowViewDialog({
                         }`}
                       >
                         <CardContent className="space-y-4">
-                          <ContactCard title="Host Contact" contactString={show.primaryContactHost} />
+                          <ContactCard title="Host Contact" contactString={show.show_host_contact} />
                           <Separator className="dark:bg-slate-700" />
-                          <ContactCard title="Show Primary Contact" contactString={show.primaryContactShow} />
+                          <ContactCard title="Show Primary Contact" contactString={show.show_primary_contact} />
                           <Separator className="dark:bg-slate-700" />
                           <div>
                             <h5 className="font-semibold text-sm text-muted-foreground">Evergreen Production Staff</h5>
                             <div className="flex items-center gap-2 mt-1 text-sm">
                               <Users className="h-4 w-4 flex-shrink-0 text-gray-400" />
-                              <span>{show.evergreenProductionStaffName || "None"}</span>
+                              <span>{show.evergreen_production_staff_name || "None"}</span>
                             </div>
                           </div>
                         </CardContent>
@@ -448,8 +448,8 @@ export default function ShowViewDialog({
                 </CardHeader>
                 <CardContent>
                   <div className="grid grid-cols-2 gap-6 mb-6">
-                    <DetailItem label="Ownership %" value={`${show.ownershipPercentage}%`} />
-                    <DetailItem label="Latest CPM" value={`$${show.latestCPM}`} />
+                    <DetailItem label="Ownership %" value={`${show.evergreen_ownership_pct}%`} />
+                    <DetailItem label="Latest CPM" value={`$${show.latest_cpm_usd}`} />
                   </div>
                   <div className="space-y-6">
                     <div>
@@ -460,19 +460,19 @@ export default function ShowViewDialog({
                         <div className="text-center p-3 bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-950/20 dark:to-emerald-900/20 rounded-lg border border-emerald-200 dark:border-emerald-800">
                           <p className="text-xs text-emerald-700 dark:text-emerald-300">2023</p>
                           <p className="text-base font-bold text-emerald-600">
-                            {formatCurrency(show.revenue2023)}
+                            {formatCurrency(show.revenue_2023)}
                           </p>
                         </div>
                         <div className="text-center p-3 bg-gradient-to-br from-cyan-50 to-cyan-100 dark:from-cyan-950/20 dark:to-cyan-900/20 rounded-lg border border-cyan-200 dark:border-cyan-800">
                           <p className="text-xs text-cyan-700 dark:text-cyan-300">2024</p>
                           <p className="text-base font-bold text-cyan-600">
-                            {formatCurrency(show.revenue2024)}
+                            {formatCurrency(show.revenue_2024)}
                           </p>
                         </div>
                         <div className="text-center p-3 bg-gradient-to-br from-green-50 to-green-100 dark:from-green-950/20 dark:to-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
                           <p className="text-xs text-green-700 dark:text-green-300">2025</p>
                           <p className="text-base font-bold text-green-600">
-                            {formatCurrency(show.revenue2025)}
+                            {formatCurrency(show.revenue_2025)}
                           </p>
                         </div>
                       </div>
@@ -485,13 +485,13 @@ export default function ShowViewDialog({
                         <div className="text-center p-3 bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950/20 dark:to-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
                           <p className="text-xs text-blue-700 dark:text-blue-300">Standard Ads</p>
                           <p className="text-base font-bold text-blue-600">
-                            {show.standardAdsPercent}%
+                            {show.standard_ads_percent}%
                           </p>
                         </div>
                         <div className="text-center p-3 bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-950/20 dark:to-purple-900/20 rounded-lg border border-purple-200 dark:border-purple-800">
                           <p className="text-xs text-purple-700 dark:text-purple-300">Programmatic Ads</p>
                           <p className="text-base font-bold text-purple-600">
-                            {show.programmaticAdsSpanPercent}%
+                            {show.programmatic_ads_span_percent}%
                           </p>
                         </div>
                       </div>
@@ -574,8 +574,8 @@ export default function ShowViewDialog({
                 <CardContent className="grid grid-cols-2 gap-6">
                   <DetailItem label="Genre" value={show.genre_name} />
                   <DetailItem label="Cadence" value={show.cadence} />
-                  <DetailItem label="Ad Slots" value={show.adSlots} />
-                  <DetailItem label="Average Length" value={`${show.averageLength} min`} />
+                  <DetailItem label="Ad Slots" value={show.ad_slots} />
+                  <DetailItem label="Average Length" value={`${show.avg_show_length_mins} min`} />
                 </CardContent>
               </Card>
               <Card className="dark:bg-[#262626]">
@@ -608,7 +608,7 @@ export default function ShowViewDialog({
           <AlertDialogDescription>
             Are you sure you want to delete this show? This action cannot be undone.
             <span className="mt-2 p-2 bg-muted rounded text-sm block">
-              <strong>"{show?.name}"</strong>
+              <strong>"{show?.title}"</strong>
             </span>
           </AlertDialogDescription>
         </AlertDialogHeader>

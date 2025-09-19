@@ -3,7 +3,7 @@
 import { useState, useMemo, useEffect } from "react"
 import { useAuth } from "@/lib/auth-context"
 import { useShows } from "@/hooks/use-shows"
-import { apiClient } from "@/lib/api-client"
+import { apiClient, Show } from "@/lib/api-client"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -71,7 +71,6 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
-import type { Show } from "@/lib/show-types"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 
@@ -161,12 +160,10 @@ const formatPercentage = (n: number | null | undefined) =>
   n === null || typeof n === "undefined" ? "N/A" : `${n}%`
 
 const getStandardSplit = (show: Show) =>
-  (show as any).standardAdsPercent ?? null
+  show.standard_ads_percent ?? null
 
 const getProgrammaticSplit = (show: Show) =>
-  (show as any).programmaticAdsPercent ??
-  (show as any).programmaticAdsSpanPercent ??
-  null
+  show.programmatic_ads_span_percent ?? null
 
 export default function ShowsManagement() {
   const { user } = useAuth()
@@ -189,7 +186,7 @@ export default function ShowsManagement() {
   const [showBulkDeleteConfirm, setShowBulkDeleteConfirm] = useState(false)
 
   // Sorting state
-  type SortField = 'name' | 'show_type' | 'isRateCard' | 'standardSplit' | 'programmaticSplit'
+  type SortField = 'name' | 'show_type' | 'isRateCard' | 'standardSplit' | 'programmaticSplit' | 'ranking_category'
   type SortDirection = 'asc' | 'desc' | null
   const [sortField, setSortField] = useState<SortField | null>(null)
   const [sortDirection, setSortDirection] = useState<SortDirection>(null)
@@ -326,71 +323,114 @@ export default function ShowsManagement() {
       return
     }
 
+    // Use the same user-friendly headers as the import CSV template
     const csvHeaders = [
-      "Show Name",
-      "Show Type",
-      "Select Type",
-      "Subnetwork",
-      "Format",
-      "Relationship",
-      "Age (Months)",
-      "Genre",
-      "Cadence",
-      "Minimum Guarantee",
-      "Ownership %",
-      "Revenue 2023",
-      "Revenue 2024",
-      "Revenue 2025",
-      "Is Rate Card",
-      "Is Original",
-      "Is Active",
-      "Age Demographic",
-      "Gender Demographic",
-      "Branded Revenue Amount",
-      "Marketing Revenue Amount",
-      "Web Management Revenue",
-      "Latest CPM",
-      "Has Sponsorship Revenue",
-      "Has Non Evergreen Revenue",
-      "Requires Partner Ledger Access",
-      "Ad Slots",
-      "Average Length",
-      "Primary Contact Host",
-      "Primary Contact Show",
-      "Is Undersized",
+      // 1. Core Show Information (Most Important)
+      "Show Name", "Show Type", "Format", "Ranking Category", "Is Original Content", "Is Rate Card Show",
+      
+      // 2. Business & Relationship Details
+      "Relationship", "Start Date", "Minimum Guarantee", "Ownership by Evergreen (%)", "Cadence",
+      
+      // 3. Content & Audience
+      "Genre", "Age Demographic", "Gender Demographic (M/F)", "Region Demographic", "Average Length (Minutes)", "Ad Slots",
+      
+      // 4. Financial Data
+      "Latest CPM", "Revenue 2023", "Revenue 2024", "Revenue 2025",
+      
+      // 5. Revenue Distribution Percentages (with standard_ads_percent and programmatic_ads_span_percent first)
+      "Standard Ads (%)", "Programmatic Ads/Span (%)", "Side Bonus (%)", "YouTube Ads (%)",
+      "Subscriptions (%)", "Sponsorship Ad FP - Lead (%)", "Sponsorship Ad - Partner Lead (%)", 
+      "Sponsorship Ad - Partner Sold (%)", "Merchandise (%)", "Branded Revenue (%)",
+      "Marketing Services Revenue (%)",
+      
+      // 6. Hands-off Percentages
+      "Direct Customer - Hands Off (%)", "YouTube - Hands Off (%)", "Subscription - Hands Off (%)",
+      
+      // 7. Contact Information
+      "Primary Contact (Show)", "Primary Contact (Host)", "Evergreen Production Staff Name",
+      
+      // 8. System & Operational
+      "Subnetwork Name", "Is Active", "Is Undersized", "Primary Education Demographic", "Secondary Education Demographic",
+      
+      // 9. Revenue Flags
+      "Has Sponsorship Revenue", "Has Non Evergreen Revenue", "Has Partner Ledger Access",
+      "Has Branded Revenue", "Has Marketing Revenue", "Has Web Management Revenue",
+      
+      // 10. Integration Data
+      "QBO Show Name", "QBO Show ID"
     ]
 
     const csvData = showsToExport.map((show) => [
-      show.name,
+      // 1. Core Show Information (Most Important)
+      show.title,
       show.show_type,
-      show.subnetwork_id,
-      show.format,
-      show.relationship,
-      show.ageMonths,
-      show.genre_name,
+      show.media_type ? show.media_type.charAt(0).toUpperCase() + show.media_type.slice(1) : "",
+      show.ranking_category ? `Level ${show.ranking_category}` : "",
+      show.is_original ? "Yes" : "No",
+      show.rate_card ? "Yes" : "No",
+      
+      // 2. Business & Relationship Details
+      show.relationship_level ? show.relationship_level.charAt(0).toUpperCase() + show.relationship_level.slice(1) : "",
+      show.start_date || "",
+      show.minimum_guarantee ? "Yes" : "No",
+      show.evergreen_ownership_pct || "",
       show.cadence,
-      show.minimumGuarantee ? "Yes" : "No",
-      show.ownershipPercentage,
-      show.revenue2023,
-      show.revenue2024,
-      show.revenue2025,
-      show.isRateCard ? "Yes" : "No",
-      show.isOriginal ? "Yes" : "No",
+      
+      // 3. Content & Audience
+      show.genre_name,
+      show.age_demographic || "",
+      show.gender || "",
+      show.region || "",
+      show.avg_show_length_mins || "",
+      show.ad_slots || "",
+      
+      // 4. Financial Data
+      show.latest_cpm_usd || "",
+      show.revenue_2023 || "",
+      show.revenue_2024 || "",
+      show.revenue_2025 || "",
+      
+      // 5. Revenue Distribution Percentages (with standard_ads_percent and programmatic_ads_span_percent first)
+      show.standard_ads_percent || "",
+      show.programmatic_ads_span_percent || "",
+      show.side_bonus_percent || "",
+      show.youtube_ads_percent || "",
+      show.subscriptions_percent || "",
+      show.sponsorship_ad_fp_lead_percent || "",
+      show.sponsorship_ad_partner_lead_percent || "",
+      show.sponsorship_ad_partner_sold_percent || "",
+      show.merchandise_percent || "",
+      show.branded_revenue_percent || "",
+      show.marketing_services_revenue_percent || "",
+      
+      // 6. Hands-off Percentages
+      show.direct_customer_hands_off_percent || "",
+      show.youtube_hands_off_percent || "",
+      show.subscription_hands_off_percent || "",
+      
+      // 7. Contact Information
+      show.show_primary_contact || "",
+      show.show_host_contact || "",
+      show.evergreen_production_staff_name || "",
+      
+      // 8. System & Operational
+      show.subnetwork_id || "",
       show.is_active ? "Yes" : "No",
-      show.age_demographic,
-      show.genderDemographic,
-      show.brandedRevenueAmount,
-      show.marketingRevenueAmount,
-      show.webManagementRevenue,
-      show.latestCPM,
-      show.hasSponsorshipRevenue ? "Yes" : "No",
-      show.hasNonEvergreenRevenue ? "Yes" : "No",
-      show.requiresPartnerLedgerAccess ? "Yes" : "No",
-      show.adSlots,
-      show.averageLength,
-      show.primaryContactHost,
-      show.primaryContactShow,
       show.is_undersized ? "Yes" : "No",
+      show.primary_education || "",
+      show.secondary_education || "",
+      
+      // 9. Revenue Flags
+      show.has_sponsorship_revenue ? "Yes" : "No",
+      show.has_non_evergreen_revenue ? "Yes" : "No",
+      show.requires_partner_access ? "Yes" : "No",
+      show.has_branded_revenue ? "Yes" : "No",
+      show.has_marketing_revenue ? "Yes" : "No",
+      show.has_web_mgmt_revenue ? "Yes" : "No",
+      
+      // 10. Integration Data
+      show.qbo_show_name || "",
+      show.qbo_show_id || "",
     ])
 
     const csvContent = [csvHeaders, ...csvData]
@@ -419,22 +459,16 @@ export default function ShowsManagement() {
       if (filters.search) {
         const searchTerm = filters.search.toLowerCase()
         const searchableFields = [
-          show.name,
+          show.title,
           show.show_type,
           show.subnetwork_id,
           show.genre_name,
-          show.primaryContactHost,
-          show.primaryContactShow,
-          show.host?.name,
-          show.host?.email,
-          show.host?.phone,
-          show.showPrimaryContact?.name,
-          show.showPrimaryContact?.email,
-          show.showPrimaryContact?.phone,
-          show.relationship,
-          show.format,
+          show.show_host_contact,
+          show.show_primary_contact,
+          show.relationship_level,
+          show.media_type,
           show.age_demographic,
-          show.genderDemographic,
+          show.gender,
         ]
         const matchesSearch = searchableFields.some(
           (field) => field && field.toString().toLowerCase().includes(searchTerm),
@@ -444,16 +478,16 @@ export default function ShowsManagement() {
 
       if (filters.subnetwork && filters.subnetwork !== "all" && show.subnetwork_id !== filters.subnetwork)
         return false
-      if (filters.format && filters.format !== "all" && show.format !== filters.format) return false
-      if (filters.relationship && filters.relationship !== "all" && show.relationship !== filters.relationship)
+      if (filters.format && filters.format !== "all" && show.media_type !== filters.format) return false
+      if (filters.relationship && filters.relationship !== "all" && show.relationship_level !== filters.relationship)
         return false
-      if (filters.show_type && filters.show_type !== "all" && show.show_type.toLowerCase() !== filters.show_type)
+      if (filters.show_type && filters.show_type !== "all" && show.show_type?.toLowerCase() !== filters.show_type)
         return false
       if (filters.genre_name && filters.genre_name !== "all" && show.genre_name !== filters.genre_name)
         return false
       if (filters.age_demographic && filters.age_demographic !== "all" && show.age_demographic !== filters.age_demographic)
         return false
-      if (filters.genderDemographic && filters.genderDemographic !== "all" && show.genderDemographic !== filters.genderDemographic)
+      if (filters.genderDemographic && filters.genderDemographic !== "all" && show.gender !== filters.genderDemographic)
         return false
       if (filters.region && filters.region !== "all" && show.region !== filters.region)
         return false
@@ -474,8 +508,17 @@ export default function ShowsManagement() {
         "hasWebManagementRevenue",
       ]
       const showToFilterKeyMap: Record<string, keyof Show> = {
-        rate_card: "isRateCard",
+        rate_card: "rate_card",
         is_undersized: "is_undersized",
+        minimumGuarantee: "minimum_guarantee",
+        hasSponsorshipRevenue: "has_sponsorship_revenue",
+        hasNonEvergreenRevenue: "has_non_evergreen_revenue",
+        requiresPartnerLedgerAccess: "requires_partner_access",
+        isOriginal: "is_original",
+        is_active: "is_active",
+        hasBrandedRevenue: "has_branded_revenue",
+        hasMarketingRevenue: "has_marketing_revenue",
+        hasWebManagementRevenue: "has_web_mgmt_revenue",
       }
 
       for (const key of booleanFilters) {
@@ -487,11 +530,11 @@ export default function ShowsManagement() {
       }
 
       const numericFilters: { filterKey: keyof ShowFilters; showKey: keyof Show }[] = [
-        { filterKey: "adSlots", showKey: "adSlots" },
-        { filterKey: "averageLength", showKey: "averageLength" },
-        { filterKey: "revenue2023", showKey: "revenue2023" },
-        { filterKey: "revenue2024", showKey: "revenue2024" },
-        { filterKey: "revenue2025", showKey: "revenue2025" },
+        { filterKey: "adSlots", showKey: "ad_slots" },
+        { filterKey: "averageLength", showKey: "avg_show_length_mins" },
+        { filterKey: "revenue2023", showKey: "revenue_2023" },
+        { filterKey: "revenue2024", showKey: "revenue_2024" },
+        { filterKey: "revenue2025", showKey: "revenue_2025" },
       ]
       for (const { filterKey, showKey } of numericFilters) {
         if (filters[filterKey]) {
@@ -503,7 +546,7 @@ export default function ShowsManagement() {
 
       if (filters.ownershipPercentage && filters.ownershipPercentage !== "all") {
         const ownership = Number.parseInt(filters.ownershipPercentage)
-        if (show.ownershipPercentage !== ownership) return false
+        if (show.evergreen_ownership_pct !== ownership) return false
       }
 
       return true
@@ -517,16 +560,16 @@ export default function ShowsManagement() {
 
         switch (sortField) {
           case 'name':
-            aValue = a.name?.toLowerCase() || ''
-            bValue = b.name?.toLowerCase() || ''
+            aValue = a.title?.toLowerCase() || ''
+            bValue = b.title?.toLowerCase() || ''
             break
           case 'show_type':
             aValue = a.show_type?.toLowerCase() || ''
             bValue = b.show_type?.toLowerCase() || ''
             break
           case 'isRateCard':
-            aValue = a.isRateCard ? 1 : 0
-            bValue = b.isRateCard ? 1 : 0
+            aValue = a.rate_card ? 1 : 0
+            bValue = b.rate_card ? 1 : 0
             break
           case 'standardSplit':
             aValue = getStandardSplit(a) || 0
@@ -535,6 +578,10 @@ export default function ShowsManagement() {
           case 'programmaticSplit':
             aValue = getProgrammaticSplit(a) || 0
             bValue = getProgrammaticSplit(b) || 0
+            break
+          case 'ranking_category':
+            aValue = a.ranking_category ? parseInt(a.ranking_category) : 0
+            bValue = b.ranking_category ? parseInt(b.ranking_category) : 0
             break
           default:
             return 0
@@ -896,9 +943,9 @@ export default function ShowsManagement() {
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="all">All Formats</SelectItem>
-                        <SelectItem value="Audio">Audio</SelectItem>
-                        <SelectItem value="Video">Video</SelectItem>
-                        <SelectItem value="Both">Both</SelectItem>
+                        <SelectItem value="audio">Audio</SelectItem>
+                        <SelectItem value="video">Video</SelectItem>
+                        <SelectItem value="both">Both</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -913,11 +960,11 @@ export default function ShowsManagement() {
                       }
                     >
                       <SelectTrigger className={filters.genderDemographic && filters.genderDemographic !== "all" ? "ring-1 ring-emerald-400" : ""}>
-                        <SelectValue placeholder="All Genders" />
+                        <SelectValue placeholder="Any" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="all">All Genders</SelectItem>
-                        {getUniqueValues("genderDemographic").map((gender) => (
+                        <SelectItem value="all">Any</SelectItem>
+                        {getUniqueValues("gender").map((gender) => (
                           <SelectItem key={String(gender)} value={String(gender)}>
                             {gender}
                           </SelectItem>
@@ -1021,9 +1068,9 @@ export default function ShowsManagement() {
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="all">All Relationships</SelectItem>
-                        <SelectItem value="Strong">Strong</SelectItem>
-                        <SelectItem value="Medium">Medium</SelectItem>
-                        <SelectItem value="Weak">Weak</SelectItem>
+                        <SelectItem value="strong">Strong</SelectItem>
+                        <SelectItem value="medium">Medium</SelectItem>
+                        <SelectItem value="weak">Weak</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -1279,7 +1326,7 @@ export default function ShowsManagement() {
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="all">All Ownership</SelectItem>
-                        {getUniqueValues("ownershipPercentage").map((percentage) => (
+                        {getUniqueValues("evergreen_ownership_pct").map((percentage) => (
                           <SelectItem key={String(percentage)} value={String(percentage)}>
                             {percentage}%
                           </SelectItem>
@@ -1469,7 +1516,7 @@ export default function ShowsManagement() {
                       className="mt-1"
                     />
                     <CardTitle className="text-lg group-hover:text-emerald-600 transition-colors flex-1 line-clamp-2 leading-tight">
-                      {show.name}
+                      {show.title}
                     </CardTitle>
                   </div>
                   <div className="flex items-center gap-2 flex-wrap">
@@ -1478,12 +1525,12 @@ export default function ShowsManagement() {
                     </Badge>
                     <Badge
                       className={`text-xs border pointer-events-none ${
-                        show.isRateCard
+                        show.rate_card
                           ? "bg-emerald-100 text-emerald-800 border-emerald-300 dark:bg-emerald-900/50 dark:text-emerald-300 dark:border-emerald-700"
                           : "bg-red-100 text-red-800 border-red-300 dark:bg-red-900/50 dark:text-red-300 dark:border-red-700"
                       }`}
                     >
-                      {`Rate Card - ${show.isRateCard ? "Yes" : "No"}`}
+                      {`Rate Card - ${show.rate_card ? "Yes" : "No"}`}
                     </Badge>
                   </div>
                 </div>
@@ -1774,7 +1821,7 @@ export default function ShowsManagement() {
                       </td>
                       <td className="pl-6 pr-6 py-2 font-medium border-r cursor-pointer hover:bg-accent/30 transition-colors" onClick={() => handleViewShow(show)}>
                         <span className="hover:underline">
-                          {show.name}
+                          {show.title}
                         </span>
                       </td>
                       <td className="pl-6 pr-6 py-2 capitalize border-r">{show.show_type}</td>
@@ -1790,7 +1837,7 @@ export default function ShowsManagement() {
             );
           })()}
         </td>
-                      <td className="pl-6 pr-6 py-2 border-r">{getYesNoBadge(!!show.isRateCard)}</td>
+                      <td className="pl-6 pr-6 py-2 border-r">{getYesNoBadge(!!show.rate_card)}</td>
                       <td className="pl-6 pr-6 py-2 border-r">{formatPercentage(getStandardSplit(show))}</td>
                       <td className="pl-6 pr-6 py-2 border-r">{formatPercentage(getProgrammaticSplit(show))}</td>
                       <td className="pl-6 pr-6 py-2">

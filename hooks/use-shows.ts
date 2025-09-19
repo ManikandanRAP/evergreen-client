@@ -1,8 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { apiClient, ShowUpdate, type Show as ApiShow, type FilterParams } from "@/lib/api-client"
-import { convertApiShowToLegacy, type Show } from "@/lib/show-types"
+import { apiClient, ShowUpdate, ShowCreate, type Show, type FilterParams } from "@/lib/api-client"
 import { useAuth } from "@/lib/auth-context"
 
 export function useShows() {
@@ -16,7 +15,7 @@ export function useShows() {
       setLoading(true)
       setError(null)
 
-      let apiShows: ApiShow[]
+      let apiShows: Show[]
 
       if (user?.role === "partner") {
         // Partners only see their assigned shows
@@ -31,9 +30,8 @@ export function useShows() {
         console.log("Fetching all shows", apiShows)
       }
 
-      const legacyShows = apiShows.map(convertApiShowToLegacy)
-      console.log("Fetched shows:", legacyShows)
-      setShows(legacyShows)
+      console.log("Fetched shows:", apiShows)
+      setShows(apiShows)
     } catch (err) {
       console.error("Failed to fetch shows:", err)
       setError(err instanceof Error ? err.message : "Failed to fetch shows")
@@ -42,18 +40,17 @@ export function useShows() {
     }
   }
 
-  const createShow = async (showData: Partial<Show>): Promise<Show | null> => {
+  const createShow = async (showData: Partial<ShowCreate>): Promise<Show | null> => {
     try {
       // Pass the showData directly since create-show-dialog already formats it correctly
       console.log("Creating show with data:", showData)
 
       const apiShow = await apiClient.createPodcast(showData as any)
-      const legacyShow = convertApiShowToLegacy(apiShow)
 
       // Refresh the shows list
       await fetchShows()
 
-      return legacyShow
+      return apiShow
     } catch (err) {
       console.error("Failed to create show:", err)
       setError(err instanceof Error ? err.message : "Failed to create show")
@@ -63,7 +60,7 @@ export function useShows() {
 
   const updateShow = async (showId: string, showData: Partial<ShowUpdate>): Promise<Show | null> => {
     try {
-      // Convert legacy Show format to API format with snake_case field names
+      // Process the update data
       const apiUpdateData: Partial<ShowUpdate> = (() => {
         // Accept API-shaped payload from the form and send only provided fields.
         const data: Partial<ShowUpdate> = { ...showData };
@@ -85,12 +82,11 @@ export function useShows() {
       })()
 
       const apiShow = await apiClient.updatePodcast(showId, apiUpdateData as ShowUpdate)
-      const legacyShow = convertApiShowToLegacy(apiShow)
 
       // Refresh the shows list
       await fetchShows()
 
-      return legacyShow
+      return apiShow
     } catch (err) {
       console.error("Failed to update show:", err)
       setError(err instanceof Error ? err.message : "Failed to update show")

@@ -305,9 +305,13 @@ export default function ImportCSVDialog({ open, onOpenChange, onImportComplete }
 
       // Validate ranking_category
       if (mappedRow.ranking_category) {
-        const rankingVal = String(mappedRow.ranking_category).trim();
-        if (!["1", "2", "3", "4", "5"].includes(rankingVal)) {
-          errors.push(`Row ${rowNum}: Invalid value for 'Ranking Category'. Must be one of: 1, 2, 3, 4, 5.`);
+        const rankingVal = String(mappedRow.ranking_category).trim().toLowerCase();
+        // Extract number from various formats: "1", "Level 1", "level 1", etc.
+        const rankingMatch = rankingVal.match(/(?:level\s*)?(\d+)/);
+        const rankingNumber = rankingMatch ? rankingMatch[1] : rankingVal;
+        
+        if (!["1", "2", "3", "4", "5"].includes(rankingNumber)) {
+          errors.push(`Row ${rowNum}: Invalid value for 'Ranking Category'. Must be one of: 1, 2, 3, 4, 5, Level 1, Level 2, etc.`);
         }
       }
 
@@ -368,7 +372,12 @@ export default function ImportCSVDialog({ open, onOpenChange, onImportComplete }
         subnetwork_id: mappedRow.subnetwork_id || undefined,
         rate_card: mappedRow.rate_card?.toLowerCase() === 'yes' || mappedRow.rate_card?.toLowerCase() === 'true' || false,
         is_original: mappedRow.is_original?.toLowerCase() === 'yes' || mappedRow.is_original?.toLowerCase() === 'true' || false,
-        ranking_category: mappedRow.ranking_category ? String(mappedRow.ranking_category).trim() as "1" | "2" | "3" | "4" | "5" : undefined,
+        ranking_category: mappedRow.ranking_category ? (() => {
+          const rankingVal = String(mappedRow.ranking_category).trim().toLowerCase();
+          const rankingMatch = rankingVal.match(/(?:level\s*)?(\d+)/);
+          const rankingNumber = rankingMatch ? rankingMatch[1] : rankingVal;
+          return rankingNumber as "1" | "2" | "3" | "4" | "5";
+        })() : undefined,
         latest_cpm_usd: mappedRow.latest_cpm_usd ? parseFloat(mappedRow.latest_cpm_usd) : undefined,
         revenue_2023: mappedRow.revenue_2023 ? parseFloat(mappedRow.revenue_2023) : undefined,
         revenue_2024: mappedRow.revenue_2024 ? parseFloat(mappedRow.revenue_2024) : undefined,
@@ -404,6 +413,7 @@ export default function ImportCSVDialog({ open, onOpenChange, onImportComplete }
         primary_education: mappedRow.primary_education || undefined,
         secondary_education: mappedRow.secondary_education || undefined,
         qbo_show_name: mappedRow.qbo_show_name || undefined,
+        qbo_show_id: mappedRow.qbo_show_id ? parseInt(mappedRow.qbo_show_id) : undefined,
       };
       shows.push(show);
     }

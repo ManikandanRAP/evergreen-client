@@ -14,7 +14,7 @@ import { Badge } from "@/components/ui/badge"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { ArrowLeft, ArrowRight, Save, X, AlertCircle, Loader2, Edit } from "lucide-react"
 import { cn } from "@/lib/utils"
-import type { Show } from "@/lib/show-types"
+import type { Show } from "@/lib/api-client"
 import { ShowCreate, ShowUpdate, fetchAllclass, apiClient } from "@/lib/api-client" // Import both types
 import { Popover, PopoverTrigger } from "@/components/ui/popover"
 import { CustomPopoverContent } from "@/components/ui/custom-popover-content"
@@ -57,7 +57,7 @@ function handleDateOnly(
 }
 
 
-const educationLevels = ["No high School", "High School", "College", "Postgraduate"] as const
+const educationLevels = ["No High School", "High School", "College", "Postgraduate"] as const
 type EducationLevel = (typeof educationLevels)[number] | ""
 
 export interface ShowFormData {
@@ -256,7 +256,7 @@ export default function CreateShowDialog({
     }
 
     // Skip checking if we're editing the same show
-    if (isEditMode && editingShow?.name?.toLowerCase() === formData.title.toLowerCase()) {
+    if (isEditMode && editingShow?.title?.toLowerCase() === formData.title.toLowerCase()) {
       setDuplicateCheckResult({ isDuplicate: false })
       return
     }
@@ -282,54 +282,54 @@ export default function CreateShowDialog({
     }, 500) // 500ms debounce
 
     return () => clearTimeout(timeoutId)
-  }, [formData.title, isEditMode, editingShow?.name])
+  }, [formData.title, isEditMode, editingShow?.title])
 
   useEffect(() => {
     if (editingShow) {
       const show_type = editingShow.show_type || ""
       setFormData({
-        title: editingShow.name ?? "",
+        title: editingShow.title ?? "",
         show_type: editingShow.show_type as "" | "Branded" | "Original" | "Partner",
         ranking_category: editingShow.ranking_category ?? "",
         subnetwork_id: editingShow.subnetwork_id ?? "",
-        format: editingShow.format ?? "",
-        relationship: editingShow.relationship ?? "",
+        format: editingShow.media_type === "video" ? "Video" : editingShow.media_type === "audio" ? "Audio" : editingShow.media_type === "both" ? "Both" : "",
+        relationship: editingShow.relationship_level === "strong" ? "Strong" : editingShow.relationship_level === "medium" ? "Medium" : editingShow.relationship_level === "weak" ? "Weak" : "",
         start_date: editingShow.start_date ? new Date(editingShow.start_date).toISOString().split('T')[0] : "",
-        isRateCard: !!editingShow.isRateCard,
-        isOriginal: !!editingShow.isOriginal,
-        minimumGuarantee: !!editingShow.minimumGuarantee,
-        ownershipPercentage: editingShow.ownershipPercentage?.toString() ?? "",
-        hasBrandedRevenue: !!editingShow.hasBrandedRevenue,
-        hasMarketingRevenue: !!editingShow.hasMarketingRevenue,
-        hasWebManagementRevenue: !!editingShow.hasWebManagementRevenue,
-        latestCPM: editingShow.latestCPM?.toString() ?? "",
-        revenue2023: editingShow.revenue2023?.toString() ?? "",
-        revenue2024: editingShow.revenue2024?.toString() ?? "",
-        revenue2025: editingShow.revenue2025?.toString() ?? "",
-        hasSponsorshipRevenue: !!editingShow.hasSponsorshipRevenue,
-        hasNonEvergreenRevenue: !!editingShow.hasNonEvergreenRevenue,
-        requiresPartnerLedgerAccess: !!editingShow.requiresPartnerLedgerAccess,
-        sideBonusPercent: editingShow.sideBonusPercent?.toString() ?? "",
-        youtubeAdsPercent: editingShow.youtubeAdsPercent?.toString() ?? "",
-        subscriptionsPercent: editingShow.subscriptionsPercent?.toString() ?? "",
-        standardAdsPercent: editingShow.standardAdsPercent?.toString() ?? "",
-        sponsorshipAdFpLeadPercent: editingShow.sponsorshipAdFpLeadPercent?.toString() ?? "",
-        sponsorshipAdPartnerLeadPercent: editingShow.sponsorshipAdPartnerLeadPercent?.toString() ?? "",
-        sponsorshipAdPartnerSoldPercent: editingShow.sponsorshipAdPartnerSoldPercent?.toString() ?? "",
-        programmaticAdsSpanPercent: editingShow.programmaticAdsSpanPercent?.toString() ?? "",
-        merchandisePercent: editingShow.merchandisePercent?.toString() ?? "",
-        brandedRevenuePercent: editingShow.brandedRevenuePercent?.toString() ?? "",
-        marketingServicesRevenuePercent: editingShow.marketingServicesRevenuePercent?.toString() ?? "",
-        directCustomerHandsOffPercent: editingShow.directCustomerHandsOffPercent?.toString() ?? "",
-        youtubeHandsOffPercent: editingShow.youtubeHandsOffPercent?.toString() ?? "",
-        subscriptionHandsOffPercent: editingShow.subscriptionHandsOffPercent?.toString() ?? "",
+        isRateCard: !!editingShow.rate_card,
+        isOriginal: !!editingShow.is_original,
+        minimumGuarantee: !!editingShow.minimum_guarantee,
+        ownershipPercentage: editingShow.evergreen_ownership_pct?.toString() ?? "",
+        hasBrandedRevenue: !!editingShow.has_branded_revenue,
+        hasMarketingRevenue: !!editingShow.has_marketing_revenue,
+        hasWebManagementRevenue: !!editingShow.has_web_mgmt_revenue,
+        latestCPM: editingShow.latest_cpm_usd?.toString() ?? "",
+        revenue2023: editingShow.revenue_2023?.toString() ?? "",
+        revenue2024: editingShow.revenue_2024?.toString() ?? "",
+        revenue2025: editingShow.revenue_2025?.toString() ?? "",
+        hasSponsorshipRevenue: !!editingShow.has_sponsorship_revenue,
+        hasNonEvergreenRevenue: !!editingShow.has_non_evergreen_revenue,
+        requiresPartnerLedgerAccess: !!editingShow.requires_partner_access,
+        sideBonusPercent: editingShow.side_bonus_percent?.toString() ?? "",
+        youtubeAdsPercent: editingShow.youtube_ads_percent?.toString() ?? "",
+        subscriptionsPercent: editingShow.subscriptions_percent?.toString() ?? "",
+        standardAdsPercent: editingShow.standard_ads_percent?.toString() ?? "",
+        sponsorshipAdFpLeadPercent: editingShow.sponsorship_ad_fp_lead_percent?.toString() ?? "",
+        sponsorshipAdPartnerLeadPercent: editingShow.sponsorship_ad_partner_lead_percent?.toString() ?? "",
+        sponsorshipAdPartnerSoldPercent: editingShow.sponsorship_ad_partner_sold_percent?.toString() ?? "",
+        programmaticAdsSpanPercent: editingShow.programmatic_ads_span_percent?.toString() ?? "",
+        merchandisePercent: editingShow.merchandise_percent?.toString() ?? "",
+        brandedRevenuePercent: editingShow.branded_revenue_percent?.toString() ?? "",
+        marketingServicesRevenuePercent: editingShow.marketing_services_revenue_percent?.toString() ?? "",
+        directCustomerHandsOffPercent: editingShow.direct_customer_hands_off_percent?.toString() ?? "",
+        youtubeHandsOffPercent: editingShow.youtube_hands_off_percent?.toString() ?? "",
+        subscriptionHandsOffPercent: editingShow.subscription_hands_off_percent?.toString() ?? "",
         genre_name: editingShow.genre_name ?? "",
         cadence: editingShow.cadence ?? "",
-        adSlots: editingShow.adSlots?.toString() ?? "",
-        averageLength: editingShow.averageLength?.toString() ?? "",
-        primaryContactHost: editingShow.primaryContactHost ?? "",
-        primaryContactShow: editingShow.primaryContactShow ?? "",
-        evergreenProductionStaffContact: editingShow.evergreenProductionStaffName ?? "",
+        adSlots: editingShow.ad_slots?.toString() ?? "",
+        averageLength: editingShow.avg_show_length_mins?.toString() ?? "",
+        primaryContactHost: editingShow.show_host_contact ?? "",
+        primaryContactShow: editingShow.show_primary_contact ?? "",
+        evergreenProductionStaffContact: editingShow.evergreen_production_staff_name ?? "",
         age_demographic: editingShow.age_demographic ?? "",
         gender: editingShow.gender ?? "",
         region: (editingShow.region || "") as "Both" | "Urban" | "Rural",
@@ -375,10 +375,10 @@ export default function CreateShowDialog({
       
       // Fallback to local check if real-time check hasn't completed yet
       const duplicateShow = existingShows.find(
-        (show) => show.name.toLowerCase() === value.toLowerCase() && show.id !== editingShow?.id,
+        (show) => show.title.toLowerCase() === value.toLowerCase() && show.id !== editingShow?.id,
       )
       if (duplicateShow) {
-        return `A show with this name already exists: "${duplicateShow.name}". Please choose a different name or edit the existing show.`
+        return `A show with this name already exists: "${duplicateShow.title}". Please choose a different name or edit the existing show.`
       }
     }
 
@@ -531,7 +531,7 @@ export default function CreateShowDialog({
       has_web_mgmt_revenue: formData.hasWebManagementRevenue,
       genre_name: formData.genre_name || undefined,
       is_original: formData.isOriginal,
-      cadence: formData.cadence || undefined,
+      cadence: (formData.cadence as "Daily" | "Weekly" | "Biweekly" | "Monthly" | "Ad hoc") || undefined,
       latest_cpm_usd: toFloatOrUndef(formData.latestCPM),
       ad_slots: toIntOrUndef(formData.adSlots),
       avg_show_length_mins: toIntOrUndef(formData.averageLength),
@@ -597,87 +597,8 @@ export default function CreateShowDialog({
     if (duplicateCheckResult?.existingShow && onEditExistingShow) {
       console.log("Edit existing show clicked, data:", duplicateCheckResult.existingShow)
       
-      // Convert the existing show data to the Show type expected by the parent
-      // We'll create a minimal Show object with the essential fields
-      const existingShow: Show = {
-        id: duplicateCheckResult.existingShow.id,
-        name: duplicateCheckResult.existingShow.title,
-        partnerUsers: [],
-        revenueSplit: { evergreen: 0, partner: 0 },
-        show_type: duplicateCheckResult.existingShow.show_type || "Original",
-        ranking_category: duplicateCheckResult.existingShow.ranking_category || null,
-        subnetwork_id: duplicateCheckResult.existingShow.subnetwork_id || "",
-        format: duplicateCheckResult.existingShow.media_type === "video" ? "Video" : 
-                duplicateCheckResult.existingShow.media_type === "audio" ? "Audio" : "Both",
-        relationship: duplicateCheckResult.existingShow.relationship_level === "strong" ? "Strong" :
-                     duplicateCheckResult.existingShow.relationship_level === "medium" ? "Medium" : "Weak",
-        ageMonths: 0,
-        isRateCard: duplicateCheckResult.existingShow.rate_card || false,
-        isOriginal: duplicateCheckResult.existingShow.is_original || false,
-        minimumGuarantee: !!duplicateCheckResult.existingShow.minimum_guarantee,
-        ownershipPercentage: duplicateCheckResult.existingShow.evergreen_ownership_pct || 0,
-        brandedRevenueAmount: 0,
-        marketingRevenueAmount: 0,
-        webManagementRevenue: 0,
-        latestCPM: duplicateCheckResult.existingShow.latest_cpm_usd || 0,
-        revenue2023: duplicateCheckResult.existingShow.revenue_2023 || 0,
-        revenue2024: duplicateCheckResult.existingShow.revenue_2024 || 0,
-        revenue2025: duplicateCheckResult.existingShow.revenue_2025 || 0,
-        hasSponsorshipRevenue: duplicateCheckResult.existingShow.has_sponsorship_revenue || false,
-        hasNonEvergreenRevenue: duplicateCheckResult.existingShow.has_non_evergreen_revenue || false,
-        requiresPartnerLedgerAccess: duplicateCheckResult.existingShow.requires_partner_access || false,
-        genre_name: duplicateCheckResult.existingShow.genre_name || null,
-        cadence: duplicateCheckResult.existingShow.cadence || "Weekly",
-        adSlots: duplicateCheckResult.existingShow.ad_slots || 0,
-        averageLength: duplicateCheckResult.existingShow.avg_show_length_mins || 0,
-        primaryContactHost: duplicateCheckResult.existingShow.show_host_contact || "",
-        primaryContactShow: duplicateCheckResult.existingShow.show_primary_contact || "",
-        age_demographic: duplicateCheckResult.existingShow.age_demographic || null,
-        gender: duplicateCheckResult.existingShow.gender || null,
-        is_undersized: duplicateCheckResult.existingShow.is_undersized || false,
-        primary_education: duplicateCheckResult.existingShow.primary_education || null,
-        secondary_education: duplicateCheckResult.existingShow.secondary_education || null,
-        evergreenProductionStaffName: duplicateCheckResult.existingShow.evergreen_production_staff_name || null,
-        demographics: {
-          region: duplicateCheckResult.existingShow.region || "",
-          primary_education: duplicateCheckResult.existingShow.primary_education || "",
-          secondary_education: duplicateCheckResult.existingShow.secondary_education || ""
-        },
-        hasBrandedRevenue: duplicateCheckResult.existingShow.has_branded_revenue || false,
-        hasMarketingRevenue: duplicateCheckResult.existingShow.has_marketing_revenue || false,
-        hasWebManagementRevenue: duplicateCheckResult.existingShow.has_web_mgmt_revenue || false,
-        genderDemographic: duplicateCheckResult.existingShow.gender || null,
-        avgShowLengthMins: duplicateCheckResult.existingShow.avg_show_length_mins || 0,
-        start_date: duplicateCheckResult.existingShow.start_date || "",
-        sideBonusPercent: duplicateCheckResult.existingShow.side_bonus_percent || 0,
-        youtubeAdsPercent: duplicateCheckResult.existingShow.youtube_ads_percent || 0,
-        subscriptionsPercent: duplicateCheckResult.existingShow.subscriptions_percent || 0,
-        standardAdsPercent: duplicateCheckResult.existingShow.standard_ads_percent || 0,
-        sponsorshipAdFpLeadPercent: duplicateCheckResult.existingShow.sponsorship_ad_fp_lead_percent || 0,
-        sponsorshipAdPartnerLeadPercent: duplicateCheckResult.existingShow.sponsorship_ad_partner_lead_percent || 0,
-        sponsorshipAdPartnerSoldPercent: duplicateCheckResult.existingShow.sponsorship_ad_partner_sold_percent || 0,
-        programmaticAdsSpanPercent: duplicateCheckResult.existingShow.programmatic_ads_span_percent || 0,
-        merchandisePercent: duplicateCheckResult.existingShow.merchandise_percent || 0,
-        brandedRevenuePercent: duplicateCheckResult.existingShow.branded_revenue_percent || 0,
-        marketingServicesRevenuePercent: duplicateCheckResult.existingShow.marketing_services_revenue_percent || 0,
-        directCustomerHandsOffPercent: duplicateCheckResult.existingShow.direct_customer_hands_off_percent || 0,
-        youtubeHandsOffPercent: duplicateCheckResult.existingShow.youtube_hands_off_percent || 0,
-        subscriptionHandsOffPercent: duplicateCheckResult.existingShow.subscription_hands_off_percent || 0,
-        region: duplicateCheckResult.existingShow.region || "",
-        is_active: duplicateCheckResult.existingShow.is_active || true,
-        qbo_show_id: duplicateCheckResult.existingShow.qbo_show_id || null,
-        qbo_show_name: duplicateCheckResult.existingShow.qbo_show_name || null,
-      }
-      
-      console.log("Converted show data:", existingShow)
-      
-      // Close the create dialog first, then open edit dialog after a small delay
-      onOpenChange(false)
-      
-      // Use setTimeout to ensure the dialog closes before opening the edit dialog
-      setTimeout(() => {
-        onEditExistingShow(existingShow)
-      }, 100)
+      // Pass the existing show directly since we're now using the API interface
+      onEditExistingShow(duplicateCheckResult.existingShow)
     }
   }
   
@@ -755,7 +676,7 @@ export default function CreateShowDialog({
                       </Label>
                       <Input
                         id="title"
-                        placeholder="Enter show name"
+                        placeholder="Enter Show Name"
                         value={formData.title}
                         onChange={(e) => handleInputChange("title", e.target.value)}
                         className={cn("h-10", getFieldError("title") && "border-red-500")}
@@ -806,7 +727,7 @@ export default function CreateShowDialog({
                         }
                       >
                         <SelectTrigger className="h-10">
-                          <SelectValue placeholder="Choose show type" />
+                          <SelectValue placeholder="Choose Show Type" />
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="Branded">Branded</SelectItem>
@@ -827,7 +748,7 @@ export default function CreateShowDialog({
                         }
                       >
                         <SelectTrigger className="h-10">
-                          <SelectValue placeholder="Choose ranking level" />
+                          <SelectValue placeholder="Choose Ranking Level" />
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="1">Level 1</SelectItem>
@@ -847,7 +768,7 @@ export default function CreateShowDialog({
                         }
                       >
                         <SelectTrigger className="h-10">
-                          <SelectValue placeholder="Choose format" />
+                          <SelectValue placeholder="Choose Format" />
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="Video">Video</SelectItem>
@@ -863,7 +784,7 @@ export default function CreateShowDialog({
                       <Label htmlFor="subnetwork_id">Subnetwork Name</Label>
                       <Input
                         id="subnetwork_id"
-                        placeholder="Enter Subnetwork Name or None"
+                        placeholder="Enter Subnetwork Name Or None"
                         value={formData.subnetwork_id}
                         onChange={(e) => handleInputChange("subnetwork_id", e.target.value)}
                         className="h-10"
@@ -894,7 +815,7 @@ export default function CreateShowDialog({
                         }
                       >
                         <SelectTrigger className="h-10">
-                          <SelectValue placeholder="Choose relationship" />
+                          <SelectValue placeholder="Choose Relationship" />
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="Strong">Strong</SelectItem>
@@ -920,8 +841,8 @@ export default function CreateShowDialog({
                         </PopoverTrigger>
                         <CustomPopoverContent className="w-[--radix-popover-trigger-width] p-0" side="bottom" align="start">
                           <Command>
-                            <CommandInput placeholder="Search QBO shows..." />
-                            <CommandEmpty>No shows found.</CommandEmpty>
+                            <CommandInput placeholder="Search QBO Shows..." />
+                            <CommandEmpty>No Shows Found.</CommandEmpty>
                             <ScrollArea className="h-60">
                               <CommandGroup>
                                 <CommandItem
@@ -1407,7 +1328,7 @@ export default function CreateShowDialog({
                     </Label>
                     <Input
                       id="evergreenProductionStaffContact"
-                      placeholder="Name or None"
+                      placeholder="Name Or None"
                       value={formData.evergreenProductionStaffContact}
                       onChange={(e) => handleInputChange("evergreenProductionStaffContact", e.target.value)}
                     />
@@ -1417,7 +1338,7 @@ export default function CreateShowDialog({
                     <Label htmlFor="primaryContactHost">Primary Contact (Host)</Label>
                     <Textarea
                       id="primaryContactHost"
-                      placeholder="Enter in this order: Name, Address, Phone, Email"
+                      placeholder="Enter In This Order: Name, Address, Phone, Email"
                       rows={4}
                       value={formData.primaryContactHost}
                       onChange={(e) => handleInputChange("primaryContactHost", e.target.value)}
@@ -1428,7 +1349,7 @@ export default function CreateShowDialog({
                     <Label htmlFor="primaryContactShow">Primary Contact (Show)</Label>
                     <Textarea
                       id="primaryContactShow"
-                      placeholder="Enter in this order: Name, Address, Phone, Email"
+                      placeholder="Enter In This Order: Name, Address, Phone, Email"
                       rows={4}
                       value={formData.primaryContactShow}
                       onChange={(e) => handleInputChange("primaryContactShow", e.target.value)}
@@ -1456,7 +1377,7 @@ export default function CreateShowDialog({
                         }
                       >
                         <SelectTrigger>
-                          <SelectValue placeholder="Choose age range" />
+                          <SelectValue placeholder="Choose Age Range" />
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="18-24">18-24</SelectItem>
@@ -1471,7 +1392,7 @@ export default function CreateShowDialog({
                       <Label htmlFor="gender">Gender Demographic (M/F)</Label>
                       <Input
                         id="gender"
-                        placeholder="Eg. 60/40"
+                        placeholder="E.g. 60/40"
                         value={formData.gender}
                         onChange={(e) => handleInputChange("gender", e.target.value)}
                         className={cn(getFieldError("gender") && "border-red-500")}
@@ -1493,7 +1414,7 @@ export default function CreateShowDialog({
                         onValueChange={(value: "Urban" | "Rural" | "Both" | "") => handleInputChange("region", value)}
                       >
                         <SelectTrigger>
-                          <SelectValue placeholder="Choose region" />
+                          <SelectValue placeholder="Choose Region" />
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="Urban">Urban</SelectItem>
@@ -1514,7 +1435,7 @@ export default function CreateShowDialog({
                         }
                       >
                         <SelectTrigger>
-                          <SelectValue placeholder="Choose primary education level" />
+                          <SelectValue placeholder="Choose Primary Education Level" />
                         </SelectTrigger>
                         <SelectContent>
                           {educationLevels.map((level) => (
@@ -1534,7 +1455,7 @@ export default function CreateShowDialog({
                         }
                       >
                         <SelectTrigger>
-                          <SelectValue placeholder="Choose secondary education level" />
+                          <SelectValue placeholder="Choose Secondary Education Level" />
                         </SelectTrigger>
                         <SelectContent>
                           {educationLevels.map((level) => (
