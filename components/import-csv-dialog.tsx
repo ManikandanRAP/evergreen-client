@@ -20,6 +20,97 @@ const SHOW_TYPE_MAP: Record<string, "Original" | "Branded" | "Partner"> = {
   partner: "Partner",
 };
 
+// Map lowercased CSV cadence to canonical values
+const CADENCE_MAP: Record<string, "Daily" | "Weekly" | "Biweekly" | "Monthly" | "Ad hoc"> = {
+  daily: "Daily",
+  weekly: "Weekly",
+  biweekly: "Biweekly",
+  monthly: "Monthly",
+  "ad hoc": "Ad hoc",
+  adhoc: "Ad hoc",
+};
+
+// Map lowercased CSV region to canonical values
+const REGION_MAP: Record<string, "Urban" | "Rural" | "Both"> = {
+  urban: "Urban",
+  rural: "Rural",
+  both: "Both",
+};
+
+// Map user-friendly CSV headers to database column names
+const CSV_HEADER_MAPPING: Record<string, string> = {
+  // 1. Core Show Information (Most Important)
+  "Show Name": "title",
+  "Show Type": "show_type", 
+  "Format": "media_type",
+  "Ranking Category": "ranking_category",
+  "Is Original Content": "is_original",
+  "Is Rate Card Show": "rate_card",
+  
+  // 2. Business & Relationship Details
+  "Relationship": "relationship_level",
+  "Start Date": "start_date", 
+  "Minimum Guarantee": "minimum_guarantee",
+  "Ownership by Evergreen (%)": "evergreen_ownership_pct",
+  "Cadence": "cadence",
+  
+  // 3. Content & Audience
+  "Genre": "genre_name",
+  "Age Demographic": "age_demographic",
+  "Gender Demographic (M/F)": "gender",
+  "Region Demographic": "region",
+  "Average Length (Minutes)": "avg_show_length_mins",
+  "Ad Slots": "ad_slots",
+  
+  // 4. Financial Data
+  "Latest CPM": "latest_cpm_usd",
+  "Revenue 2023": "revenue_2023",
+  "Revenue 2024": "revenue_2024", 
+  "Revenue 2025": "revenue_2025",
+  
+  // 5. Revenue Distribution Percentages (with standard_ads_percent and programmatic_ads_span_percent first)
+  "Standard Ads (%)": "standard_ads_percent",
+  "Programmatic Ads/Span (%)": "programmatic_ads_span_percent",
+  "Side Bonus (%)": "side_bonus_percent",
+  "YouTube Ads (%)": "youtube_ads_percent",
+  "Subscriptions (%)": "subscriptions_percent",
+  "Sponsorship Ad FP - Lead (%)": "sponsorship_ad_fp_lead_percent",
+  "Sponsorship Ad - Partner Lead (%)": "sponsorship_ad_partner_lead_percent",
+  "Sponsorship Ad - Partner Sold (%)": "sponsorship_ad_partner_sold_percent",
+  "Merchandise (%)": "merchandise_percent",
+  "Branded Revenue (%)": "branded_revenue_percent",
+  "Marketing Services Revenue (%)": "marketing_services_revenue_percent",
+  
+  // 6. Hands-off Percentages
+  "Direct Customer - Hands Off (%)": "direct_customer_hands_off_percent",
+  "YouTube - Hands Off (%)": "youtube_hands_off_percent",
+  "Subscription - Hands Off (%)": "subscription_hands_off_percent",
+  
+  // 7. Contact Information
+  "Primary Contact (Show)": "show_primary_contact",
+  "Primary Contact (Host)": "show_host_contact",
+  "Evergreen Production Staff Name": "evergreen_production_staff_name",
+  
+  // 8. System & Operational
+  "Subnetwork Name": "subnetwork_id",
+  "Is Active": "is_active",
+  "Is Undersized": "is_undersized",
+  "Primary Education Demographic": "primary_education",
+  "Secondary Education Demographic": "secondary_education",
+  
+  // 9. Revenue Flags
+  "Has Sponsorship Revenue": "has_sponsorship_revenue",
+  "Has Non Evergreen Revenue": "has_non_evergreen_revenue",
+  "Has Partner Ledger Access": "requires_partner_access",
+  "Has Branded Revenue": "has_branded_revenue",
+  "Has Marketing Revenue": "has_marketing_revenue",
+  "Has Web Management Revenue": "has_web_mgmt_revenue",
+  
+  // 10. Integration Data
+  "QBO Show Name": "qbo_show_name",
+  "QBO Show ID": "qbo_show_id"
+};
+
 
 interface ImportCSVDialogProps {
   open: boolean
@@ -35,22 +126,41 @@ interface ImportPreviewRow {
   showData: ShowCreate
 }
 
-// These are the headers for the CSV file template - matching your exact database schema
+// User-friendly CSV headers for the template
 const CSV_HEADERS = [
-  "title", "show_type", "media_type", "relationship_level", "start_date", "minimum_guarantee",
-  "evergreen_ownership_pct", "genre_name", "cadence", "show_primary_contact",
-  "age_demographic", "subnetwork_id", "rate_card", "is_original", "latest_cpm_usd",
-  "revenue_2023", "revenue_2024", "revenue_2025", "ad_slots", "avg_show_length_mins",
-  "gender", "region", "is_active", "is_undersized", "show_host_contact",
-  "evergreen_production_staff_name", "side_bonus_percent", "youtube_ads_percent",
-  "subscriptions_percent", "standard_ads_percent", "sponsorship_ad_fp_lead_percent",
-  "sponsorship_ad_partner_lead_percent", "sponsorship_ad_partner_sold_percent",
-  "programmatic_ads_span_percent", "merchandise_percent", "branded_revenue_percent",
-  "marketing_services_revenue_percent", "direct_customer_hands_off_percent",
-  "youtube_hands_off_percent", "subscription_hands_off_percent", "has_sponsorship_revenue",
-  "has_non_evergreen_revenue", "requires_partner_access", "has_branded_revenue",
-  "has_marketing_revenue", "has_web_mgmt_revenue", "primary_education",
-  "secondary_education", "qbo_show_name", "qbo_show_id"
+  // 1. Core Show Information (Most Important)
+  "Show Name", "Show Type", "Format", "Ranking Category", "Is Original Content", "Is Rate Card Show",
+  
+  // 2. Business & Relationship Details
+  "Relationship", "Start Date", "Minimum Guarantee", "Ownership by Evergreen (%)", "Cadence",
+  
+  // 3. Content & Audience
+  "Genre", "Age Demographic", "Gender Demographic (M/F)", "Region Demographic", "Average Length (Minutes)", "Ad Slots",
+  
+  // 4. Financial Data
+  "Latest CPM", "Revenue 2023", "Revenue 2024", "Revenue 2025",
+  
+  // 5. Revenue Distribution Percentages (with standard_ads_percent and programmatic_ads_span_percent first)
+  "Standard Ads (%)", "Programmatic Ads/Span (%)", "Side Bonus (%)", "YouTube Ads (%)",
+  "Subscriptions (%)", "Sponsorship Ad FP - Lead (%)", "Sponsorship Ad - Partner Lead (%)", 
+  "Sponsorship Ad - Partner Sold (%)", "Merchandise (%)", "Branded Revenue (%)",
+  "Marketing Services Revenue (%)",
+  
+  // 6. Hands-off Percentages
+  "Direct Customer - Hands Off (%)", "YouTube - Hands Off (%)", "Subscription - Hands Off (%)",
+  
+  // 7. Contact Information
+  "Primary Contact (Show)", "Primary Contact (Host)", "Evergreen Production Staff Name",
+  
+  // 8. System & Operational
+  "Subnetwork Name", "Is Active", "Is Undersized", "Primary Education Demographic", "Secondary Education Demographic",
+  
+  // 9. Revenue Flags
+  "Has Sponsorship Revenue", "Has Non Evergreen Revenue", "Has Partner Ledger Access",
+  "Has Branded Revenue", "Has Marketing Revenue", "Has Web Management Revenue",
+  
+  // 10. Integration Data
+  "QBO Show Name", "QBO Show ID"
 ];
 
 export default function ImportCSVDialog({ open, onOpenChange, onImportComplete }: ImportCSVDialogProps) {
@@ -129,6 +239,17 @@ export default function ImportCSVDialog({ open, onOpenChange, onImportComplete }
     document.body.removeChild(link);
   };
 
+  // Helper function to map user-friendly headers to database column names
+  const mapHeadersToDbColumns = (row: any): any => {
+    const mappedRow: any = {};
+    for (const [userFriendlyHeader, dbColumn] of Object.entries(CSV_HEADER_MAPPING)) {
+      if (row[userFriendlyHeader] !== undefined) {
+        mappedRow[dbColumn] = row[userFriendlyHeader];
+      }
+    }
+    return mappedRow;
+  };
+
   const parseCSVData = (data: any[]): { shows: ShowCreate[], errors: string[] } => {
     const shows: ShowCreate[] = [];
     const errors: string[] = [];
@@ -137,37 +258,70 @@ export default function ImportCSVDialog({ open, onOpenChange, onImportComplete }
       const row = data[i];
       const rowNum = i + 2;
 
-      if (!row.title || row.title.trim() === "") {
-        errors.push(`Row ${rowNum}: Missing required field 'title'.`);
+      // Map user-friendly headers to database column names
+      const mappedRow = mapHeadersToDbColumns(row);
+
+      if (!mappedRow.title || mappedRow.title.trim() === "") {
+        errors.push(`Row ${rowNum}: Missing required field 'Show Name'.`);
         continue;
       }
 
       // Case-insensitive enum validation
-      const mediaVal = (row.media_type ?? row.mediaType) !== undefined
-        ? String(row.media_type ?? row.mediaType).trim().toLowerCase()
+      const mediaVal = mappedRow.media_type !== undefined
+        ? String(mappedRow.media_type).trim().toLowerCase()
         : undefined;
 
-      const relVal = (row.relationship_level ?? row.relationshipLevel) !== undefined
-        ? String(row.relationship_level ?? row.relationshipLevel).trim().toLowerCase()
+      const relVal = mappedRow.relationship_level !== undefined
+        ? String(mappedRow.relationship_level).trim().toLowerCase()
         : undefined;
 
-      const showTypeKey = (row.show_type ?? row.showType) !== undefined
-        ? String(row.show_type ?? row.showType).trim().toLowerCase()
+      const showTypeKey = mappedRow.show_type !== undefined
+        ? String(mappedRow.show_type).trim().toLowerCase()
         : undefined;
 
-      if (row.media_type ?? row.mediaType) {
+      const cadenceKey = mappedRow.cadence !== undefined
+        ? String(mappedRow.cadence).trim().toLowerCase()
+        : undefined;
+
+      const regionKey = mappedRow.region !== undefined
+        ? String(mappedRow.region).trim().toLowerCase()
+        : undefined;
+
+      if (mappedRow.media_type) {
         if (!["video", "audio", "both"].includes(mediaVal as string)) {
-          errors.push(`Row ${rowNum}: Invalid value for 'media_type'. Must be one of: video, audio, both.`);
+          errors.push(`Row ${rowNum}: Invalid value for 'Format'. Must be one of: Video, Audio, Both.`);
         }
       }
-      if (row.relationship_level ?? row.relationshipLevel) {
+      if (mappedRow.relationship_level) {
         if (!["strong", "medium", "weak"].includes(relVal as string)) {
-          errors.push(`Row ${rowNum}: Invalid value for 'relationship_level'. Must be one of: strong, medium, weak.`);
+          errors.push(`Row ${rowNum}: Invalid value for 'Relationship'. Must be one of: Strong, Medium, Weak.`);
         }
       }
-      if (row.show_type ?? row.showType) {
+      if (mappedRow.show_type) {
         if (!showTypeKey || !["original", "branded", "partner"].includes(showTypeKey)) {
-          errors.push(`Row ${rowNum}: Invalid value for 'show_type'. Must be one of: Original, Branded, Partner.`);
+          errors.push(`Row ${rowNum}: Invalid value for 'Show Type'. Must be one of: Original, Branded, Partner.`);
+        }
+      }
+
+      // Validate ranking_category
+      if (mappedRow.ranking_category) {
+        const rankingVal = String(mappedRow.ranking_category).trim();
+        if (!["1", "2", "3", "4", "5"].includes(rankingVal)) {
+          errors.push(`Row ${rowNum}: Invalid value for 'Ranking Category'. Must be one of: 1, 2, 3, 4, 5.`);
+        }
+      }
+
+      // Validate cadence
+      if (mappedRow.cadence) {
+        if (!cadenceKey || !["daily", "weekly", "biweekly", "monthly", "ad hoc", "adhoc"].includes(cadenceKey)) {
+          errors.push(`Row ${rowNum}: Invalid value for 'Cadence'. Must be one of: Daily, Weekly, Biweekly, Monthly, Ad hoc.`);
+        }
+      }
+
+      // Validate region
+      if (mappedRow.region) {
+        if (!regionKey || !["urban", "rural", "both"].includes(regionKey)) {
+          errors.push(`Row ${rowNum}: Invalid value for 'Region Demographic'. Must be one of: Urban, Rural, Both.`);
         }
       }
 
@@ -182,13 +336,16 @@ export default function ImportCSVDialog({ open, onOpenChange, onImportComplete }
       ];
 
       for (const field of numericFields) {
-        if (row[field] && isNaN(parseFloat(row[field]))) {
-          errors.push(`Row ${rowNum}: Invalid number for '${field}'.`);
+        if (mappedRow[field] && isNaN(parseFloat(mappedRow[field]))) {
+          // Find the user-friendly header name for this field
+          const userFriendlyName = Object.entries(CSV_HEADER_MAPPING).find(([_, dbCol]) => dbCol === field)?.[0] || field;
+          errors.push(`Row ${rowNum}: Invalid number for '${userFriendlyName}'.`);
         }
         if (field.includes('_percent') || field === 'evergreen_ownership_pct') {
-          const val = parseFloat(row[field]);
+          const val = parseFloat(mappedRow[field]);
           if (!isNaN(val) && (val < 0 || val > 100)) {
-            errors.push(`Row ${rowNum}: Value for '${field}' must be between 0 and 100.`);
+            const userFriendlyName = Object.entries(CSV_HEADER_MAPPING).find(([_, dbCol]) => dbCol === field)?.[0] || field;
+            errors.push(`Row ${rowNum}: Value for '${userFriendlyName}' must be between 0 and 100.`);
           }
         }
       }
@@ -197,55 +354,56 @@ export default function ImportCSVDialog({ open, onOpenChange, onImportComplete }
 
       // Create ShowCreate object
       const show: ShowCreate = {
-        title: row.title,
+        title: mappedRow.title,
         show_type: showTypeKey ? SHOW_TYPE_MAP[showTypeKey] : undefined,
         media_type: mediaVal ? (mediaVal as "video" | "audio" | "both") : undefined,
         relationship_level: relVal ? (relVal as "strong" | "medium" | "weak") : undefined,
-        start_date: row.start_date || undefined,
-        minimum_guarantee: row.minimum_guarantee?.toLowerCase() === 'yes' || row.minimum_guarantee?.toLowerCase() === 'true' || false,
-        evergreen_ownership_pct: row.evergreen_ownership_pct ? parseFloat(row.evergreen_ownership_pct) : undefined,
-        genre_name: row.genre_name || undefined,
-        cadence: row.cadence || undefined,
-        show_primary_contact: row.show_primary_contact || undefined,
-        age_demographic: row.age_demographic || undefined,
-        subnetwork_id: row.subnetwork_id || undefined,
-        rate_card: row.rate_card?.toLowerCase() === 'yes' || row.rate_card?.toLowerCase() === 'true' || false,
-        is_original: row.is_original?.toLowerCase() === 'yes' || row.is_original?.toLowerCase() === 'true' || false,
-        latest_cpm_usd: row.latest_cpm_usd ? parseFloat(row.latest_cpm_usd) : undefined,
-        revenue_2023: row.revenue_2023 ? parseFloat(row.revenue_2023) : undefined,
-        revenue_2024: row.revenue_2024 ? parseFloat(row.revenue_2024) : undefined,
-        revenue_2025: row.revenue_2025 ? parseFloat(row.revenue_2025) : undefined,
-        ad_slots: row.ad_slots ? parseInt(row.ad_slots) : undefined,
-        avg_show_length_mins: row.avg_show_length_mins ? parseInt(row.avg_show_length_mins) : undefined,
-        gender: row.gender || undefined,
-        region: row.region || undefined,
-        is_active: row.isActive ? row.isActive.toLowerCase() !== 'no' && row.isActive.toLowerCase() !== 'false' : true,
-        is_undersized: row.isUndersized?.toLowerCase() === 'yes' || row.isUndersized?.toLowerCase() === 'true' || false,
-        show_host_contact: row.show_host_contact || undefined,
-        evergreen_production_staff_name: row.evergreen_production_staff_name || undefined,
-        side_bonus_percent: row.side_bonus_percent ? parseFloat(row.side_bonus_percent) : undefined,
-        youtube_ads_percent: row.youtube_ads_percent ? parseFloat(row.youtube_ads_percent) : undefined,
-        subscriptions_percent: row.subscriptions_percent ? parseFloat(row.subscriptions_percent) : undefined,
-        standard_ads_percent: row.standard_ads_percent ? parseFloat(row.standard_ads_percent) : undefined,
-        sponsorship_ad_fp_lead_percent: row.sponsorship_ad_fp_lead_percent ? parseFloat(row.sponsorship_ad_fp_lead_percent) : undefined,
-        sponsorship_ad_partner_lead_percent: row.sponsorship_ad_partner_lead_percent ? parseFloat(row.sponsorship_ad_partner_lead_percent) : undefined,
-        sponsorship_ad_partner_sold_percent: row.sponsorship_ad_partner_sold_percent ? parseFloat(row.sponsorship_ad_partner_sold_percent) : undefined,
-        programmatic_ads_span_percent: row.programmatic_ads_span_percent ? parseFloat(row.programmatic_ads_span_percent) : undefined,
-        merchandise_percent: row.merchandise_percent ? parseFloat(row.merchandise_percent) : undefined,
-        branded_revenue_percent: row.branded_revenue_percent ? parseFloat(row.branded_revenue_percent) : undefined,
-        marketing_services_revenue_percent: row.marketing_services_revenue_percent ? parseFloat(row.marketing_services_revenue_percent) : undefined,
-        direct_customer_hands_off_percent: row.direct_customer_hands_off_percent ? parseFloat(row.direct_customer_hands_off_percent) : undefined,
-        youtube_hands_off_percent: row.youtube_hands_off_percent ? parseFloat(row.youtube_hands_off_percent) : undefined,
-        subscription_hands_off_percent: row.subscription_hands_off_percent ? parseFloat(row.subscription_hands_off_percent) : undefined,
-        has_sponsorship_revenue: row.has_sponsorship_revenue?.toLowerCase() === 'yes' || row.has_sponsorship_revenue?.toLowerCase() === 'true' || false,
-        has_non_evergreen_revenue: row.has_non_evergreen_revenue?.toLowerCase() === 'yes' || row.has_non_evergreen_revenue?.toLowerCase() === 'true' || false,
-        requires_partner_access: row.requires_partner_access?.toLowerCase() === 'yes' || row.requires_partner_access?.toLowerCase() === 'true' || false,
-        has_branded_revenue: row.has_branded_revenue?.toLowerCase() === 'yes' || row.has_branded_revenue?.toLowerCase() === 'true' || false,
-        has_marketing_revenue: row.has_marketing_revenue?.toLowerCase() === 'yes' || row.has_marketing_revenue?.toLowerCase() === 'true' || false,
-        has_web_mgmt_revenue: row.has_web_mgmt_revenue?.toLowerCase() === 'yes' || row.has_web_mgmt_revenue?.toLowerCase() === 'true' || false,
-        primary_education: row.primary_education || undefined,
-        secondary_education: row.secondary_education || undefined,
-        qbo_show_name: row.qbo_show_name || undefined,
+        start_date: mappedRow.start_date || undefined,
+        minimum_guarantee: mappedRow.minimum_guarantee?.toLowerCase() === 'yes' || mappedRow.minimum_guarantee?.toLowerCase() === 'true' || false,
+        evergreen_ownership_pct: mappedRow.evergreen_ownership_pct ? parseFloat(mappedRow.evergreen_ownership_pct) : undefined,
+        genre_name: mappedRow.genre_name || undefined,
+        cadence: cadenceKey ? CADENCE_MAP[cadenceKey] : undefined,
+        show_primary_contact: mappedRow.show_primary_contact || undefined,
+        age_demographic: mappedRow.age_demographic || undefined,
+        subnetwork_id: mappedRow.subnetwork_id || undefined,
+        rate_card: mappedRow.rate_card?.toLowerCase() === 'yes' || mappedRow.rate_card?.toLowerCase() === 'true' || false,
+        is_original: mappedRow.is_original?.toLowerCase() === 'yes' || mappedRow.is_original?.toLowerCase() === 'true' || false,
+        ranking_category: mappedRow.ranking_category ? String(mappedRow.ranking_category).trim() as "1" | "2" | "3" | "4" | "5" : undefined,
+        latest_cpm_usd: mappedRow.latest_cpm_usd ? parseFloat(mappedRow.latest_cpm_usd) : undefined,
+        revenue_2023: mappedRow.revenue_2023 ? parseFloat(mappedRow.revenue_2023) : undefined,
+        revenue_2024: mappedRow.revenue_2024 ? parseFloat(mappedRow.revenue_2024) : undefined,
+        revenue_2025: mappedRow.revenue_2025 ? parseFloat(mappedRow.revenue_2025) : undefined,
+        ad_slots: mappedRow.ad_slots ? parseInt(mappedRow.ad_slots) : undefined,
+        avg_show_length_mins: mappedRow.avg_show_length_mins ? parseInt(mappedRow.avg_show_length_mins) : undefined,
+        gender: mappedRow.gender || undefined,
+        region: regionKey ? REGION_MAP[regionKey] : undefined,
+        is_active: mappedRow.is_active ? mappedRow.is_active.toLowerCase() !== 'no' && mappedRow.is_active.toLowerCase() !== 'false' : true,
+        is_undersized: mappedRow.is_undersized?.toLowerCase() === 'yes' || mappedRow.is_undersized?.toLowerCase() === 'true' || false,
+        show_host_contact: mappedRow.show_host_contact || undefined,
+        evergreen_production_staff_name: mappedRow.evergreen_production_staff_name || undefined,
+        side_bonus_percent: mappedRow.side_bonus_percent ? parseFloat(mappedRow.side_bonus_percent) : undefined,
+        youtube_ads_percent: mappedRow.youtube_ads_percent ? parseFloat(mappedRow.youtube_ads_percent) : undefined,
+        subscriptions_percent: mappedRow.subscriptions_percent ? parseFloat(mappedRow.subscriptions_percent) : undefined,
+        standard_ads_percent: mappedRow.standard_ads_percent ? parseFloat(mappedRow.standard_ads_percent) : undefined,
+        sponsorship_ad_fp_lead_percent: mappedRow.sponsorship_ad_fp_lead_percent ? parseFloat(mappedRow.sponsorship_ad_fp_lead_percent) : undefined,
+        sponsorship_ad_partner_lead_percent: mappedRow.sponsorship_ad_partner_lead_percent ? parseFloat(mappedRow.sponsorship_ad_partner_lead_percent) : undefined,
+        sponsorship_ad_partner_sold_percent: mappedRow.sponsorship_ad_partner_sold_percent ? parseFloat(mappedRow.sponsorship_ad_partner_sold_percent) : undefined,
+        programmatic_ads_span_percent: mappedRow.programmatic_ads_span_percent ? parseFloat(mappedRow.programmatic_ads_span_percent) : undefined,
+        merchandise_percent: mappedRow.merchandise_percent ? parseFloat(mappedRow.merchandise_percent) : undefined,
+        branded_revenue_percent: mappedRow.branded_revenue_percent ? parseFloat(mappedRow.branded_revenue_percent) : undefined,
+        marketing_services_revenue_percent: mappedRow.marketing_services_revenue_percent ? parseFloat(mappedRow.marketing_services_revenue_percent) : undefined,
+        direct_customer_hands_off_percent: mappedRow.direct_customer_hands_off_percent ? parseFloat(mappedRow.direct_customer_hands_off_percent) : undefined,
+        youtube_hands_off_percent: mappedRow.youtube_hands_off_percent ? parseFloat(mappedRow.youtube_hands_off_percent) : undefined,
+        subscription_hands_off_percent: mappedRow.subscription_hands_off_percent ? parseFloat(mappedRow.subscription_hands_off_percent) : undefined,
+        has_sponsorship_revenue: mappedRow.has_sponsorship_revenue?.toLowerCase() === 'yes' || mappedRow.has_sponsorship_revenue?.toLowerCase() === 'true' || false,
+        has_non_evergreen_revenue: mappedRow.has_non_evergreen_revenue?.toLowerCase() === 'yes' || mappedRow.has_non_evergreen_revenue?.toLowerCase() === 'true' || false,
+        requires_partner_access: mappedRow.requires_partner_access?.toLowerCase() === 'yes' || mappedRow.requires_partner_access?.toLowerCase() === 'true' || false,
+        has_branded_revenue: mappedRow.has_branded_revenue?.toLowerCase() === 'yes' || mappedRow.has_branded_revenue?.toLowerCase() === 'true' || false,
+        has_marketing_revenue: mappedRow.has_marketing_revenue?.toLowerCase() === 'yes' || mappedRow.has_marketing_revenue?.toLowerCase() === 'true' || false,
+        has_web_mgmt_revenue: mappedRow.has_web_mgmt_revenue?.toLowerCase() === 'yes' || mappedRow.has_web_mgmt_revenue?.toLowerCase() === 'true' || false,
+        primary_education: mappedRow.primary_education || undefined,
+        secondary_education: mappedRow.secondary_education || undefined,
+        qbo_show_name: mappedRow.qbo_show_name || undefined,
       };
       shows.push(show);
     }
