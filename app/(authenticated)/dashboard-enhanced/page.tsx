@@ -38,7 +38,7 @@ import {
   Bell,
   Plus,
   Upload,
-  MessageSquare,
+  History,
   Settings
 } from "lucide-react"
 import { 
@@ -105,6 +105,7 @@ type Show = {
   revenue_2024: number | null
   latest_cpm_usd: number | null
   minimum_guarantee: number | null
+  genre_name: string | null
 }
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL
@@ -369,8 +370,8 @@ export default function EnhancedDashboard() {
       case 'import-shows':
         setIsImportDialogOpen(true)
         break
-      case 'feedbacks':
-        router.push('/feedbacks')
+      case 'split-history':
+        router.push('/split-history')
         break
       case 'user-management':
         router.push('/user-management')
@@ -482,7 +483,7 @@ export default function EnhancedDashboard() {
 
     // Top 3 genres
     const genreCount = filteredShows.reduce((acc, show) => {
-      const genre = (show as any).genre_name || 'Unknown'
+      const genre = show.genre_name || 'Unknown'
       acc[genre] = (acc[genre] || 0) + 1
       return acc
     }, {} as Record<string, number>)
@@ -536,11 +537,11 @@ export default function EnhancedDashboard() {
   // Calculate payments summary
   const paymentsSummary = useMemo(() => {
     const pendingPayments = payouts.filter(payout => 
-      payout.balance_billpayments && payout.balance_billpayments > 0
+      payout.billed_amount_outstanding && payout.billed_amount_outstanding > 0
     )
     
     const totalPendingAmount = pendingPayments.reduce((sum, payout) => 
-      sum + num(payout.balance_billpayments), 0
+      sum + num(payout.billed_amount_outstanding), 0
     )
     
     const totalRevenueEntries = ledger.length
@@ -712,13 +713,13 @@ export default function EnhancedDashboard() {
                   <div className="text-lg font-bold text-green-600">{analytics.activeShows}</div>
                   <div className="text-xs text-green-700 dark:text-green-300">Active</div>
                 </div>
-                <div className="text-center p-2 bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-950/20 dark:to-slate-900/20 rounded-lg border border-slate-200 dark:border-slate-800">
-                  <div className="text-lg font-bold text-slate-600">{analytics.totalShows - analytics.activeShows}</div>
-                  <div className="text-xs text-slate-700 dark:text-slate-300">Inactive</div>
+                <div className="text-center p-2 bg-gradient-to-br from-red-50 to-red-100 dark:from-red-950/20 dark:to-red-900/20 rounded-lg border border-red-200 dark:border-red-800">
+                  <div className="text-lg font-bold text-red-600">{analytics.totalShows - analytics.activeShows}</div>
+                  <div className="text-xs text-red-700 dark:text-red-300">Inactive</div>
                 </div>
-                <div className="text-center p-2 bg-gradient-to-br from-yellow-50 to-yellow-100 dark:from-yellow-950/20 dark:to-yellow-900/20 rounded-lg border border-yellow-200 dark:border-yellow-800">
-                  <div className="text-lg font-bold text-yellow-600">{analytics.rateCardShows}</div>
-                  <div className="text-xs text-yellow-700 dark:text-yellow-300">Rate Card</div>
+                <div className="text-center p-2 bg-gradient-to-br from-teal-50 to-teal-100 dark:from-teal-950/20 dark:to-teal-900/20 rounded-lg border border-teal-200 dark:border-teal-800">
+                  <div className="text-lg font-bold text-teal-600">{analytics.rateCardShows}</div>
+                  <div className="text-xs text-teal-700 dark:text-teal-300">Rate Card</div>
                 </div>
                 <div className="text-center p-2 bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950/20 dark:to-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
                   <div className="text-lg font-bold text-blue-600">{analytics.originalShows}</div>
@@ -759,7 +760,7 @@ export default function EnhancedDashboard() {
                     
                     return (
                       <div key={type} className={getColorClasses(index)}>
-                        <div className="text-sm font-bold">{count}</div>
+                        <div className={`text-sm font-bold ${getTextClasses(index)}`}>{count}</div>
                         <div className={`text-xs ${getTextClasses(index)} truncate`} title={type}>{type}</div>
                       </div>
                     )
@@ -800,7 +801,7 @@ export default function EnhancedDashboard() {
                     
                     return (
                       <div key={genre} className={getColorClasses(index)}>
-                        <div className="text-sm font-bold">{count}</div>
+                        <div className={`text-sm font-bold ${getTextClasses(index)}`}>{count}</div>
                         <div className={`text-xs ${getTextClasses(index)} truncate`} title={genre}>{genre}</div>
                       </div>
                     )
@@ -879,27 +880,27 @@ export default function EnhancedDashboard() {
               </Button>
               <Button 
                 variant="outline" 
-                className="h-20 flex flex-col gap-2 bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950/20 dark:to-blue-900/20 border-blue-200 dark:border-blue-800 hover:from-blue-100 hover:to-blue-200 dark:hover:from-blue-900/30 dark:hover:to-blue-800/30"
+                className="h-20 flex flex-col gap-2 bg-gradient-to-br from-green-50 to-green-100 dark:from-green-950/20 dark:to-green-900/20 border-green-200 dark:border-green-800 hover:from-green-100 hover:to-green-200 dark:hover:from-green-900/30 dark:hover:to-green-800/30"
                 onClick={() => handleQuickAction('import-shows')}
               >
-                <Upload className="h-6 w-6 text-blue-600" />
-                <span className="text-sm text-blue-700 dark:text-blue-300">Import Shows</span>
+                <Upload className="h-6 w-6 text-green-600" />
+                <span className="text-sm text-green-700 dark:text-green-300">Import Shows</span>
               </Button>
               <Button 
                 variant="outline" 
                 className="h-20 flex flex-col gap-2 bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-950/20 dark:to-purple-900/20 border-purple-200 dark:border-purple-800 hover:from-purple-100 hover:to-purple-200 dark:hover:from-purple-900/30 dark:hover:to-purple-800/30"
-                onClick={() => handleQuickAction('feedbacks')}
+                onClick={() => handleQuickAction('split-history')}
               >
-                <MessageSquare className="h-6 w-6 text-purple-600" />
-                <span className="text-sm text-purple-700 dark:text-purple-300">Feedbacks</span>
+                <History className="h-6 w-6 text-purple-600" />
+                <span className="text-sm text-purple-700 dark:text-purple-300">Split History</span>
               </Button>
               <Button 
                 variant="outline" 
-                className="h-20 flex flex-col gap-2 bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-950/20 dark:to-orange-900/20 border-orange-200 dark:border-orange-800 hover:from-orange-100 hover:to-orange-200 dark:hover:from-orange-900/30 dark:hover:to-orange-800/30"
+                className="h-20 flex flex-col gap-2 bg-gradient-to-br from-indigo-50 to-indigo-100 dark:from-indigo-950/20 dark:to-indigo-900/20 border-indigo-200 dark:border-indigo-800 hover:from-indigo-100 hover:to-indigo-200 dark:hover:from-indigo-900/30 dark:hover:to-indigo-800/30"
                 onClick={() => handleQuickAction('user-management')}
               >
-                <Settings className="h-6 w-6 text-orange-600" />
-                <span className="text-sm text-orange-700 dark:text-orange-300">User Management</span>
+                <Settings className="h-6 w-6 text-indigo-600" />
+                <span className="text-sm text-indigo-700 dark:text-indigo-300">User Management</span>
               </Button>
             </div>
           </CardContent>

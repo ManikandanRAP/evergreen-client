@@ -10,9 +10,10 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/command"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { Loader2, Eye, Check, ChevronsUpDown, Link2, Trash2 } from "lucide-react"
+import { Loader2, Eye, Check, ChevronsUpDown, Link2, Trash2, History } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { useAuth } from "@/lib/auth-context"
+import { useRouter } from "next/navigation"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -50,6 +51,7 @@ interface Split {
 export default function VendorSplitManagement({ refreshSignal = 0 }: { refreshSignal?: number }) {
   const { user, token } = useAuth()
   const { toast } = useToast()
+  const router = useRouter()
 
   // Data states
   const [shows, setShows] = useState<Show[]>([])
@@ -440,8 +442,20 @@ export default function VendorSplitManagement({ refreshSignal = 0 }: { refreshSi
     <div className="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle>View and Update Existing Vendor Split Percentage</CardTitle>
-          <CardDescription>Select shows and vendors to view and update split configurations.</CardDescription>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle>View and Update Existing Vendor Split Percentage</CardTitle>
+              <CardDescription>Select shows and vendors to view and update split configurations.</CardDescription>
+            </div>
+            <Button 
+              variant="outline" 
+              onClick={() => router.push("/split-history")}
+              className="flex items-center gap-2"
+            >
+              <History className="h-4 w-4" />
+              View All Split History
+            </Button>
+          </div>
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="grid gap-4 md:grid-cols-3">
