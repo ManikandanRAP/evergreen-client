@@ -279,7 +279,7 @@ export default function HomePage() {
                         </Badge>
                       </td>
                       <td className="p-3 font-medium text-emerald-600">
-                        {formatCurrency(Number((show as any).minimumGuarantee || 0))}
+                        {(show as any).minimumGuarantee ? "Yes" : "No"}
                       </td>
                       <td className="p-3">{(show as any).ageMonths ?? "—"}m</td>
                       <td className="p-3">{(show as any).cadence ?? "—"}</td>
