@@ -556,11 +556,20 @@ export default function EnhancedDashboard() {
 
   if (fetching) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
-          <p>Loading enhanced dashboard...</p>
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-3xl font-bold bg-gradient-to-r from-emerald-600 to-cyan-600 bg-clip-text text-transparent tracking-tight">
+            Welcome back, {user?.name}!
+          </h1>
+          <p className="text-muted-foreground">Loading your dashboard…</p>
         </div>
+        <Card className="evergreen-card">
+          <CardContent className="text-center py-12">
+            <Loader2 className="h-12 w-12 text-muted-foreground mx-auto mb-4 animate-spin" />
+            <h3 className="text-lg font-medium mb-2">Loading Dashboard</h3>
+            <p className="text-muted-foreground">Please wait while we fetch your data…</p>
+          </CardContent>
+        </Card>
       </div>
     )
   }
@@ -583,13 +592,11 @@ export default function EnhancedDashboard() {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold bg-gradient-to-r from-emerald-600 to-cyan-600 bg-clip-text text-transparent">
-          Enhanced Dashboard
+        <h1 className="text-3xl font-bold bg-gradient-to-r from-emerald-600 to-cyan-600 bg-clip-text text-transparent tracking-tight">
+          Welcome back, {user?.name}!
         </h1>
         <p className="text-muted-foreground">
-          {user?.role === "admin"
-            ? "Comprehensive view of your show network performance"
-            : "View your shows and revenue performance"}
+          Comprehensive view of your show network performance
         </p>
       </div>
 
