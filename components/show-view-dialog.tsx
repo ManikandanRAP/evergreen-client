@@ -43,6 +43,8 @@ import {
   ChevronLeft,
   ChevronRight,
   ChevronDown,
+  Archive,
+  RotateCcw,
 } from "lucide-react"
 import type { Show } from "@/lib/api-client"
 import { getRankingInfo } from "@/lib/ranking-utils"
@@ -157,6 +159,9 @@ interface ShowViewDialogProps {
   hasPrevious: boolean
   onEdit?: (show: Show) => void
   onDelete?: (show: Show) => void
+  onArchive?: (show: Show) => void
+  onUnarchive?: (show: Show) => void
+  isArchived?: boolean
 }
 
 export default function ShowViewDialog({
@@ -168,6 +173,9 @@ export default function ShowViewDialog({
   hasPrevious,
   onEdit,
   onDelete,
+  onArchive,
+  onUnarchive,
+  isArchived = false,
 }: ShowViewDialogProps) {
   const [animationDirection, setAnimationDirection] = useState<"next" | "previous" | null>(null)
   const [isContactOpen, setIsContactOpen] = useState(false)
@@ -325,6 +333,28 @@ export default function ShowViewDialog({
                 Delete
               </Button>
             )}
+            {onArchive && show && !isArchived && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => onArchive(show)}
+                className="h-8 px-3 text-orange-600 hover:text-orange-700 hover:bg-orange-50"
+              >
+                <Archive className="h-4 w-4 mr-1" />
+                Archive
+              </Button>
+            )}
+            {onUnarchive && show && isArchived && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => onUnarchive(show)}
+                className="h-8 px-3 text-green-600 hover:text-green-700 hover:bg-green-50"
+              >
+                <RotateCcw className="h-4 w-4 mr-1" />
+                Unarchive
+              </Button>
+            )}
             <div className="ml-4">
               <DialogClose className={buttonStyles}>
                 <X className="h-4 w-4" />
@@ -448,7 +478,7 @@ export default function ShowViewDialog({
                 </CardHeader>
                 <CardContent>
                   <div className="grid grid-cols-2 gap-6 mb-6">
-                    <DetailItem label="Ownership %" value={show.evergreen_ownership_pct ? `${show.evergreen_ownership_pct}%` : "N/A"} />
+                    <DetailItem label="EVG Ownership %" value={show.evergreen_ownership_pct ? `${show.evergreen_ownership_pct}%` : "N/A"} />
                     <DetailItem label="Latest CPM" value={show.latest_cpm_usd ? `$${show.latest_cpm_usd}` : "N/A"} />
                   </div>
                   <div className="space-y-6">
@@ -479,7 +509,7 @@ export default function ShowViewDialog({
                     </div>
                     <div>
                       <h4 className="font-semibold flex items-center gap-2 mb-3 text-base">
-                        <Percent className="h-4 w-4" /> Revenue Split
+                        <Percent className="h-4 w-4" /> Partner Split
                       </h4>
                       <div className="grid grid-cols-2 gap-3">
                         <div className="text-center p-3 bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950/20 dark:to-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
@@ -587,7 +617,7 @@ export default function ShowViewDialog({
                 <CardContent>
                   <div className="grid grid-cols-3 gap-4">
                     <DetailItem label="Age" value={show.age_demographic} />
-                    <DetailItem label="Gender" value={show.gender} />
+                    <DetailItem label="Gender (M/F)" value={show.gender} />
                     <DetailItem label="Region" value={show.region} />
                     <DetailItem label="Primary Education" value={show.primary_education} />
                     <DetailItem label="Secondary Education" value={show.secondary_education} />
@@ -597,6 +627,21 @@ export default function ShowViewDialog({
             </div>
           </div>
         </ScrollArea>
+        
+        {/* Archive Footer - Only show if show is archived */}
+        {isArchived && show && (
+          <div className="border-t bg-muted/30 px-6 py-3 flex items-center justify-center">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Archive className="h-4 w-4" />
+              <span>
+                Archived by <span className="font-medium">{show.archived_by || 'Unknown'}</span> on{' '}
+                <span className="font-medium">
+                  {show.archived_at ? new Date(show.archived_at).toLocaleString() : 'Unknown date'}
+                </span>
+              </span>
+            </div>
+          </div>
+        )}
       </DialogContent>
     </Dialog>
 

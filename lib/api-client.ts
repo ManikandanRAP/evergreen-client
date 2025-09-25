@@ -81,6 +81,10 @@ interface Show {
   evergreen_production_staff_name: string;
   qbo_show_name: string;
   qbo_show_id: string;
+  // Archive fields
+  is_archived?: boolean;
+  archived_at?: string;
+  archived_by?: string;
 }
 
 interface ShowCreate {
@@ -279,6 +283,12 @@ class ApiClient {
     const response = await fetch(url, { ...options, headers })
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}))
+      console.error(`API Error: ${response.status} - ${response.statusText}`, errorData)
+      if (response.status === 401) {
+        throw new Error("Authentication required. Please log in again.")
+      } else if (response.status === 404) {
+        throw new Error("Endpoint not found. Please check if the backend server is running with the latest code.")
+      }
       throw new Error(errorData.detail || `HTTP error! status: ${response.status}`)
     }
     if (response.status === 204) {
@@ -518,6 +528,73 @@ class ApiClient {
     return this.request<void>(`/podcasts/${showId}/partners/${partnerId}`, {
       method: "DELETE",
     })
+  }
+
+  // Archive methods
+  async archiveShow(showId: string): Promise<Show> {
+    try {
+      const response = await this.request<Show>(`/podcasts/${showId}/archive`, {
+        method: "PATCH",
+      })
+      toast.success("Show archived successfully!")
+      return response
+    } catch (error: any) {
+      toast.error(error.message || "Failed to archive show.")
+      throw error
+    }
+  }
+
+  async unarchiveShow(showId: string): Promise<Show> {
+    try {
+      const response = await this.request<Show>(`/podcasts/${showId}/unarchive`, {
+        method: "PATCH",
+      })
+      toast.success("Show unarchived successfully!")
+      return response
+    } catch (error: any) {
+      toast.error(error.message || "Failed to unarchive show.")
+      throw error
+    }
+  }
+
+  async getArchivedShows(): Promise<Show[]> {
+    try {
+      return await this.request<Show[]>("/podcasts/archived")
+    } catch (error: any) {
+      // If the error is "not found" or similar, return empty array instead of throwing
+      if (error.message?.includes("not found") || error.message?.includes("404")) {
+        return []
+      }
+      throw error
+    }
+  }
+
+  async bulkArchiveShows(showIds: string[]): Promise<{ successful: number; failed: number; message: string }> {
+    try {
+      const response = await this.request<{ successful: number; failed: number; message: string }>("/podcasts/bulk-archive", {
+        method: "PATCH",
+        body: JSON.stringify({ show_ids: showIds }),
+      })
+      toast.success(`Successfully archived ${response.successful} shows!`)
+      return response
+    } catch (error: any) {
+      toast.error(error.message || "Failed to archive shows.")
+      throw error
+    }
+  }
+
+  async bulkUnarchiveShows(showIds: string[]): Promise<{ successful: number; failed: number; message: string }> {
+    try {
+      const response = await this.request<{ successful: number; failed: number; message: string }>("/podcasts/bulk-unarchive", {
+        method: "PATCH",
+        body: JSON.stringify({ show_ids: showIds }),
+      })
+      toast.success(`Successfully unarchived ${response.successful} shows!`)
+      return response
+    } catch (error: any) {
+      toast.error(error.message || "Failed to unarchive shows.")
+      throw error
+    }
   }
 }
 

@@ -42,7 +42,7 @@ export default function LoginForm() {
       <Card className="w-full max-w-md evergreen-card shadow-2xl">
         <CardHeader className="text-center space-y-4">
           <div className="flex justify-center">
-            <Image src="/myco-beta-logo.png" alt="Myco" width={200} height={50} className="h-12 w-auto" />
+            <Image src="/myco-beta-logo.png" alt="Myco" width={200} height={50} className="h-12 w-auto" priority />
           </div>
           <CardTitle className="text-2xl font-bold bg-gradient-to-r from-emerald-600 to-cyan-600 bg-clip-text text-transparent">
             Ledger and Partner Portal

@@ -28,6 +28,7 @@ import {
   Lightbulb,
   MessageSquare,
   BarChart3,
+  Archive,
 } from "lucide-react"
 import { useTheme } from "next-themes"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
@@ -70,10 +71,11 @@ export default function DashboardNav({ onSidebarToggle }: DashboardNavProps) {
         ? [{ href: "/administrator", label: "Administrator", icon: Shield }]
         : []),
     ]
+    
   }
 
   const secondaryNavItems = [
-    ...(user?.role === "internal" ? [{ href: "/add-feature-suggestion", label: "Feature Suggestion", variant: "outline", icon: Lightbulb }] : []),
+    ...(user?.role === "internal" || user?.role === "admin" ? [{ href: "/add-feature-suggestion", label: "Feature Suggestion", variant: "outline", icon: Lightbulb }] : []),
     ...(user?.role === "admin" ? [{ href: "/feedbacks", label: "Feedbacks", variant: "outline", icon: MessageSquare }] : []),
   ]
 

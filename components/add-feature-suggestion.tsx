@@ -44,7 +44,7 @@ export default function AddFeatureSuggestion() {
   })
 
   // Check if user has access
-  if (user?.role !== "internal") {
+  if (user?.role !== "internal" && user?.role !== "admin") {
     return (
       <div className="space-y-8">
         <div>
@@ -54,7 +54,7 @@ export default function AddFeatureSuggestion() {
         <Card>
           <CardHeader>
             <CardTitle>Access Denied</CardTitle>
-            <CardDescription>This feature is only accessible to internal users.</CardDescription>
+            <CardDescription>This feature is only accessible to internal and admin users.</CardDescription>
           </CardHeader>
           <CardContent>
             <p className="text-muted-foreground">

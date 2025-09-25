@@ -33,6 +33,8 @@ import {
   User,
   Calendar,
   FileText,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react"
 import type { Feedback } from "@/lib/feedback"
 import { toast } from "sonner"
@@ -51,6 +53,8 @@ export default function Feedbacks() {
   const [sortDirection, setSortDirection] = useState<SortDirection>("original")
   const [originalOrder, setOriginalOrder] = useState<Feedback[]>([])
   const [selectedFeedback, setSelectedFeedback] = useState<Feedback | null>(null)
+  const [currentFeedbackIndex, setCurrentFeedbackIndex] = useState<number>(0)
+  const [animationDirection, setAnimationDirection] = useState<"next" | "previous" | null>(null)
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [feedbackToDelete, setFeedbackToDelete] = useState<Feedback | null>(null)
@@ -142,6 +146,37 @@ export default function Feedbacks() {
     return filtered
   }, [feedbacks, originalOrder, searchTerm, sortField, sortDirection])
 
+  // Handle keyboard navigation when dialog is open
+  useEffect(() => {
+    if (!isViewDialogOpen) {
+      // Reset animation direction when dialog closes
+      setAnimationDirection(null)
+      return
+    }
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (!isViewDialogOpen) return
+
+      if (event.key === "ArrowLeft") {
+        event.preventDefault()
+        setAnimationDirection("previous")
+        handlePreviousFeedback()
+      } else if (event.key === "ArrowRight") {
+        event.preventDefault()
+        setAnimationDirection("next")
+        handleNextFeedback()
+      }
+    }
+
+    if (isViewDialogOpen) {
+      document.addEventListener("keydown", handleKeyDown)
+    }
+
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown)
+    }
+  }, [isViewDialogOpen, currentFeedbackIndex, filteredAndSortedFeedbacks])
+
   const handleSort = (field: SortField) => {
     if (sortField === field) {
       // Cycle through: asc -> desc -> original
@@ -160,8 +195,28 @@ export default function Feedbacks() {
   }
 
   const handleViewFeedback = (feedback: Feedback) => {
+    const index = filteredAndSortedFeedbacks.findIndex(f => f.id === feedback.id)
+    setCurrentFeedbackIndex(index >= 0 ? index : 0)
     setSelectedFeedback(feedback)
     setIsViewDialogOpen(true)
+  }
+
+  const handlePreviousFeedback = () => {
+    if (currentFeedbackIndex > 0 && filteredAndSortedFeedbacks.length > 0) {
+      setAnimationDirection("previous")
+      const newIndex = currentFeedbackIndex - 1
+      setCurrentFeedbackIndex(newIndex)
+      setSelectedFeedback(filteredAndSortedFeedbacks[newIndex])
+    }
+  }
+
+  const handleNextFeedback = () => {
+    if (currentFeedbackIndex < filteredAndSortedFeedbacks.length - 1 && filteredAndSortedFeedbacks.length > 0) {
+      setAnimationDirection("next")
+      const newIndex = currentFeedbackIndex + 1
+      setCurrentFeedbackIndex(newIndex)
+      setSelectedFeedback(filteredAndSortedFeedbacks[newIndex])
+    }
   }
 
   const handleDeleteClick = (feedback: Feedback) => {
@@ -249,6 +304,13 @@ export default function Feedbacks() {
         return { className: "bg-gray-100 text-gray-800 border-gray-200" }
     }
   }
+
+  const animationClass =
+    animationDirection === "next"
+      ? "animate-in slide-in-from-right-8 fade-in-0 duration-300"
+      : animationDirection === "previous"
+      ? "animate-in slide-in-from-left-8 fade-in-0 duration-300"
+      : "" // No slide animation on initial open
   
 
   const getSortIcon = (field: SortField) => {
@@ -380,7 +442,7 @@ export default function Feedbacks() {
           </DialogHeader>
 
           {selectedFeedback && (
-            <div className="space-y-6">
+            <div key={selectedFeedback.id} className={`space-y-6 ${animationClass}`}>
               {/* Header Section */}
               <Card>
                 <CardHeader>
@@ -435,23 +497,53 @@ export default function Feedbacks() {
               </Card>
 
               {/* Actions */}
-              <div className="flex justify-end gap-3">
-                <Button
-                  variant="outline"
-                  onClick={() => setIsViewDialogOpen(false)}
-                >
-                  Cancel
-                </Button>
-                <Button
-                  variant="destructive"
-                  onClick={() => {
-                    setIsViewDialogOpen(false)
-                    handleDeleteClick(selectedFeedback)
-                  }}
-                >
-                  <Trash2 className="h-4 w-4 mr-2" />
-                  Delete Feedback
-                </Button>
+              <div className="flex justify-between items-center">
+                {/* Navigation buttons */}
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handlePreviousFeedback}
+                    disabled={currentFeedbackIndex === 0}
+                    className="flex items-center gap-1"
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                    Previous
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleNextFeedback}
+                    disabled={currentFeedbackIndex === filteredAndSortedFeedbacks.length - 1}
+                    className="flex items-center gap-1"
+                  >
+                    Next
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                  <span className="text-sm text-muted-foreground ml-2">
+                    {currentFeedbackIndex + 1} of {filteredAndSortedFeedbacks.length}
+                  </span>
+                </div>
+
+                {/* Action buttons */}
+                <div className="flex gap-3">
+                  <Button
+                    variant="outline"
+                    onClick={() => setIsViewDialogOpen(false)}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    variant="destructive"
+                    onClick={() => {
+                      setIsViewDialogOpen(false)
+                      handleDeleteClick(selectedFeedback)
+                    }}
+                  >
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Delete Feedback
+                  </Button>
+                </div>
               </div>
             </div>
           )}

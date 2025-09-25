@@ -45,6 +45,7 @@ import {
   ArrowUpDown,
   ArrowUp,
   ArrowDown,
+  Archive,
 } from "lucide-react"
 import {
   Collapsible,
@@ -184,6 +185,10 @@ export default function ShowsManagement() {
   const [importResult, setImportResult] = useState<ImportResult | null>(null)
   const [isBulkDeleting, setIsBulkDeleting] = useState(false)
   const [showBulkDeleteConfirm, setShowBulkDeleteConfirm] = useState(false)
+  const [isBulkArchiving, setIsBulkArchiving] = useState(false)
+  const [showBulkArchiveConfirm, setShowBulkArchiveConfirm] = useState(false)
+  const [showArchiveConfirm, setShowArchiveConfirm] = useState(false)
+  const [showingArchiveShow, setShowingArchiveShow] = useState<Show | null>(null)
 
   // Sorting state
   type SortField = 'name' | 'show_type' | 'isRateCard' | 'standardSplit' | 'programmaticSplit' | 'ranking_category'
@@ -246,6 +251,24 @@ export default function ShowsManagement() {
 
   const handleDeleteShow = (show: Show) => setDeletingShow(show)
 
+  const handleArchiveShow = (show: Show) => {
+    setShowingArchiveShow(show)
+    setShowArchiveConfirm(true)
+  }
+
+  const handleConfirmArchiveShow = async () => {
+    if (!showingArchiveShow) return
+
+    try {
+      await apiClient.archiveShow(showingArchiveShow.id)
+      await fetchShows()
+      setShowArchiveConfirm(false)
+      setShowingArchiveShow(null)
+    } catch (error) {
+      // Error handling is done in the API client
+    }
+  }
+
   const handleShowUpdated = async () => {
     setEditingShow(null)
     await fetchShows()
@@ -277,6 +300,43 @@ export default function ShowsManagement() {
 
   const handleBulkDelete = () => {
     setShowBulkDeleteConfirm(true)
+  }
+
+  const handleBulkArchive = () => {
+    setShowBulkArchiveConfirm(true)
+  }
+
+  const handleConfirmBulkArchive = async () => {
+    if (selectedShows.size === 0) return
+
+    setIsBulkArchiving(true)
+    try {
+      const selectedShowIds = Array.from(selectedShows)
+      
+      // Use the new bulk archive API
+      const result = await apiClient.bulkArchiveShows(selectedShowIds)
+      
+      // Clear selection after archiving
+      setSelectedShows(new Set())
+      
+      // Show appropriate success/error message
+      if (result.failed === 0) {
+        toast.success(`Successfully archived all ${result.successful} selected shows!`)
+      } else if (result.successful > 0) {
+        toast.warning(`Archived ${result.successful} shows, ${result.failed} failed`)
+      } else {
+        toast.error(`Failed to archive any shows. ${result.errors?.join(', ') || 'Unknown error'}`)
+      }
+
+      // Refresh the shows list
+      await fetchShows()
+    } catch (error: any) {
+      console.error("Bulk archive error:", error)
+      toast.error(error.message || "Failed to archive shows")
+    } finally {
+      setIsBulkArchiving(false)
+      setShowBulkArchiveConfirm(false)
+    }
   }
 
   const handleConfirmBulkDelete = async () => {
@@ -797,6 +857,15 @@ export default function ShowsManagement() {
               <List className="h-4 w-4" />
             </Button>
           </div>
+
+          <Button
+            variant="outline"
+            onClick={() => window.location.href = "/archived-shows"}
+            className="flex items-center gap-2 text-orange-600 hover:text-orange-700 hover:bg-orange-50 border-orange-200 hover:border-orange-300"
+          >
+            <Archive className="h-4 w-4" />
+            Archived Shows
+          </Button>
 
           {user?.role === "admin" && (
             <Button
@@ -1443,18 +1512,29 @@ export default function ShowsManagement() {
                   <span className="text-sm text-muted-foreground">{selectedShows.size} selected</span>
                   {selectedShows.size > 0 && (
                     <>
-                      <Button variant="outline" size="sm" onClick={() => setSelectedShows(new Set())}>
-                        Clear Selection
-                      </Button>
-                      <Button 
-                        variant="destructive" 
-                        size="sm" 
-                        onClick={handleBulkDelete}
-                        disabled={isBulkDeleting}
-                      >
-                        <Trash2 className="h-4 w-4 mr-2" />
-                        {isBulkDeleting ? "Deleting..." : "Delete Selected Shows"}
-                      </Button>
+                      {user?.role === "admin" && (
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          onClick={handleBulkArchive}
+                          disabled={isBulkArchiving}
+                          className="text-orange-600 hover:text-orange-700 hover:bg-orange-50 border-orange-200 hover:border-orange-300"
+                        >
+                          <Archive className="h-4 w-4 mr-2" />
+                          {isBulkArchiving ? "Archiving..." : "Archive Selected Shows"}
+                        </Button>
+                      )}
+                      {user?.role === "admin" && (
+                        <Button 
+                          variant="destructive" 
+                          size="sm" 
+                          onClick={handleBulkDelete}
+                          disabled={isBulkDeleting}
+                        >
+                          <Trash2 className="h-4 w-4 mr-2" />
+                          {isBulkDeleting ? "Deleting..." : "Delete Selected Shows"}
+                        </Button>
+                      )}
                     </>
                   )}
                 </div>
@@ -1497,7 +1577,7 @@ export default function ShowsManagement() {
               </div>
             )}
             
-            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-7 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 gap-6">
               {paginatedShows.map((show) => (
             <Card
               key={show.id}
@@ -1573,17 +1653,27 @@ export default function ShowsManagement() {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => handleEditShow(show)}>
-                          <Edit className="h-4 w-4 mr-2" />
-                          Edit
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          className="text-red-600 focus:text-red-700"
-                          onClick={() => handleDeleteShow(show)}
-                        >
-                          <Trash2 className="h-4 w-4 mr-2" />
-                          Delete
-                        </DropdownMenuItem>
+                        {user?.role === "admin" && (
+                          <DropdownMenuItem onClick={() => handleEditShow(show)}>
+                            <Edit className="h-4 w-4 mr-2" />
+                            Edit
+                          </DropdownMenuItem>
+                        )}
+                        {user?.role === "admin" && (
+                          <DropdownMenuItem onClick={() => handleArchiveShow(show)} className="text-orange-600 focus:text-orange-700">
+                            <Archive className="h-4 w-4 mr-2" />
+                            Archive
+                          </DropdownMenuItem>
+                        )}
+                        {user?.role === "admin" && (
+                          <DropdownMenuItem
+                            className="text-red-600 focus:text-red-700"
+                            onClick={() => handleDeleteShow(show)}
+                          >
+                            <Trash2 className="h-4 w-4 mr-2" />
+                            Delete
+                          </DropdownMenuItem>
+                        )}
                       </DropdownMenuContent>
                     </DropdownMenu>
                   )}
@@ -1609,18 +1699,29 @@ export default function ShowsManagement() {
                   <span className="text-sm text-muted-foreground">{selectedShows.size} selected</span>
                   {selectedShows.size > 0 && (
                     <>
-                      <Button variant="outline" size="sm" onClick={() => setSelectedShows(new Set())}>
-                        Clear Selection
-                      </Button>
-                      <Button 
-                        variant="destructive" 
-                        size="sm" 
-                        onClick={handleBulkDelete}
-                        disabled={isBulkDeleting}
-                      >
-                        <Trash2 className="h-4 w-4 mr-2" />
-                        {isBulkDeleting ? "Deleting..." : "Delete Selected Shows"}
-                      </Button>
+                      {user?.role === "admin" && (
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          onClick={handleBulkArchive}
+                          disabled={isBulkArchiving}
+                          className="text-orange-600 hover:text-orange-700 hover:bg-orange-50 border-orange-200 hover:border-orange-300"
+                        >
+                          <Archive className="h-4 w-4 mr-2" />
+                          {isBulkArchiving ? "Archiving..." : "Archive Selected Shows"}
+                        </Button>
+                      )}
+                      {user?.role === "admin" && (
+                        <Button 
+                          variant="destructive" 
+                          size="sm" 
+                          onClick={handleBulkDelete}
+                          disabled={isBulkDeleting}
+                        >
+                          <Trash2 className="h-4 w-4 mr-2" />
+                          {isBulkDeleting ? "Deleting..." : "Delete Selected Shows"}
+                        </Button>
+                      )}
                     </>
                   )}
                 </div>
@@ -1683,18 +1784,29 @@ export default function ShowsManagement() {
                   <span className="text-sm text-muted-foreground">{selectedShows.size} selected</span>
                   {selectedShows.size > 0 && (
                     <>
-                      <Button variant="outline" size="sm" onClick={() => setSelectedShows(new Set())}>
-                        Clear Selection
-                      </Button>
-                      <Button 
-                        variant="destructive" 
-                        size="sm" 
-                        onClick={handleBulkDelete}
-                        disabled={isBulkDeleting}
-                      >
-                        <Trash2 className="h-4 w-4 mr-2" />
-                        {isBulkDeleting ? "Deleting..." : "Delete Selected Shows"}
-                      </Button>
+                      {user?.role === "admin" && (
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          onClick={handleBulkArchive}
+                          disabled={isBulkArchiving}
+                          className="text-orange-600 hover:text-orange-700 hover:bg-orange-50 border-orange-200 hover:border-orange-300"
+                        >
+                          <Archive className="h-4 w-4 mr-2" />
+                          {isBulkArchiving ? "Archiving..." : "Archive Selected Shows"}
+                        </Button>
+                      )}
+                      {user?.role === "admin" && (
+                        <Button 
+                          variant="destructive" 
+                          size="sm" 
+                          onClick={handleBulkDelete}
+                          disabled={isBulkDeleting}
+                        >
+                          <Trash2 className="h-4 w-4 mr-2" />
+                          {isBulkDeleting ? "Deleting..." : "Delete Selected Shows"}
+                        </Button>
+                      )}
                     </>
                   )}
                 </div>
@@ -1863,6 +1975,10 @@ export default function ShowsManagement() {
                                   <Edit className="h-4 w-4 mr-2" />
                                   Edit
                                 </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => handleArchiveShow(show)} className="text-orange-600 focus:text-orange-700">
+                                  <Archive className="h-4 w-4 mr-2" />
+                                  Archive
+                                </DropdownMenuItem>
                                 <DropdownMenuItem
                                   className="text-red-600 focus:text-red-700"
                                   onClick={() => handleDeleteShow(show)}
@@ -1897,18 +2013,29 @@ export default function ShowsManagement() {
                   <span className="text-sm text-muted-foreground">{selectedShows.size} selected</span>
                   {selectedShows.size > 0 && (
                     <>
-                      <Button variant="outline" size="sm" onClick={() => setSelectedShows(new Set())}>
-                        Clear Selection
-                      </Button>
-                      <Button 
-                        variant="destructive" 
-                        size="sm" 
-                        onClick={handleBulkDelete}
-                        disabled={isBulkDeleting}
-                      >
-                        <Trash2 className="h-4 w-4 mr-2" />
-                        {isBulkDeleting ? "Deleting..." : "Delete Selected Shows"}
-                      </Button>
+                      {user?.role === "admin" && (
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          onClick={handleBulkArchive}
+                          disabled={isBulkArchiving}
+                          className="text-orange-600 hover:text-orange-700 hover:bg-orange-50 border-orange-200 hover:border-orange-300"
+                        >
+                          <Archive className="h-4 w-4 mr-2" />
+                          {isBulkArchiving ? "Archiving..." : "Archive Selected Shows"}
+                        </Button>
+                      )}
+                      {user?.role === "admin" && (
+                        <Button 
+                          variant="destructive" 
+                          size="sm" 
+                          onClick={handleBulkDelete}
+                          disabled={isBulkDeleting}
+                        >
+                          <Trash2 className="h-4 w-4 mr-2" />
+                          {isBulkDeleting ? "Deleting..." : "Delete Selected Shows"}
+                        </Button>
+                      )}
                     </>
                   )}
                 </div>
@@ -2000,9 +2127,72 @@ export default function ShowsManagement() {
         onNavigate={handleNavigate}
         hasNext={viewingShowIndex !== null && viewingShowIndex < filteredShows.length - 1}
         hasPrevious={viewingShowIndex !== null && viewingShowIndex > 0}
-        onEdit={handleEditShow}
-        onDelete={handleDeleteShow}
+        onEdit={user?.role === "admin" ? handleEditShow : undefined}
+        onDelete={user?.role === "admin" ? handleDeleteShow : undefined}
+        onArchive={user?.role === "admin" ? handleArchiveShow : undefined}
+        isArchived={false}
       />
+
+      {/* Individual Archive Confirmation Dialog */}
+      <AlertDialog open={showArchiveConfirm} onOpenChange={setShowArchiveConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2 text-orange-600">
+              <Archive className="h-5 w-5" />
+              Archive Show
+            </AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-2">
+                <p>Are you sure you want to archive <strong>{showingArchiveShow?.title}</strong>?</p>
+                <p>This will move the show to the archived shows page where it can be unarchived later.</p>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setShowArchiveConfirm(false)}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleConfirmArchiveShow}
+              className="bg-orange-600 hover:bg-orange-700 focus:ring-orange-600"
+            >
+              <Archive className="h-4 w-4 mr-2" />
+              Archive Show
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Bulk Archive Confirmation Dialog */}
+      <AlertDialog open={showBulkArchiveConfirm} onOpenChange={setShowBulkArchiveConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2 text-orange-600">
+              <Archive className="h-5 w-5" />
+              Archive Selected Shows
+            </AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-2">
+                <p>Are you sure you want to archive {selectedShows.size} selected show{selectedShows.size > 1 ? 's' : ''}?</p>
+                <p>This will move the shows to the archived shows page where they can be unarchived later.</p>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setShowBulkArchiveConfirm(false)}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleConfirmBulkArchive}
+              disabled={isBulkArchiving}
+              className="bg-orange-600 hover:bg-orange-700 focus:ring-orange-600"
+            >
+              <Archive className="h-4 w-4 mr-2" />
+              {isBulkArchiving ? "Archiving..." : `Archive ${selectedShows.size} Show${selectedShows.size > 1 ? 's' : ''}`}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* Bulk Delete Confirmation Dialog */}
       <AlertDialog open={showBulkDeleteConfirm} onOpenChange={setShowBulkDeleteConfirm}>
