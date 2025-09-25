@@ -861,7 +861,7 @@ export default function ShowsManagement() {
           <Button
             variant="outline"
             onClick={() => window.location.href = "/archived-shows"}
-            className="flex items-center gap-2 text-orange-600 hover:text-orange-700 hover:bg-orange-50 border-orange-200 hover:border-orange-300"
+            className="flex items-center gap-2 text-orange-600 hover:text-orange-700 hover:bg-orange-50 dark:hover:bg-orange-900/20 border-orange-200 hover:border-orange-300 dark:border-orange-800 dark:hover:border-orange-700"
           >
             <Archive className="h-4 w-4" />
             Archived Shows
@@ -871,7 +871,7 @@ export default function ShowsManagement() {
             <Button
               variant="outline"
               onClick={() => setIsImportDialogOpen(true)}
-              className="flex items-center gap-2 bg-transparent"
+              className="flex items-center gap-2 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 border-emerald-200 hover:border-emerald-300 dark:border-emerald-800 dark:hover:border-emerald-700"
             >
               <Upload className="h-4 w-4" />
               Import CSV
@@ -881,7 +881,7 @@ export default function ShowsManagement() {
           <Button
             variant="outline"
             onClick={handleExportCSV}
-            className="flex items-center gap-2 bg-transparent"
+            className="flex items-center gap-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50 dark:hover:bg-blue-900/20 border-blue-200 hover:border-blue-300 dark:border-blue-800 dark:hover:border-blue-700"
           >
             <Download className="h-4 w-4" />
             Export CSV
@@ -1504,7 +1504,7 @@ export default function ShowsManagement() {
                     variant="outline"
                     size="sm"
                     onClick={handleSelectAll}
-                    className="flex items-center gap-2 bg-transparent"
+                    className="flex items-center gap-2 hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50 border-border hover:border-border"
                   >
                     <Check className="h-4 w-4" />
                     {selectedShows.size === filteredShows.length ? "Deselect All" : "Select All"}
@@ -1518,7 +1518,7 @@ export default function ShowsManagement() {
                           size="sm" 
                           onClick={handleBulkArchive}
                           disabled={isBulkArchiving}
-                          className="text-orange-600 hover:text-orange-700 hover:bg-orange-50 border-orange-200 hover:border-orange-300"
+                          className="text-orange-600 hover:text-orange-700 hover:bg-orange-50 dark:hover:bg-orange-900/20 border-orange-200 hover:border-orange-300 dark:border-orange-800 dark:hover:border-orange-700"
                         >
                           <Archive className="h-4 w-4 mr-2" />
                           {isBulkArchiving ? "Archiving..." : "Archive Selected Shows"}
@@ -1639,7 +1639,7 @@ export default function ShowsManagement() {
                   <Button
                     variant="outline"
                     size="sm"
-                    className="h-8 px-3 bg-transparent"
+                    className="h-8 px-3 hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50 border-border hover:border-border"
                     onClick={() => handleViewShow(show)}
                   >
                     <Eye className="h-4 w-4 mr-1" />
@@ -1648,7 +1648,7 @@ export default function ShowsManagement() {
                   {user?.role === "admin" && (
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button variant="outline" size="sm" className="h-8 px-2 bg-transparent">
+                        <Button variant="outline" size="sm" className="h-8 px-2 hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50 border-border hover:border-border">
                           <MoreHorizontal className="h-4 w-4" />
                         </Button>
                       </DropdownMenuTrigger>
@@ -1691,7 +1691,7 @@ export default function ShowsManagement() {
                     variant="outline"
                     size="sm"
                     onClick={handleSelectAll}
-                    className="flex items-center gap-2 bg-transparent"
+                    className="flex items-center gap-2 hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50 border-border hover:border-border"
                   >
                     <Check className="h-4 w-4" />
                     {selectedShows.size === filteredShows.length ? "Deselect All" : "Select All"}
@@ -1705,7 +1705,7 @@ export default function ShowsManagement() {
                           size="sm" 
                           onClick={handleBulkArchive}
                           disabled={isBulkArchiving}
-                          className="text-orange-600 hover:text-orange-700 hover:bg-orange-50 border-orange-200 hover:border-orange-300"
+                          className="text-orange-600 hover:text-orange-700 hover:bg-orange-50 dark:hover:bg-orange-900/20 border-orange-200 hover:border-orange-300 dark:border-orange-800 dark:hover:border-orange-700"
                         >
                           <Archive className="h-4 w-4 mr-2" />
                           {isBulkArchiving ? "Archiving..." : "Archive Selected Shows"}
@@ -1776,7 +1776,7 @@ export default function ShowsManagement() {
                     variant="outline"
                     size="sm"
                     onClick={handleSelectAll}
-                    className="flex items-center gap-2 bg-transparent"
+                    className="flex items-center gap-2 hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50 border-border hover:border-border"
                   >
                     <Check className="h-4 w-4" />
                     {selectedShows.size === filteredShows.length ? "Deselect All" : "Select All"}
@@ -1790,7 +1790,7 @@ export default function ShowsManagement() {
                           size="sm" 
                           onClick={handleBulkArchive}
                           disabled={isBulkArchiving}
-                          className="text-orange-600 hover:text-orange-700 hover:bg-orange-50 border-orange-200 hover:border-orange-300"
+                          className="text-orange-600 hover:text-orange-700 hover:bg-orange-50 dark:hover:bg-orange-900/20 border-orange-200 hover:border-orange-300 dark:border-orange-800 dark:hover:border-orange-700"
                         >
                           <Archive className="h-4 w-4 mr-2" />
                           {isBulkArchiving ? "Archiving..." : "Archive Selected Shows"}
@@ -2005,7 +2005,7 @@ export default function ShowsManagement() {
                     variant="outline"
                     size="sm"
                     onClick={handleSelectAll}
-                    className="flex items-center gap-2 bg-transparent"
+                    className="flex items-center gap-2 hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50 border-border hover:border-border"
                   >
                     <Check className="h-4 w-4" />
                     {selectedShows.size === filteredShows.length ? "Deselect All" : "Select All"}
@@ -2019,7 +2019,7 @@ export default function ShowsManagement() {
                           size="sm" 
                           onClick={handleBulkArchive}
                           disabled={isBulkArchiving}
-                          className="text-orange-600 hover:text-orange-700 hover:bg-orange-50 border-orange-200 hover:border-orange-300"
+                          className="text-orange-600 hover:text-orange-700 hover:bg-orange-50 dark:hover:bg-orange-900/20 border-orange-200 hover:border-orange-300 dark:border-orange-800 dark:hover:border-orange-700"
                         >
                           <Archive className="h-4 w-4 mr-2" />
                           {isBulkArchiving ? "Archiving..." : "Archive Selected Shows"}

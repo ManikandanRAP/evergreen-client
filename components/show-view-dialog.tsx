@@ -318,7 +318,7 @@ export default function ShowViewDialog({
                 variant="outline"
                 size="sm"
                 onClick={() => onEdit(show)}
-                className="h-8 px-3"
+                className="h-8 px-3 text-blue-600 hover:text-blue-700 hover:bg-blue-50 dark:hover:bg-blue-900/20 border-blue-200 hover:border-blue-300 dark:border-blue-800 dark:hover:border-blue-700"
               >
                 Edit
               </Button>
@@ -338,7 +338,7 @@ export default function ShowViewDialog({
                 variant="outline"
                 size="sm"
                 onClick={() => onArchive(show)}
-                className="h-8 px-3 text-orange-600 hover:text-orange-700 hover:bg-orange-50"
+                className="h-8 px-3 text-orange-600 hover:text-orange-700 hover:bg-orange-50 dark:hover:bg-orange-900/20 border-orange-200 hover:border-orange-300 dark:border-orange-800 dark:hover:border-orange-700"
               >
                 <Archive className="h-4 w-4 mr-1" />
                 Archive
@@ -349,7 +349,7 @@ export default function ShowViewDialog({
                 variant="outline"
                 size="sm"
                 onClick={() => onUnarchive(show)}
-                className="h-8 px-3 text-green-600 hover:text-green-700 hover:bg-green-50"
+                className="h-8 px-3 text-green-600 hover:text-green-700 hover:bg-green-50 dark:hover:bg-green-900/20 border-green-200 hover:border-green-300 dark:border-green-800 dark:hover:border-green-700"
               >
                 <RotateCcw className="h-4 w-4 mr-1" />
                 Unarchive

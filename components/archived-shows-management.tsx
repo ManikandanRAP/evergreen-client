@@ -544,7 +544,7 @@ export default function ArchivedShowsManagement() {
                     variant="outline"
                     size="sm"
                     onClick={handleSelectAll}
-                    className="flex items-center gap-2 bg-transparent"
+                    className="flex items-center gap-2 hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50 border-border hover:border-border"
                   >
                     <Check className="h-4 w-4" />
                     {selectedShows.size === filteredShows.length ? "Deselect All" : "Select All"}
@@ -558,7 +558,7 @@ export default function ArchivedShowsManagement() {
                           size="sm" 
                           onClick={handleBulkUnarchive}
                           disabled={isBulkUnarchiving}
-                          className="text-green-600 hover:text-green-700 hover:bg-green-50 border-green-200 hover:border-green-300"
+                          className="text-green-600 hover:text-green-700 hover:bg-green-50 dark:hover:bg-green-900/20 border-green-200 hover:border-green-300 dark:border-green-800 dark:hover:border-green-700"
                         >
                           <RotateCcw className="h-4 w-4 mr-2" />
                           {isBulkUnarchiving ? "Unarchiving..." : "Unarchive Selected Shows"}
@@ -679,7 +679,7 @@ export default function ArchivedShowsManagement() {
                   <Button
                     variant="outline"
                     size="sm"
-                    className="h-8 px-3 bg-transparent"
+                    className="h-8 px-3 hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50 border-border hover:border-border"
                     onClick={() => handleViewShow(show)}
                   >
                     <Eye className="h-4 w-4 mr-1" />
@@ -688,7 +688,7 @@ export default function ArchivedShowsManagement() {
                   {user?.role === "admin" && (
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button variant="outline" size="sm" className="h-8 px-2 bg-transparent">
+                        <Button variant="outline" size="sm" className="h-8 px-2 hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50 border-border hover:border-border">
                           <MoreHorizontal className="h-4 w-4" />
                         </Button>
                       </DropdownMenuTrigger>
@@ -731,7 +731,7 @@ export default function ArchivedShowsManagement() {
                     variant="outline"
                     size="sm"
                     onClick={handleSelectAll}
-                    className="flex items-center gap-2 bg-transparent"
+                    className="flex items-center gap-2 hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50 border-border hover:border-border"
                   >
                     <Check className="h-4 w-4" />
                     {selectedShows.size === filteredShows.length ? "Deselect All" : "Select All"}
@@ -745,7 +745,7 @@ export default function ArchivedShowsManagement() {
                           size="sm" 
                           onClick={handleBulkUnarchive}
                           disabled={isBulkUnarchiving}
-                          className="text-green-600 hover:text-green-700 hover:bg-green-50 border-green-200 hover:border-green-300"
+                          className="text-green-600 hover:text-green-700 hover:bg-green-50 dark:hover:bg-green-900/20 border-green-200 hover:border-green-300 dark:border-green-800 dark:hover:border-green-700"
                         >
                           <RotateCcw className="h-4 w-4 mr-2" />
                           {isBulkUnarchiving ? "Unarchiving..." : "Unarchive Selected Shows"}
@@ -816,7 +816,7 @@ export default function ArchivedShowsManagement() {
                     variant="outline"
                     size="sm"
                     onClick={handleSelectAll}
-                    className="flex items-center gap-2 bg-transparent"
+                    className="flex items-center gap-2 hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50 border-border hover:border-border"
                   >
                     <Check className="h-4 w-4" />
                     {selectedShows.size === filteredShows.length ? "Deselect All" : "Select All"}
@@ -830,7 +830,7 @@ export default function ArchivedShowsManagement() {
                           size="sm" 
                           onClick={handleBulkUnarchive}
                           disabled={isBulkUnarchiving}
-                          className="text-green-600 hover:text-green-700 hover:bg-green-50 border-green-200 hover:border-green-300"
+                          className="text-green-600 hover:text-green-700 hover:bg-green-50 dark:hover:bg-green-900/20 border-green-200 hover:border-green-300 dark:border-green-800 dark:hover:border-green-700"
                         >
                           <RotateCcw className="h-4 w-4 mr-2" />
                           {isBulkUnarchiving ? "Unarchiving..." : "Unarchive Selected Shows"}
@@ -1041,7 +1041,7 @@ export default function ArchivedShowsManagement() {
                     variant="outline"
                     size="sm"
                     onClick={handleSelectAll}
-                    className="flex items-center gap-2 bg-transparent"
+                    className="flex items-center gap-2 hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50 border-border hover:border-border"
                   >
                     <Check className="h-4 w-4" />
                     {selectedShows.size === filteredShows.length ? "Deselect All" : "Select All"}
@@ -1055,7 +1055,7 @@ export default function ArchivedShowsManagement() {
                           size="sm" 
                           onClick={handleBulkUnarchive}
                           disabled={isBulkUnarchiving}
-                          className="text-green-600 hover:text-green-700 hover:bg-green-50 border-green-200 hover:border-green-300"
+                          className="text-green-600 hover:text-green-700 hover:bg-green-50 dark:hover:bg-green-900/20 border-green-200 hover:border-green-300 dark:border-green-800 dark:hover:border-green-700"
                         >
                           <RotateCcw className="h-4 w-4 mr-2" />
                           {isBulkUnarchiving ? "Unarchiving..." : "Unarchive Selected Shows"}
