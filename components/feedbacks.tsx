@@ -159,11 +159,9 @@ export default function Feedbacks() {
 
       if (event.key === "ArrowLeft") {
         event.preventDefault()
-        setAnimationDirection("previous")
         handlePreviousFeedback()
       } else if (event.key === "ArrowRight") {
         event.preventDefault()
-        setAnimationDirection("next")
         handleNextFeedback()
       }
     }
@@ -207,6 +205,11 @@ export default function Feedbacks() {
       const newIndex = currentFeedbackIndex - 1
       setCurrentFeedbackIndex(newIndex)
       setSelectedFeedback(filteredAndSortedFeedbacks[newIndex])
+      
+      // Reset animation direction after animation completes
+      setTimeout(() => {
+        setAnimationDirection(null)
+      }, 300)
     }
   }
 
@@ -216,6 +219,11 @@ export default function Feedbacks() {
       const newIndex = currentFeedbackIndex + 1
       setCurrentFeedbackIndex(newIndex)
       setSelectedFeedback(filteredAndSortedFeedbacks[newIndex])
+      
+      // Reset animation direction after animation completes
+      setTimeout(() => {
+        setAnimationDirection(null)
+      }, 300)
     }
   }
 
@@ -307,9 +315,9 @@ export default function Feedbacks() {
 
   const animationClass =
     animationDirection === "next"
-      ? "animate-in slide-in-from-right-8 fade-in-0 duration-300"
+      ? "animate-in slide-in-from-right-2 fade-in-0 duration-300"
       : animationDirection === "previous"
-      ? "animate-in slide-in-from-left-8 fade-in-0 duration-300"
+      ? "animate-in slide-in-from-left-2 fade-in-0 duration-300"
       : "" // No slide animation on initial open
   
 
@@ -435,14 +443,18 @@ export default function Feedbacks() {
 
       {/* View Feedback Dialog */}
       <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto overflow-x-hidden">
+          <div className="min-h-0 flex flex-col">
           <DialogHeader>
             <DialogTitle className="text-2xl">Feedback Details</DialogTitle>
             <DialogDescription>Complete information about this feedback submission</DialogDescription>
           </DialogHeader>
 
           {selectedFeedback && (
-            <div key={selectedFeedback.id} className={`space-y-6 ${animationClass}`}>
+            <div 
+              key={selectedFeedback.id} 
+              className={`space-y-6 transition-all duration-300 overflow-hidden ${animationClass}`}
+            >
               {/* Header Section */}
               <Card>
                 <CardHeader>
@@ -547,6 +559,7 @@ export default function Feedbacks() {
               </div>
             </div>
           )}
+          </div>
         </DialogContent>
       </Dialog>
 
