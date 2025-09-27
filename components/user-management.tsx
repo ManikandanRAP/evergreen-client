@@ -582,7 +582,7 @@ export default function UserManagement({ onBack }: UserManagementProps) {
             <div className="flex items-center space-x-2">
               <Users className="h-4 w-4 text-orange-600" />
               <div>
-                <p className="text-sm font-medium text-orange-700 dark:text-orange-300">Internal - Full Access</p>
+                <p className="text-sm font-medium text-orange-700 dark:text-orange-300">Full Access Internals</p>
                 <p className="text-2xl font-bold text-orange-600">{userStats.internalFullAccess}</p>
               </div>
             </div>
@@ -593,7 +593,7 @@ export default function UserManagement({ onBack }: UserManagementProps) {
             <div className="flex items-center space-x-2">
               <Users className="h-4 w-4 text-blue-600" />
               <div>
-                <p className="text-sm font-medium text-blue-700 dark:text-blue-300">Internal - Show Access</p>
+                <p className="text-sm font-medium text-blue-700 dark:text-blue-300">Show Access Internals</p>
                 <p className="text-2xl font-bold text-blue-600">{userStats.internalShowAccess}</p>
               </div>
             </div>
