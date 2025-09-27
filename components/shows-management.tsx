@@ -269,6 +269,13 @@ export default function ShowsManagement() {
     }
   }
 
+  const handleArchiveFromDialog = (show: Show) => {
+    setShowingArchiveShow(show)
+    setShowArchiveConfirm(true)
+    // Close the show view dialog first
+    setViewingShowIndex(null)
+  }
+
   const handleShowUpdated = async () => {
     setEditingShow(null)
     await fetchShows()
@@ -395,7 +402,7 @@ export default function ShowsManagement() {
       "Genre", "Age Demographic", "Gender Demographic (M/F)", "Region Demographic", "Average Length (Minutes)", "Ad Slots",
       
       // 4. Financial Data
-      "Latest CPM", "Revenue 2023", "Revenue 2024", "Revenue 2025",
+      "Span CPM", "Latest CPM", "Revenue 2023", "Revenue 2024", "Revenue 2025",
       
       // 5. Revenue Distribution Percentages (with standard_ads_percent and programmatic_ads_span_percent first)
       "Standard Ads (%)", "Programmatic Ads/Span (%)", "Side Bonus (%)", "YouTube Ads (%)",
@@ -445,6 +452,7 @@ export default function ShowsManagement() {
       show.ad_slots || "",
       
       // 4. Financial Data
+      show.span_cpm_usd || "",
       show.latest_cpm_usd || "",
       show.revenue_2023 || "",
       show.revenue_2024 || "",
@@ -948,7 +956,7 @@ export default function ShowsManagement() {
                     <Filter className="h-5 w-5" />
                     Filters
                   </CardTitle>
-                  <Badge variant="secondary">
+                  <Badge className="px-3 py-1 bg-green-100 text-green-800 border-green-200 dark:bg-green-900/50 dark:text-green-300 dark:border-green-700 hover:bg-green-100 hover:text-green-800 dark:hover:bg-green-900/50 dark:hover:text-green-300">
                     {filteredShows.length} Show{filteredShows.length !== 1 ? "s" : ""}
                   </Badge>
                 </div>
@@ -2129,7 +2137,7 @@ export default function ShowsManagement() {
         hasPrevious={viewingShowIndex !== null && viewingShowIndex > 0}
         onEdit={user?.role === "admin" ? handleEditShow : undefined}
         onDelete={user?.role === "admin" ? handleDeleteShow : undefined}
-        onArchive={user?.role === "admin" ? handleArchiveShow : undefined}
+        onArchive={user?.role === "admin" ? handleArchiveFromDialog : undefined}
         isArchived={false}
       />
 

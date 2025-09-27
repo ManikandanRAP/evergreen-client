@@ -3,7 +3,7 @@
 import { createContext, useContext, useState, useEffect, type ReactNode } from "react"
 import { apiClient, type User, type LoginCredentials } from "./api-client"
 
-export type UserRole = "admin" | "partner" | "internal"
+export type UserRole = "admin" | "partner" | "internal_full_access" | "internal_show_access"
 
 interface AuthContextType {
   user: User | null

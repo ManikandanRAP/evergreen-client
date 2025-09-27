@@ -2,6 +2,7 @@
 
 import { useState, useMemo, useEffect } from "react"
 import { useAuth } from "@/lib/auth-context"
+import { useUserMapping } from "@/hooks/use-user-mapping"
 import { apiClient, Show } from "@/lib/api-client"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
@@ -78,6 +79,7 @@ const getProgrammaticSplit = (show: Show) =>
 
 export default function ArchivedShowsManagement() {
   const { user } = useAuth()
+  const { getUserName, fetchUsers } = useUserMapping()
   const [archivedShows, setArchivedShows] = useState<Show[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -111,6 +113,17 @@ export default function ArchivedShowsManagement() {
     try {
       const shows = await apiClient.getArchivedShows()
       setArchivedShows(shows)
+      
+      // Fetch user data for archived_by_id fields
+      const userIds: string[] = []
+      shows.forEach(show => {
+        if (show.archived_by_id && show.archived_by_id !== 'system' && show.archived_by_id !== 'unknown') {
+          userIds.push(show.archived_by_id)
+        }
+      })
+      if (userIds.length > 0) {
+        fetchUsers(userIds)
+      }
     } catch (error: any) {
       console.error("Failed to fetch archived shows:", error)
       setError(error.message || "Failed to load archived shows")
@@ -161,7 +174,10 @@ export default function ArchivedShowsManagement() {
     // Note: Edit functionality removed for archived shows
   }
 
-  const handleDeleteShow = (show: Show) => setDeletingShow(show)
+  const handleDeleteShow = (show: Show) => {
+    setDeletingShow(show)
+    setViewingShowIndex(null) // Close the show view dialog
+  }
 
   const handleUnarchiveShow = (show: Show) => {
     setShowingUnarchiveShow(show)
@@ -180,6 +196,13 @@ export default function ArchivedShowsManagement() {
     } catch (error) {
       // Error handling is done in the API client
     }
+  }
+
+  const handleUnarchiveFromDialog = (show: Show) => {
+    setShowingUnarchiveShow(show)
+    setShowUnarchiveConfirm(true)
+    // Close the show view dialog first
+    setViewingShowIndex(null)
   }
 
   const handleShowDeleted = async () => {
@@ -479,7 +502,7 @@ export default function ArchivedShowsManagement() {
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
           {/* Show Numbers - Moved to left */}
           <div className="flex items-center gap-2">
-            <Badge variant="secondary" className="text-sm whitespace-nowrap">
+            <Badge className="px-3 py-1 bg-orange-100 text-orange-800 border-orange-200 dark:bg-orange-900/50 dark:text-orange-300 dark:border-orange-700">
               {filteredShows.length} Archived Shows
             </Badge>
             {searchTerm && (
@@ -693,12 +716,6 @@ export default function ArchivedShowsManagement() {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        {user?.role === "admin" && (
-                          <DropdownMenuItem onClick={() => handleEditShow(show)}>
-                            <Edit className="h-4 w-4 mr-2" />
-                            Edit
-                          </DropdownMenuItem>
-                        )}
                         {user?.role === "admin" && (
                           <DropdownMenuItem onClick={() => handleUnarchiveShow(show)} className="text-green-600 focus:text-green-700">
                             <RotateCcw className="h-4 w-4 mr-2" />
@@ -969,7 +986,7 @@ export default function ArchivedShowsManagement() {
                         </span>
                       </td>
                       <td className="pl-6 pr-6 py-2 border-r">
-                        {show.archived_by || "Unknown"}
+                        {getUserName(show.archived_by_id, show.archived_by)}
                       </td>
                       <td className="pl-6 pr-6 py-2 border-r">
                         {show.archived_at ? new Date(show.archived_at).toLocaleDateString() : "Unknown"}
@@ -1007,10 +1024,6 @@ export default function ArchivedShowsManagement() {
                                 </Button>
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="end">
-                                <DropdownMenuItem onClick={() => handleEditShow(show)}>
-                                  <Edit className="h-4 w-4 mr-2" />
-                                  Edit
-                                </DropdownMenuItem>
                                 <DropdownMenuItem onClick={() => handleUnarchiveShow(show)} className="text-green-600 focus:text-green-700">
                                   <RotateCcw className="h-4 w-4 mr-2" />
                                   Unarchive
@@ -1151,9 +1164,9 @@ export default function ArchivedShowsManagement() {
         onNavigate={handleNavigate}
         hasNext={viewingShowIndex !== null && viewingShowIndex < filteredShows.length - 1}
         hasPrevious={viewingShowIndex !== null && viewingShowIndex > 0}
-        onEdit={user?.role === "admin" ? handleEditShow : undefined}
+        onEdit={undefined}
         onDelete={user?.role === "admin" ? handleDeleteShow : undefined}
-        onUnarchive={user?.role === "admin" ? handleUnarchiveShow : undefined}
+        onUnarchive={user?.role === "admin" ? handleUnarchiveFromDialog : undefined}
         isArchived={true}
       />
 

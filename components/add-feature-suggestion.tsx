@@ -44,7 +44,7 @@ export default function AddFeatureSuggestion() {
   })
 
   // Check if user has access
-  if (user?.role !== "internal" && user?.role !== "admin") {
+  if (user?.role !== "internal_full_access" && user?.role !== "internal_show_access" && user?.role !== "admin") {
     return (
       <div className="space-y-8">
         <div>

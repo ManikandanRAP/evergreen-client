@@ -63,6 +63,7 @@ const CSV_HEADER_MAPPING: Record<string, string> = {
   "Ad Slots": "ad_slots",
   
   // 4. Financial Data
+  "Span CPM": "span_cpm_usd",
   "Latest CPM": "latest_cpm_usd",
   "Revenue 2023": "revenue_2023",
   "Revenue 2024": "revenue_2024", 
@@ -138,7 +139,7 @@ const CSV_HEADERS = [
   "Genre", "Age Demographic", "Gender Demographic (M/F)", "Region Demographic", "Average Length (Minutes)", "Ad Slots",
   
   // 4. Financial Data
-  "Latest CPM", "Revenue 2023", "Revenue 2024", "Revenue 2025",
+  "Span CPM", "Latest CPM", "Revenue 2023", "Revenue 2024", "Revenue 2025",
   
   // 5. Revenue Distribution Percentages (with standard_ads_percent and programmatic_ads_span_percent first)
   "Standard Ads (%)", "Programmatic Ads/Span (%)", "Side Bonus (%)", "YouTube Ads (%)",
@@ -330,7 +331,7 @@ export default function ImportCSVDialog({ open, onOpenChange, onImportComplete }
       }
 
       const numericFields = [
-        "evergreen_ownership_pct", "latest_cpm_usd", "revenue_2023", "revenue_2024", "revenue_2025",
+        "evergreen_ownership_pct", "span_cpm_usd", "latest_cpm_usd", "revenue_2023", "revenue_2024", "revenue_2025",
         "ad_slots", "avg_show_length_mins", "side_bonus_percent", "youtube_ads_percent",
         "subscriptions_percent", "standard_ads_percent", "sponsorship_ad_fp_lead_percent",
         "sponsorship_ad_partner_lead_percent", "sponsorship_ad_partner_sold_percent",
@@ -378,6 +379,7 @@ export default function ImportCSVDialog({ open, onOpenChange, onImportComplete }
           const rankingNumber = rankingMatch ? rankingMatch[1] : rankingVal;
           return rankingNumber as "1" | "2" | "3" | "4" | "5";
         })() : undefined,
+        span_cpm_usd: mappedRow.span_cpm_usd ? parseFloat(mappedRow.span_cpm_usd) : undefined,
         latest_cpm_usd: mappedRow.latest_cpm_usd ? parseFloat(mappedRow.latest_cpm_usd) : undefined,
         revenue_2023: mappedRow.revenue_2023 ? parseFloat(mappedRow.revenue_2023) : undefined,
         revenue_2024: mappedRow.revenue_2024 ? parseFloat(mappedRow.revenue_2024) : undefined,

@@ -81,6 +81,7 @@ export interface ShowFormData {
   hasMarketingRevenue: boolean
   hasWebManagementRevenue: boolean
   latestCPM: string
+  spanCPM: string
   revenue2023: string
   revenue2024: string
   revenue2025: string
@@ -150,6 +151,7 @@ const initialFormData: ShowFormData = {
   hasMarketingRevenue: false,
   hasWebManagementRevenue: false,
   latestCPM: "",
+  spanCPM: "",
   revenue2023: "",
   revenue2024: "",
   revenue2025: "",
@@ -303,6 +305,7 @@ export default function CreateShowDialog({
         hasMarketingRevenue: !!editingShow.has_marketing_revenue,
         hasWebManagementRevenue: !!editingShow.has_web_mgmt_revenue,
         latestCPM: editingShow.latest_cpm_usd?.toString() ?? "",
+        spanCPM: editingShow.span_cpm_usd?.toString() ?? "",
         revenue2023: editingShow.revenue_2023?.toString() ?? "",
         revenue2024: editingShow.revenue_2024?.toString() ?? "",
         revenue2025: editingShow.revenue_2025?.toString() ?? "",
@@ -533,6 +536,7 @@ export default function CreateShowDialog({
       is_original: formData.isOriginal,
       cadence: (formData.cadence as "Daily" | "Weekly" | "Biweekly" | "Monthly" | "Ad hoc") || undefined,
       latest_cpm_usd: toFloatOrUndef(formData.latestCPM),
+      span_cpm_usd: toFloatOrUndef(formData.spanCPM),
       ad_slots: toIntOrUndef(formData.adSlots),
       avg_show_length_mins: toIntOrUndef(formData.averageLength),
       start_date: formData.start_date || undefined,
@@ -927,7 +931,7 @@ export default function CreateShowDialog({
                   <CardDescription>Configure revenue and financial details</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="ownershipPercentage">Ownership by Evergreen (%)</Label>
                       <Input
@@ -938,6 +942,18 @@ export default function CreateShowDialog({
                         max="100"
                         value={formData.ownershipPercentage}
                         onChange={(e) => handleInputChange("ownershipPercentage", e.target.value)}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="spanCPM">Span CPM</Label>
+                      <Input
+                        id="spanCPM"
+                        type="number"
+                        step="0.01"
+                        placeholder="0.00"
+                        min="0"
+                        value={formData.spanCPM}
+                        onChange={(e) => handleInputChange("spanCPM", e.target.value)}
                       />
                     </div>
                     <div className="space-y-2">

@@ -45,9 +45,11 @@ import {
   ChevronDown,
   Archive,
   RotateCcw,
+  User,
 } from "lucide-react"
 import type { Show } from "@/lib/api-client"
 import { getRankingInfo } from "@/lib/ranking-utils"
+import { useUserMapping } from "@/hooks/use-user-mapping"
 import React, { useEffect, useState } from "react"
 
 // --- Reusable Sub-components for Cleaner Layout ---
@@ -177,9 +179,9 @@ export default function ShowViewDialog({
   onUnarchive,
   isArchived = false,
 }: ShowViewDialogProps) {
+  const { getUserName, fetchUser } = useUserMapping()
   const [animationDirection, setAnimationDirection] = useState<"next" | "previous" | null>(null)
   const [isContactOpen, setIsContactOpen] = useState(false)
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
 
   useEffect(() => {
     if (!open) {
@@ -203,6 +205,25 @@ export default function ShowViewDialog({
       document.removeEventListener("keydown", handleKeyDown)
     }
   }, [open, hasNext, hasPrevious, onNavigate])
+
+  // Fetch user data when dialog opens
+  useEffect(() => {
+    if (open && show) {
+      console.log('Show data in dialog:', { 
+        created_by: show.created_by, 
+        created_by_id: show.created_by_id, 
+        created_at: show.created_at,
+        archived_by: show.archived_by,
+        archived_by_id: show.archived_by_id
+      })
+      if (show.created_by_id) {
+        fetchUser(show.created_by_id)
+      }
+      if (show.archived_by_id) {
+        fetchUser(show.archived_by_id)
+      }
+    }
+  }, [open, show, fetchUser])
 
   if (!show) return null
 
@@ -327,7 +348,7 @@ export default function ShowViewDialog({
               <Button
                 variant="destructive"
                 size="sm"
-                onClick={() => setShowDeleteConfirm(true)}
+                onClick={() => onDelete(show)}
                 className="h-8 px-3"
               >
                 Delete
@@ -477,8 +498,9 @@ export default function ShowViewDialog({
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="grid grid-cols-2 gap-6 mb-6">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
                     <DetailItem label="EVG Ownership %" value={show.evergreen_ownership_pct ? `${show.evergreen_ownership_pct}%` : "N/A"} />
+                    <DetailItem label="Span CPM" value={show.span_cpm_usd ? `$${show.span_cpm_usd}` : "N/A"} />
                     <DetailItem label="Latest CPM" value={show.latest_cpm_usd ? `$${show.latest_cpm_usd}` : "N/A"} />
                   </div>
                   <div className="space-y-6">
@@ -509,7 +531,7 @@ export default function ShowViewDialog({
                     </div>
                     <div>
                       <h4 className="font-semibold flex items-center gap-2 mb-3 text-base">
-                        <Percent className="h-4 w-4" /> Partner Split
+                        <Percent className="h-4 w-4" /> Revenue Split to Partner
                       </h4>
                       <div className="grid grid-cols-2 gap-3">
                         <div className="text-center p-3 bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950/20 dark:to-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
@@ -628,51 +650,39 @@ export default function ShowViewDialog({
           </div>
         </ScrollArea>
         
-        {/* Archive Footer - Only show if show is archived */}
-        {isArchived && show && (
+        {/* Combined Footer - Show creation and archive info */}
+        {show && (
           <div className="border-t bg-muted/30 px-6 py-3 flex items-center justify-center">
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Archive className="h-4 w-4" />
-              <span>
-                Archived by <span className="font-medium">{show.archived_by || 'Unknown'}</span> on{' '}
-                <span className="font-medium">
-                  {show.archived_at ? new Date(show.archived_at).toLocaleString() : 'Unknown date'}
+            <div className="flex items-center gap-4 text-sm text-muted-foreground">
+              <div className="flex items-center gap-2">
+                <User className="h-4 w-4" />
+                <span>
+                  Created by <span className="font-medium">{getUserName(show.created_by_id, show.created_by)}</span> on{' '}
+                  <span className="font-medium">
+                    {show.created_at ? new Date(show.created_at).toLocaleString() : 'Unknown date'}
+                  </span>
                 </span>
-              </span>
+              </div>
+              {isArchived && (
+                <>
+                  <span className="text-muted-foreground/50">|</span>
+                  <div className="flex items-center gap-2">
+                    <Archive className="h-4 w-4" />
+                    <span>
+                      Archived by <span className="font-medium">{getUserName(show.archived_by_id, show.archived_by)}</span> on{' '}
+                      <span className="font-medium">
+                        {show.archived_at ? new Date(show.archived_at).toLocaleString() : 'Unknown date'}
+                      </span>
+                    </span>
+                  </div>
+                </>
+              )}
             </div>
           </div>
         )}
       </DialogContent>
     </Dialog>
 
-    {/* Delete Confirmation Dialog */}
-    <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle>Delete Show</AlertDialogTitle>
-          <AlertDialogDescription>
-            Are you sure you want to delete this show? This action cannot be undone.
-            <span className="mt-2 p-2 bg-muted rounded text-sm block">
-              <strong>"{show?.title}"</strong>
-            </span>
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel>Cancel</AlertDialogCancel>
-          <AlertDialogAction 
-            onClick={() => {
-              if (show && onDelete) {
-                onDelete(show)
-                setShowDeleteConfirm(false)
-              }
-            }} 
-            className="bg-red-600 hover:bg-red-700 focus:ring-red-600"
-          >
-            Delete Show
-          </AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
     </>
   )
 }

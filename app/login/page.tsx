@@ -14,6 +14,8 @@ export default function LoginPage() {
       // Redirect to appropriate page based on user role
       if (user.role === "partner") {
         router.push("/revenue-ledger")
+      } else if (user.role === "internal_show_access") {
+        router.push("/shows-management")
       } else {
         router.push("/")
       }

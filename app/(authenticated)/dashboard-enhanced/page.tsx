@@ -149,6 +149,8 @@ export default function EnhancedDashboard() {
   useEffect(() => {
     if (user?.role === "partner") {
       router.push("/revenue-ledger")
+    } else if (user?.role === "internal_show_access") {
+      router.push("/shows-management")
     }
   }, [user, router])
 

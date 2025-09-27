@@ -49,6 +49,17 @@ export default function DashboardNav({ onSidebarToggle }: DashboardNavProps) {
   const [isDesktopCollapsed, setIsDesktopCollapsed] = useState(false)
   const [mounted, setMounted] = useState(false)
 
+  // Helper function to format role names for display
+  const formatRoleName = (role: string | null) => {
+    switch (role) {
+      case 'admin': return 'Admin'
+      case 'partner': return 'Partner'
+      case 'internal_full_access': return 'Internal - Full Access'
+      case 'internal_show_access': return 'Internal - Show Access'
+      default: return role || '—'
+    }
+  }
+
   // Ensure component is mounted before rendering theme-dependent content
   useEffect(() => {
     setMounted(true)
@@ -62,6 +73,8 @@ export default function DashboardNav({ onSidebarToggle }: DashboardNavProps) {
 
   if (user?.role === "partner") {
     mainNavItems = [{ href: "/revenue-ledger", label: "Revenue Ledger", icon: DollarSign }]
+  } else if (user?.role === "internal_show_access") {
+    mainNavItems = [{ href: "/shows-management", label: "Shows", icon: Radio }]
   } else {
     mainNavItems = [
       { href: "/", label: "Dashboard", icon: Home },
@@ -75,7 +88,7 @@ export default function DashboardNav({ onSidebarToggle }: DashboardNavProps) {
   }
 
   const secondaryNavItems = [
-    ...(user?.role === "internal" || user?.role === "admin" ? [{ href: "/add-feature-suggestion", label: "Feature Suggestion", variant: "outline", icon: Lightbulb }] : []),
+    ...(user?.role === "internal_full_access" || user?.role === "internal_show_access" || user?.role === "admin" ? [{ href: "/add-feature-suggestion", label: "Feature Suggestion", variant: "outline", icon: Lightbulb }] : []),
     ...(user?.role === "admin" ? [{ href: "/feedbacks", label: "Feedbacks", variant: "outline", icon: MessageSquare }] : []),
   ]
 
@@ -189,7 +202,7 @@ export default function DashboardNav({ onSidebarToggle }: DashboardNavProps) {
           <div className="flex items-center justify-between mb-2">
             <div className="text-sm min-w-0 flex-1">
               <p className="font-medium truncate">{user?.name}</p>
-              <p className="text-muted-foreground capitalize text-xs">{user?.role}</p>
+              <p className="text-muted-foreground text-xs">{formatRoleName(user?.role)}</p>
             </div>
             <ThemeToggle />
           </div>

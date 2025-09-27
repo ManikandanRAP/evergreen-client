@@ -23,7 +23,7 @@ interface User {
   name: string | null
   email: string | null
   password_hash: string | null
-  role: "admin" | "partner" | "internal" | null
+  role: "admin" | "partner" | "internal_full_access" | "internal_show_access" | null
   created_at: string | null
 }
 
@@ -49,6 +49,7 @@ interface Show {
   is_original: boolean;
   cadence: "Daily" | "Weekly" | "Biweekly" | "Monthly" | "Ad hoc";
   latest_cpm_usd: number;
+  span_cpm_usd: number;
   ad_slots: number;
   avg_show_length_mins: number;
   start_date: string;
@@ -85,6 +86,11 @@ interface Show {
   is_archived?: boolean;
   archived_at?: string;
   archived_by?: string;
+  archived_by_id?: string;
+  // Creation fields
+  created_at?: string;
+  created_by?: string;
+  created_by_id?: string;
 }
 
 interface ShowCreate {
@@ -108,6 +114,7 @@ interface ShowCreate {
   is_original?: boolean;
   cadence?: "Daily" | "Weekly" | "Biweekly" | "Monthly" | "Ad hoc";
   latest_cpm_usd?: number;
+  span_cpm_usd?: number;
   ad_slots?: number;
   avg_show_length_mins?: number;
   start_date?: string;
@@ -162,6 +169,7 @@ interface ShowUpdate {
   is_original?: boolean;
   cadence?: "Daily" | "Weekly" | "Biweekly" | "Monthly" | "Ad hoc";
   latest_cpm_usd?: number;
+  span_cpm_usd?: number;
   ad_slots?: number;
   avg_show_length_mins?: number;
   start_date?: string;
@@ -332,6 +340,10 @@ class ApiClient {
 
   async getCurrentUser(): Promise<User> {
     return this.request<User>("/users/me")
+  }
+
+  async getUserById(userId: string): Promise<User> {
+    return this.request<User>(`/users/${userId}`)
   }
 
   async deleteUser(userId: string): Promise<void> {

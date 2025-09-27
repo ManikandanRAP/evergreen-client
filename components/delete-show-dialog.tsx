@@ -40,12 +40,6 @@ export default function DeleteShowDialog({
   deleteShow,
 }: DeleteShowDialogProps) {
   const [isDeleting, setIsDeleting] = useState(false)
-  const [showConfirmation, setShowConfirmation] = useState(false)
-
-  const handleDeleteClick = () => {
-    setShowConfirmation(true)
-  }
-
   const handleConfirmDelete = async () => {
     if (!show) return
 
@@ -60,12 +54,10 @@ export default function DeleteShowDialog({
       console.error("Failed to delete show:", error)
     } finally {
       setIsDeleting(false)
-      setShowConfirmation(false)
     }
   }
 
   const handleCancel = () => {
-    setShowConfirmation(false)
     onOpenChange(false)
   }
 
@@ -73,7 +65,7 @@ export default function DeleteShowDialog({
 
   return (
     <>
-      <Dialog open={open && !showConfirmation} onOpenChange={onOpenChange}>
+      <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-red-600">
@@ -122,38 +114,14 @@ export default function DeleteShowDialog({
             <Button variant="outline" onClick={handleCancel}>
               Cancel
             </Button>
-            <Button variant="destructive" onClick={handleDeleteClick}>
+            <Button variant="destructive" onClick={handleConfirmDelete} disabled={isDeleting}>
               <Trash2 className="h-4 w-4 mr-2" />
-              Delete Show
+              {isDeleting ? "Deleting..." : "Delete Show"}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      <AlertDialog open={showConfirmation} onOpenChange={setShowConfirmation}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle className="flex items-center gap-2 text-red-600">
-              <AlertTriangle className="h-5 w-5" />
-              Confirm Deletion
-            </AlertDialogTitle>
-            <AlertDialogDescription>
-              This action cannot be undone. Are you absolutely sure you want to delete "{show.title}"?
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => setShowConfirmation(false)}>No, Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleConfirmDelete}
-              disabled={isDeleting}
-              className="bg-red-600 hover:bg-red-700 focus:ring-red-600"
-            >
-              <Trash2 className="h-4 w-4 mr-2" />
-              {isDeleting ? "Deleting..." : "Yes, Delete"}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </>
   )
 }

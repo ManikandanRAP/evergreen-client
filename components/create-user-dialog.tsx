@@ -18,6 +18,7 @@ import { useAuth } from "@/lib/auth-context"
 interface CreateUserDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
+  onUserCreated?: () => void
 }
 
 interface Vendor {
@@ -28,7 +29,7 @@ interface Vendor {
 // const API_URL = "http://127.0.0.1:8000"
 const API_URL = process.env.NEXT_PUBLIC_API_URL
 
-export default function CreateUserDialog({ open, onOpenChange }: CreateUserDialogProps) {
+export default function CreateUserDialog({ open, onOpenChange, onUserCreated }: CreateUserDialogProps) {
   const { token } = useAuth()
   const [formData, setFormData] = useState({
     userType: "",
@@ -211,6 +212,9 @@ export default function CreateUserDialog({ open, onOpenChange }: CreateUserDialo
       setRealTimeErrors({})
       setUsernameError("")
       onOpenChange(false)
+      
+      // Notify parent component to reload users list
+      onUserCreated?.()
     } catch (error: any) {
       toast({
         title: "Error creating user",
@@ -317,7 +321,8 @@ export default function CreateUserDialog({ open, onOpenChange }: CreateUserDialo
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="admin">Admin</SelectItem>
-                <SelectItem value="internal">Internal</SelectItem>
+                <SelectItem value="internal_full_access">Internal - Full Access</SelectItem>
+                <SelectItem value="internal_show_access">Internal - Show Access</SelectItem>
                 <SelectItem value="partner">Partner</SelectItem>
               </SelectContent>
             </Select>

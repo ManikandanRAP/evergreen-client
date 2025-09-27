@@ -117,6 +117,17 @@ export default function UserManagement({ onBack }: UserManagementProps) {
 
   const isPartner = useMemo(() => (form.role || "").toLowerCase() === "partner", [form.role])
 
+  // Helper function to format role names for display
+  const formatRoleName = (role: string | null) => {
+    switch (role) {
+      case 'admin': return 'Admin'
+      case 'partner': return 'Partner'
+      case 'internal_full_access': return 'Internal - Full Access'
+      case 'internal_show_access': return 'Internal - Show Access'
+      default: return role || '—'
+    }
+  }
+
   // Real-time password validation for edit dialog
   useEffect(() => {
     setRealTimeErrors(prev => {
@@ -251,27 +262,33 @@ export default function UserManagement({ onBack }: UserManagementProps) {
     const total = users.length
     const admins = users.filter(u => u.role === "admin").length
     const partners = users.filter(u => u.role === "partner").length
-    const internals = users.filter(u => u.role === "internal").length
+    const internalFullAccess = users.filter(u => u.role === "internal_full_access").length
+    const internalShowAccess = users.filter(u => u.role === "internal_show_access").length
     
-    return { total, admins, partners, internals }
+    return { total, admins, partners, internalFullAccess, internalShowAccess }
   }, [users])
+
+  // Function to load users
+  const loadUsers = async () => {
+    if (!token) return
+    setLoading(true)
+    try {
+      const res = await fetch(`${API_URL}/users`, { headers: { Authorization: `Bearer ${token}` } })
+      if (!res.ok) throw new Error("Failed to fetch users")
+      const data = (await res.json()) as UserRow[]
+      setUsers(data)
+      setOriginalOrder(data)
+    } catch (e: any) {
+      toast({ title: "Failed to load users", description: e?.message ?? String(e), variant: "destructive" })
+    } finally {
+      setLoading(false)
+    }
+  }
 
   // Load users & vendors on mount
   useEffect(() => {
     const run = async () => {
-      if (!token) return
-      setLoading(true)
-      try {
-        const res = await fetch(`${API_URL}/users`, { headers: { Authorization: `Bearer ${token}` } })
-        if (!res.ok) throw new Error("Failed to fetch users")
-        const data = (await res.json()) as UserRow[]
-        setUsers(data)
-        setOriginalOrder(data)
-      } catch (e: any) {
-        toast({ title: "Failed to load users", description: e?.message ?? String(e), variant: "destructive" })
-      } finally {
-        setLoading(false)
-      }
+      await loadUsers()
       // preload vendors for combobox
       try {
         const resp = await fetch(`${API_URL}/vendors`, { headers: { Authorization: `Bearer ${token}` } })
@@ -594,7 +611,8 @@ export default function UserManagement({ onBack }: UserManagementProps) {
                   <SelectItem value="all">All Roles</SelectItem>
                   <SelectItem value="admin">Admin</SelectItem>
                   <SelectItem value="partner">Partner</SelectItem>
-                  <SelectItem value="internal">Internal</SelectItem>
+                  <SelectItem value="internal_full_access">Internal - Full Access</SelectItem>
+                  <SelectItem value="internal_show_access">Internal - Show Access</SelectItem>
                 </SelectContent>
               </Select>
               <div className="text-sm text-muted-foreground">
@@ -650,14 +668,16 @@ export default function UserManagement({ onBack }: UserManagementProps) {
                             className={`text-xs border pointer-events-none uppercase font-semibold ${
                               u.role === 'admin' 
                                 ? "bg-emerald-100 text-emerald-800 border-emerald-300 dark:bg-emerald-900/50 dark:text-emerald-300 dark:border-emerald-700"
-                                : u.role === 'internal'
+                                : u.role === 'internal_full_access'
                                 ? "bg-orange-100 text-orange-800 border-orange-300 dark:bg-orange-900/50 dark:text-orange-300 dark:border-orange-700"
+                                : u.role === 'internal_show_access'
+                                ? "bg-blue-100 text-blue-800 border-blue-300 dark:bg-blue-900/50 dark:text-blue-300 dark:border-blue-700"
                                 : u.role === 'partner'
                                 ? "bg-purple-100 text-purple-800 border-purple-300 dark:bg-purple-900/50 dark:text-purple-300 dark:border-purple-700"
                                 : "bg-gray-100 text-gray-800 border-gray-300 dark:bg-gray-900/50 dark:text-gray-300 dark:border-gray-700"
                             }`}
                           >
-                            {u.role || "—"}
+                            {formatRoleName(u.role)}
                           </Badge>
                         </TableCell>
                         <TableCell className="border-r px-4 py-2">
@@ -942,7 +962,7 @@ export default function UserManagement({ onBack }: UserManagementProps) {
       </AlertDialog>
 
       {/* Create User Dialog */}
-      <CreateUserDialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen} />
+      <CreateUserDialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen} onUserCreated={loadUsers} />
 
       {/* User Profile Dialog */}
       <Dialog open={isProfileDialogOpen} onOpenChange={setIsProfileDialogOpen}>
@@ -958,8 +978,10 @@ export default function UserManagement({ onBack }: UserManagementProps) {
               <div className={`flex items-start gap-6 p-6 rounded-lg border ${
                 viewingUser.role === 'admin' 
                   ? "bg-gradient-to-r from-emerald-50 to-emerald-100 dark:from-emerald-950/20 dark:to-emerald-900/20 border-emerald-200 dark:border-emerald-800"
-                  : viewingUser.role === 'internal'
+                  : viewingUser.role === 'internal_full_access'
                   ? "bg-gradient-to-r from-orange-50 to-orange-100 dark:from-orange-950/20 dark:to-orange-900/20 border-orange-200 dark:border-orange-800"
+                  : viewingUser.role === 'internal_show_access'
+                  ? "bg-gradient-to-r from-blue-50 to-blue-100 dark:from-blue-950/20 dark:to-blue-900/20 border-blue-200 dark:border-blue-800"
                   : viewingUser.role === 'partner'
                   ? "bg-gradient-to-r from-purple-50 to-purple-100 dark:from-purple-950/20 dark:to-purple-900/20 border-purple-200 dark:border-purple-800"
                   : "bg-gradient-to-r from-slate-50 to-slate-100 dark:from-slate-950/20 dark:to-slate-900/20 border-slate-200 dark:border-slate-800"
@@ -968,8 +990,10 @@ export default function UserManagement({ onBack }: UserManagementProps) {
                   <div className={`w-16 h-16 rounded-full flex items-center justify-center ${
                     viewingUser.role === 'admin' 
                       ? "bg-emerald-100 dark:bg-emerald-900/30"
-                      : viewingUser.role === 'internal'
+                      : viewingUser.role === 'internal_full_access'
                       ? "bg-orange-100 dark:bg-orange-900/30"
+                      : viewingUser.role === 'internal_show_access'
+                      ? "bg-blue-100 dark:bg-blue-900/30"
                       : viewingUser.role === 'partner'
                       ? "bg-purple-100 dark:bg-purple-900/30"
                       : "bg-slate-100 dark:bg-slate-900/30"
@@ -977,8 +1001,10 @@ export default function UserManagement({ onBack }: UserManagementProps) {
                     <UserIcon className={`h-8 w-8 ${
                       viewingUser.role === 'admin' 
                         ? "text-emerald-600 dark:text-emerald-400"
-                        : viewingUser.role === 'internal'
+                        : viewingUser.role === 'internal_full_access'
                         ? "text-orange-600 dark:text-orange-400"
+                        : viewingUser.role === 'internal_show_access'
+                        ? "text-blue-600 dark:text-blue-400"
                         : viewingUser.role === 'partner'
                         ? "text-purple-600 dark:text-purple-400"
                         : "text-slate-600 dark:text-slate-400"
@@ -997,14 +1023,16 @@ export default function UserManagement({ onBack }: UserManagementProps) {
                       className={`text-xs border pointer-events-none uppercase font-semibold ${
                         viewingUser.role === 'admin' 
                           ? "bg-emerald-100 text-emerald-800 border-emerald-300 dark:bg-emerald-900/50 dark:text-emerald-300 dark:border-emerald-700"
-                          : viewingUser.role === 'internal'
+                          : viewingUser.role === 'internal_full_access'
                           ? "bg-orange-100 text-orange-800 border-orange-300 dark:bg-orange-900/50 dark:text-orange-300 dark:border-orange-700"
+                          : viewingUser.role === 'internal_show_access'
+                          ? "bg-blue-100 text-blue-800 border-blue-300 dark:bg-blue-900/50 dark:text-blue-300 dark:border-blue-700"
                           : viewingUser.role === 'partner'
                           ? "bg-purple-100 text-purple-800 border-purple-300 dark:bg-purple-900/50 dark:text-purple-300 dark:border-purple-700"
                           : "bg-gray-100 text-gray-800 border-gray-300 dark:bg-gray-900/50 dark:text-gray-300 dark:border-gray-700"
                       }`}
                     >
-                      {viewingUser.role || "—"}
+                      {formatRoleName(viewingUser.role)}
                     </Badge>
                     {viewingUser.created_at && (
                       <span className="text-sm text-muted-foreground">
@@ -1120,8 +1148,10 @@ export default function UserManagement({ onBack }: UserManagementProps) {
                       className={`flex items-center gap-2 ${
                         viewingUser.role === 'admin' 
                           ? "bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-950/20 dark:to-emerald-900/20 border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300 hover:from-emerald-100 hover:to-emerald-200 dark:hover:from-emerald-900/30 dark:hover:to-emerald-800/30"
-                          : viewingUser.role === 'internal'
+                          : viewingUser.role === 'internal_full_access'
                           ? "bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-950/20 dark:to-orange-900/20 border-orange-200 dark:border-orange-800 text-orange-700 dark:text-orange-300 hover:from-orange-100 hover:to-orange-200 dark:hover:from-orange-900/30 dark:hover:to-orange-800/30"
+                          : viewingUser.role === 'internal_show_access'
+                          ? "bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950/20 dark:to-blue-900/20 border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-300 hover:from-blue-100 hover:to-blue-200 dark:hover:from-blue-900/30 dark:hover:to-blue-800/30"
                           : viewingUser.role === 'partner'
                           ? "bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-950/20 dark:to-purple-900/20 border-purple-200 dark:border-purple-800 text-purple-700 dark:text-purple-300 hover:from-purple-100 hover:to-purple-200 dark:hover:from-purple-900/30 dark:hover:to-purple-800/30"
                           : "bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-950/20 dark:to-slate-900/20 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:from-slate-100 hover:to-slate-200 dark:hover:from-slate-900/30 dark:hover:to-slate-800/30"

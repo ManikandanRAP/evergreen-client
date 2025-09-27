@@ -291,6 +291,27 @@ export default function RevenueLedger() {
     return { totalNetRevenue, totalPartnerCompensation, totalPaymentsMade }
   }, [filteredRevenueData, filteredPartnerPayments])
 
+  // Calculate totals for revenue table
+  const revenueTotals = useMemo(() => {
+    return {
+      invoice_amount: filteredRevenueData.reduce((sum, item) => sum + num(item.invoice_amount), 0),
+      evergreen_compensation: filteredRevenueData.reduce((sum, item) => sum + num(item.evergreen_compensation), 0),
+      partner_compensation: filteredRevenueData.reduce((sum, item) => sum + num(item.partner_compensation), 0),
+      effective_payment_received: filteredRevenueData.reduce((sum, item) => sum + num(item.effective_payment_received), 0),
+      outstanding_balance: filteredRevenueData.reduce((sum, item) => sum + num(item.outstanding_balance), 0),
+      partner_comp_waiting: filteredRevenueData.reduce((sum, item) => sum + num(item.partner_comp_waiting), 0),
+    }
+  }, [filteredRevenueData])
+
+  // Calculate totals for partner payments table
+  const paymentsTotals = useMemo(() => {
+    return {
+      bill_amount: filteredPartnerPayments.reduce((sum, item) => sum + num(item.bill_amount), 0),
+      effective_billed_amount_paid: filteredPartnerPayments.reduce((sum, item) => sum + num(item.effective_billed_amount_paid), 0),
+      billed_amount_outstanding: filteredPartnerPayments.reduce((sum, item) => sum + num(item.billed_amount_outstanding), 0),
+    }
+  }, [filteredPartnerPayments])
+
   // Calculate filtered stats based on the same logic as the database view
   const filteredStats = useMemo(() => {
     // total_effective_billed_paid: sum of effective_billed_amount_paid from filtered partner payouts
@@ -540,8 +561,8 @@ export default function RevenueLedger() {
       <Card className={cn(fetching ? "opacity-60" : "")}>
         <CardHeader className="flex-row items-start justify-between space-y-0">
           <div>
-            <CardTitle>Revenue</CardTitle>
-            <CardDescription>Transactions between Evergreen and Customers</CardDescription>
+            <CardTitle>Show Revenue</CardTitle>
+            <CardDescription>Transactions between Evergreen and Customers (Starting July 1, 2025)</CardDescription>
           </div>
           <PaginationControls
             page={revenuePageSafe}
@@ -640,22 +661,39 @@ export default function RevenueLedger() {
 
               <TableBody>
                 {revenueSlice.length > 0 ? (
-                  revenueSlice.map((item, index) => (
-                    <TableRow key={`${item.show_name}-${item.customer}-${item.invoice_date}-${index}`}>
-                      <TableCell className="font-medium border-r px-4 py-3">{item.show_name}</TableCell>
-                      <TableCell className="border-r px-4 py-3">{item.customer}</TableCell>
-                      <TableCell className="border-r px-4 py-3">{formatDate(item.invoice_date)}</TableCell>
-                      <TableCell className="text-right font-mono border-r px-4 py-3">{formatCurrency(item.invoice_amount)}</TableCell>
-                      <TableCell className="text-right border-r px-4 py-3">{formatPct(item.evergreen_percentage)}</TableCell>
-                      <TableCell className="text-right font-mono text-emerald-600 border-r px-4 py-3">{formatCurrency(item.evergreen_compensation)}</TableCell>
-                      <TableCell className="text-right border-r px-4 py-3">{formatPct(item.partner_percentage)}</TableCell>
-                      <TableCell className="border-r text-right font-mono text-blue-600 px-4 py-3">{formatCurrency(item.partner_compensation)}</TableCell>
-                      <TableCell className="text-right font-mono text-green-600 border-r px-4 py-3">{formatCurrency(item.effective_payment_received)}</TableCell>
-                      <TableCell className="text-right font-mono text-orange-600 border-r px-4 py-3">{formatCurrency(item.outstanding_balance)}</TableCell>
-                      <TableCell className="text-right font-mono text-purple-600 border-r px-4 py-3">{formatCurrency(item.partner_comp_waiting)}</TableCell>
-                      <TableCell className="px-4 py-3 whitespace-normal break-words">{item.invoice_description}</TableCell>
+                  <>
+                    {revenueSlice.map((item, index) => (
+                      <TableRow key={`${item.show_name}-${item.customer}-${item.invoice_date}-${index}`}>
+                        <TableCell className="font-medium border-r px-4 py-3">{item.show_name}</TableCell>
+                        <TableCell className="border-r px-4 py-3">{item.customer}</TableCell>
+                        <TableCell className="border-r px-4 py-3">{formatDate(item.invoice_date)}</TableCell>
+                        <TableCell className="text-right font-mono border-r px-4 py-3">{formatCurrency(item.invoice_amount)}</TableCell>
+                        <TableCell className="text-right border-r px-4 py-3">{formatPct(item.evergreen_percentage)}</TableCell>
+                        <TableCell className="text-right font-mono text-emerald-600 border-r px-4 py-3">{formatCurrency(item.evergreen_compensation)}</TableCell>
+                        <TableCell className="text-right border-r px-4 py-3">{formatPct(item.partner_percentage)}</TableCell>
+                        <TableCell className="border-r text-right font-mono text-blue-600 px-4 py-3">{formatCurrency(item.partner_compensation)}</TableCell>
+                        <TableCell className="text-right font-mono text-green-600 border-r px-4 py-3">{formatCurrency(item.effective_payment_received)}</TableCell>
+                        <TableCell className="text-right font-mono text-orange-600 border-r px-4 py-3">{formatCurrency(item.outstanding_balance)}</TableCell>
+                        <TableCell className="text-right font-mono text-purple-600 border-r px-4 py-3">{formatCurrency(item.partner_comp_waiting)}</TableCell>
+                        <TableCell className="px-4 py-3 whitespace-normal break-words">{item.invoice_description}</TableCell>
+                      </TableRow>
+                    ))}
+                    {/* Totals Row */}
+                    <TableRow className="bg-muted/30 border-t-2 border-muted-foreground/20 font-semibold">
+                      <TableCell className="font-bold border-r px-4 py-3 text-muted-foreground">TOTALS</TableCell>
+                      <TableCell className="border-r px-4 py-3 text-muted-foreground">-</TableCell>
+                      <TableCell className="border-r px-4 py-3 text-muted-foreground">-</TableCell>
+                      <TableCell className="text-right font-mono border-r px-4 py-3 text-foreground font-bold">{formatCurrency(revenueTotals.invoice_amount)}</TableCell>
+                      <TableCell className="text-right border-r px-4 py-3 text-muted-foreground">-</TableCell>
+                      <TableCell className="text-right font-mono text-emerald-600 border-r px-4 py-3 font-bold">{formatCurrency(revenueTotals.evergreen_compensation)}</TableCell>
+                      <TableCell className="text-right border-r px-4 py-3 text-muted-foreground">-</TableCell>
+                      <TableCell className="border-r text-right font-mono text-blue-600 px-4 py-3 font-bold">{formatCurrency(revenueTotals.partner_compensation)}</TableCell>
+                      <TableCell className="text-right font-mono text-green-600 border-r px-4 py-3 font-bold">{formatCurrency(revenueTotals.effective_payment_received)}</TableCell>
+                      <TableCell className="text-right font-mono text-orange-600 border-r px-4 py-3 font-bold">{formatCurrency(revenueTotals.outstanding_balance)}</TableCell>
+                      <TableCell className="text-right font-mono text-purple-600 border-r px-4 py-3 font-bold">{formatCurrency(revenueTotals.partner_comp_waiting)}</TableCell>
+                      <TableCell className="px-4 py-3 text-muted-foreground">-</TableCell>
                     </TableRow>
-                  ))
+                  </>
                 ) : (
                   <TableRow>
                     <TableCell colSpan={12} className="h-24 text-center">
@@ -755,19 +793,33 @@ export default function RevenueLedger() {
               </TableHeader>
               <TableBody>
                 {paymentsSlice.length > 0 ? (
-                  paymentsSlice.map((item, index) => (
-                    <TableRow key={`${item.show_name}-${item.bill_number}-${item.bill_date}-${index}`}>
-                      <TableCell className="font-medium border-r px-4 py-3">{item.show_name}</TableCell>
-                      <TableCell className="border-r px-4 py-3">{item.partner_name}</TableCell>
-                      <TableCell className="border-r px-4 py-3">{item.bill_number || "-"}</TableCell>
-                      <TableCell className="border-r px-4 py-3">{formatDate(item.bill_date)}</TableCell>
-                      <TableCell className="text-right font-mono border-r px-4 py-3">{formatCurrency(item.bill_amount)}</TableCell>
-                      <TableCell className="border-r px-4 py-3">{formatPaymentId(item.payment_id)}</TableCell>
-                      <TableCell className="border-r px-4 py-3">{formatPaymentDates(item.date_of_payment)}</TableCell>
-                      <TableCell className="text-right font-mono text-green-600 border-r px-4 py-3">{formatCurrency(item.effective_billed_amount_paid)}</TableCell>
-                      <TableCell className="text-right font-mono text-orange-600 px-4 py-3">{formatCurrency(item.billed_amount_outstanding)}</TableCell>
+                  <>
+                    {paymentsSlice.map((item, index) => (
+                      <TableRow key={`${item.show_name}-${item.bill_number}-${item.bill_date}-${index}`}>
+                        <TableCell className="font-medium border-r px-4 py-3">{item.show_name}</TableCell>
+                        <TableCell className="border-r px-4 py-3">{item.partner_name}</TableCell>
+                        <TableCell className="border-r px-4 py-3">{item.bill_number || "-"}</TableCell>
+                        <TableCell className="border-r px-4 py-3">{formatDate(item.bill_date)}</TableCell>
+                        <TableCell className="text-right font-mono border-r px-4 py-3">{formatCurrency(item.bill_amount)}</TableCell>
+                        <TableCell className="border-r px-4 py-3">{formatPaymentId(item.payment_id)}</TableCell>
+                        <TableCell className="border-r px-4 py-3">{formatPaymentDates(item.date_of_payment)}</TableCell>
+                        <TableCell className="text-right font-mono text-green-600 border-r px-4 py-3">{formatCurrency(item.effective_billed_amount_paid)}</TableCell>
+                        <TableCell className="text-right font-mono text-orange-600 px-4 py-3">{formatCurrency(item.billed_amount_outstanding)}</TableCell>
+                      </TableRow>
+                    ))}
+                    {/* Totals Row */}
+                    <TableRow className="bg-muted/30 border-t-2 border-muted-foreground/20 font-semibold">
+                      <TableCell className="font-bold border-r px-4 py-3 text-muted-foreground">TOTALS</TableCell>
+                      <TableCell className="border-r px-4 py-3 text-muted-foreground">-</TableCell>
+                      <TableCell className="border-r px-4 py-3 text-muted-foreground">-</TableCell>
+                      <TableCell className="border-r px-4 py-3 text-muted-foreground">-</TableCell>
+                      <TableCell className="text-right font-mono border-r px-4 py-3 text-foreground font-bold">{formatCurrency(paymentsTotals.bill_amount)}</TableCell>
+                      <TableCell className="border-r px-4 py-3 text-muted-foreground">-</TableCell>
+                      <TableCell className="border-r px-4 py-3 text-muted-foreground">-</TableCell>
+                      <TableCell className="text-right font-mono text-green-600 border-r px-4 py-3 font-bold">{formatCurrency(paymentsTotals.effective_billed_amount_paid)}</TableCell>
+                      <TableCell className="text-right font-mono text-orange-600 px-4 py-3 font-bold">{formatCurrency(paymentsTotals.billed_amount_outstanding)}</TableCell>
                     </TableRow>
-                  ))
+                  </>
                 ) : (
                   <TableRow>
                     <TableCell colSpan={9} className="h-24 text-center">
