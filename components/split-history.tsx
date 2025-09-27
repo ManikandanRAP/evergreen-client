@@ -35,8 +35,8 @@ type SplitHistoryRow = {
   show_name: string | null
   vendor_qbo_id: number | null
   vendor_name: string | null
-  evergreen_pct_ads: number | null
-  evergreen_pct_programmatic: number | null
+  partner_pct_ads: number | null
+  partner_pct_programmatic: number | null
   effective_date: string | null
 }
 
@@ -149,8 +149,8 @@ export default function SplitHistory({ onBack }: SplitHistoryProps) {
           `"${(split.show_name || "").replace(/"/g, '""')}"`,
           split.vendor_qbo_id || "",
           `"${(split.vendor_name || "").replace(/"/g, '""')}"`,
-          split.evergreen_pct_ads ? (split.evergreen_pct_ads * 100).toFixed(2) : "",
-          split.evergreen_pct_programmatic ? (split.evergreen_pct_programmatic * 100).toFixed(2) : "",
+          split.partner_pct_ads ? (split.partner_pct_ads * 100).toFixed(2) : "",
+          split.partner_pct_programmatic ? (split.partner_pct_programmatic * 100).toFixed(2) : "",
           split.effective_date || "",
         ].join(","),
       ),
@@ -316,8 +316,8 @@ export default function SplitHistory({ onBack }: SplitHistoryProps) {
                       <SortableHeader field="show_name">Show Name</SortableHeader>
                       <SortableHeader field="vendor_qbo_id">Vendor QBO ID</SortableHeader>
                       <SortableHeader field="vendor_name">Vendor Name</SortableHeader>
-                      <SortableHeader field="evergreen_pct_ads">Ads %</SortableHeader>
-                      <SortableHeader field="evergreen_pct_programmatic">Prog %</SortableHeader>
+                      <SortableHeader field="partner_pct_ads">Ads %</SortableHeader>
+                      <SortableHeader field="partner_pct_programmatic">Prog %</SortableHeader>
                       <SortableHeader field="effective_date">Effective Date</SortableHeader>
                     </TableRow>
                   </TableHeader>
@@ -332,16 +332,16 @@ export default function SplitHistory({ onBack }: SplitHistoryProps) {
                         <TableCell className="font-mono border-r px-4 py-2">{split.vendor_qbo_id || "—"}</TableCell>
                         <TableCell className="border-r px-4 py-2">{split.vendor_name || "—"}</TableCell>
                         <TableCell className="border-r px-4 py-2">
-                          {split.evergreen_pct_ads ? (
+                          {split.partner_pct_ads ? (
                             <Badge className="bg-emerald-100 text-emerald-800 border-emerald-300 dark:bg-emerald-900/50 dark:text-emerald-300 dark:border-emerald-700 pointer-events-none">
-                              {(split.evergreen_pct_ads * 100).toFixed(2)}%
+                              {(split.partner_pct_ads * 100).toFixed(2)}%
                             </Badge>
                           ) : "—"}
                         </TableCell>
                         <TableCell className="border-r px-4 py-2">
-                          {split.evergreen_pct_programmatic ? (
+                          {split.partner_pct_programmatic ? (
                             <Badge className="bg-orange-100 text-orange-800 border-orange-300 dark:bg-orange-900/50 dark:text-orange-300 dark:border-orange-700 pointer-events-none">
-                              {(split.evergreen_pct_programmatic * 100).toFixed(2)}%
+                              {(split.partner_pct_programmatic * 100).toFixed(2)}%
                             </Badge>
                           ) : "—"}
                         </TableCell>

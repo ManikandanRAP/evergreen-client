@@ -949,7 +949,7 @@ export default function ShowsManagement() {
                     Filters
                   </CardTitle>
                   <Badge variant="secondary">
-                    {filteredShows.length} show{filteredShows.length !== 1 ? "s" : ""}
+                    {filteredShows.length} Show{filteredShows.length !== 1 ? "s" : ""}
                   </Badge>
                 </div>
                 <ChevronDown className="h-5 w-5 transition-transform duration-200 group-data-[state=open]:rotate-180" />

@@ -42,8 +42,8 @@ interface Split {
   split_id: number
   show_name: string
   vendor_name: string
-  evergreen_pct_ads: number
-  evergreen_pct_programmatic: number
+  partner_pct_ads: number
+  partner_pct_programmatic: number
   effective_date: string
 }
 
@@ -203,8 +203,8 @@ export default function VendorSplitManagement({ refreshSignal = 0 }: { refreshSi
         vendor_qbo_id: selectedVendor.vendor_qbo_id,
         show_name: selectedShow.show_name,
         vendor_name: selectedVendor.vendor_name,
-        evergreen_pct_ads: parseFloat(newSplit.adPercent) / 100,
-        evergreen_pct_programmatic: parseFloat(newSplit.programmaticPercent) / 100,
+        partner_pct_ads: parseFloat(newSplit.adPercent) / 100,
+        partner_pct_programmatic: parseFloat(newSplit.programmaticPercent) / 100,
         effective_date: newSplit.effectiveDate,
       }
 
@@ -322,8 +322,8 @@ export default function VendorSplitManagement({ refreshSignal = 0 }: { refreshSi
         vendor_qbo_id: selectedCatalogVendor.vendor_qbo_id,
         show_name: selectedCatalogShow.show_name,
         vendor_name: selectedCatalogVendor.vendor_name,
-        evergreen_pct_ads: parseFloat(newMappedSplit.adPercent) / 100,
-        evergreen_pct_programmatic: parseFloat(newMappedSplit.programmaticPercent) / 100,
+        partner_pct_ads: parseFloat(newMappedSplit.adPercent) / 100,
+        partner_pct_programmatic: parseFloat(newMappedSplit.programmaticPercent) / 100,
         effective_date: newMappedSplit.effectiveDate,
       }
       const response = await fetch(`${API_URL}/split-management/splits`, {
@@ -560,8 +560,8 @@ export default function VendorSplitManagement({ refreshSignal = 0 }: { refreshSi
                         <TableRow key={split.split_id}>
                           <TableCell>{split.show_name}</TableCell>
                           <TableCell>{split.vendor_name}</TableCell>
-                          <TableCell>{split.evergreen_pct_ads * 100}%</TableCell>
-                          <TableCell>{split.evergreen_pct_programmatic * 100}%</TableCell>
+                          <TableCell>{split.partner_pct_ads * 100}%</TableCell>
+                          <TableCell>{split.partner_pct_programmatic * 100}%</TableCell>
                           <TableCell>{new Date(split.effective_date).toLocaleDateString()}</TableCell>
                           <TableCell>
                             <Button

@@ -24,6 +24,7 @@ import {
   Download,
   Radio,
   Users,
+  X,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
@@ -80,6 +81,38 @@ export default function RevenueLedger() {
   const [dateFrom, setDateFrom] = useState<string>("")
   const [dateTo, setDateTo] = useState<string>("")
   const [isFiltersOpen, setIsFiltersOpen] = useState(false)
+  const [isSlideOutOpen, setIsSlideOutOpen] = useState(false)
+
+  // Lock body scroll when panel is open
+  useEffect(() => {
+    if (isSlideOutOpen) {
+      document.body.style.overflow = 'hidden'
+    } else {
+      document.body.style.overflow = 'unset'
+    }
+    
+    // Cleanup on unmount
+    return () => {
+      document.body.style.overflow = 'unset'
+    }
+  }, [isSlideOutOpen])
+
+  // Handle escape key to close filter panel
+  useEffect(() => {
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && isSlideOutOpen) {
+        setIsSlideOutOpen(false)
+      }
+    }
+
+    if (isSlideOutOpen) {
+      document.addEventListener('keydown', handleEscape)
+    }
+
+    return () => {
+      document.removeEventListener('keydown', handleEscape)
+    }
+  }, [isSlideOutOpen])
 
   const [ledger, setLedger] = useState<LedgerItem[]>([])
   const [payouts, setPayouts] = useState<PartnerPayout[]>([])
@@ -414,10 +447,43 @@ export default function RevenueLedger() {
 
         {/* actions */}
         <div className="flex items-center gap-2">
+          {/* Stats Pills */}
+          <div className="flex items-center gap-2">
+            <Badge className="px-3 py-1 bg-green-100 text-green-800 border-green-200 dark:bg-green-900/50 dark:text-green-300 dark:border-green-700 hover:bg-green-100 hover:text-green-800 dark:hover:bg-green-900/50 dark:hover:text-green-300">
+              {filteredRevenueData.length} Revenue Entries
+            </Badge>
+            <Badge className="px-3 py-1 bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-900/50 dark:text-blue-300 dark:border-blue-700 hover:bg-blue-100 hover:text-blue-800 dark:hover:bg-blue-900/50 dark:hover:text-blue-300">
+              {filteredPartnerPayments.length} Partner Payments
+            </Badge>
+          </div>
+
+          {/* Filter Button */}
+          <Button 
+            variant="outline" 
+            onClick={() => setIsSlideOutOpen(true)}
+            className="flex items-center gap-2"
+          >
+            <Filter className="h-4 w-4" />
+            Filters
+          </Button>
+
+          {/* Clear Filters Button - Only show when filters are applied */}
+          <div className={`overflow-hidden transition-all duration-300 ease-in-out ${(selectedShow !== "all" || dateFrom || dateTo) ? 'max-w-36 opacity-100' : 'max-w-0 opacity-0 -ml-2'}`}>
+            <Button 
+              variant="outline" 
+              onClick={handleClearFilters}
+              className="flex items-center gap-2 text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950 whitespace-nowrap"
+            >
+              <RotateCcw className="h-4 w-4" />
+              Clear Filters
+            </Button>
+          </div>
+
           <Button variant="outline" onClick={onRefresh} disabled={fetching}>
             {fetching ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <RotateCcw className="mr-2 h-4 w-4" />}
             Refresh
           </Button>
+
           <Button className="evergreen-button" onClick={exportToExcel}>
             <Download className="mr-2 h-4 w-4" />
             Export CSV
@@ -461,60 +527,6 @@ export default function RevenueLedger() {
         </Card>
       </div>
 
-      {/* Filters */}
-      <Card>
-        <Collapsible open={isFiltersOpen} onOpenChange={setIsFiltersOpen}>
-          <CollapsibleTrigger asChild>
-            <CardHeader className="cursor-pointer hover:bg-accent/50 transition-colors rounded-lg group px-6 py-3">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <CardTitle className="flex items-center gap-2 font-semibold text-lg">
-                    <Filter className="h-5 w-5" />
-                    Filters
-                  </CardTitle>
-                </div>
-                <div className="flex items-center gap-4">
-                  <Badge variant="secondary">{filteredRevenueData.length} revenue entries</Badge>
-                  <Badge variant="outline">{filteredPartnerPayments.length} payment entries</Badge>
-                  {isFiltersOpen ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
-                </div>
-              </div>
-            </CardHeader>
-          </CollapsibleTrigger>
-          <CollapsibleContent>
-            <CardContent className="pt-4">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="space-y-2">
-                  <Label>Show Name</Label>
-                  <ShowCombobox
-                    value={selectedShow}
-                    onChange={(val) => setSelectedShow(val)}
-                    options={["all", ...availableShows]}
-                    placeholder="Search shows…"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label>From Date</Label>
-                  <Input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} />
-                </div>
-
-                <div className="space-y-2">
-                  <Label>To Date</Label>
-                  <Input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} />
-                </div>
-              </div>
-
-              <div className="flex justify-end pt-4">
-                <Button variant="outline" onClick={handleClearFilters}>
-                  <RotateCcw className="mr-2 h-4 w-4" />
-                  Clear All Filters
-                </Button>
-              </div>
-            </CardContent>
-          </CollapsibleContent>
-        </Collapsible>
-      </Card>
 
       {/* Loading / Error banners */}
       {fetching && (
@@ -781,7 +793,80 @@ export default function RevenueLedger() {
           </div>
         </CardContent>
       </Card>
-    </div>
+
+      {/* Slide-out Filter Panel */}
+      <div className={`fixed inset-0 z-50 transition-opacity duration-300 ${isSlideOutOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`} style={{ margin: 0, padding: 0 }}>
+        {/* Backdrop */}
+        <div 
+          className={`absolute inset-0 bg-black/50 transition-opacity duration-300 ${isSlideOutOpen ? 'opacity-100' : 'opacity-0'}`}
+          onClick={() => setIsSlideOutOpen(false)}
+        />
+        
+        {/* Slide-out Panel */}
+        <div className={`absolute top-0 right-0 w-96 h-screen bg-white dark:bg-gray-900 shadow-2xl border-l border-gray-200 dark:border-gray-700 overflow-y-auto transform transition-transform duration-300 ease-in-out ${isSlideOutOpen ? 'translate-x-0' : 'translate-x-full'}`} style={{ margin: 0, padding: 0, top: 0 }}>
+            <div className="flex items-center justify-between px-6 py-3 border-b border-gray-200 dark:border-gray-700">
+              <h2 className="text-lg font-semibold flex items-center gap-2">
+                <Filter className="h-5 w-5" />
+                Filters
+              </h2>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setIsSlideOutOpen(false)}
+                className="h-8 w-8 p-0"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+            
+            <div className="p-6">
+              {/* Filter Stats */}
+              <div className="flex gap-2">
+                <Badge className="bg-green-100 text-green-800 border-green-200 dark:bg-green-900/50 dark:text-green-300 dark:border-green-700 hover:bg-green-100 hover:text-green-800 dark:hover:bg-green-900/50 dark:hover:text-green-300">
+                  {filteredRevenueData.length} Revenue Entries
+                </Badge>
+                <Badge className="bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-900/50 dark:text-blue-300 dark:border-blue-700 hover:bg-blue-100 hover:text-blue-800 dark:hover:bg-blue-900/50 dark:hover:text-blue-300">
+                  {filteredPartnerPayments.length} Partner Payments
+                </Badge>
+              </div>
+
+              {/* Filter Controls */}
+              <div className="mt-6 space-y-4">
+                <div className="space-y-2">
+                  <Label>Show Name</Label>
+                  <ShowCombobox
+                    value={selectedShow}
+                    onChange={(val) => setSelectedShow(val)}
+                    options={["all", ...availableShows]}
+                    placeholder="Search shows…"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label>From Date</Label>
+                  <Input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} />
+                </div>
+
+                <div className="space-y-2">
+                  <Label>To Date</Label>
+                  <Input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} />
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex gap-2 mt-6">
+                <Button variant="outline" onClick={handleClearFilters} className="flex-1">
+                  <RotateCcw className="mr-2 h-4 w-4" />
+                  Clear All
+                </Button>
+                <Button onClick={() => setIsSlideOutOpen(false)} className="flex-1">
+                  Apply Filters
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
   )
 }
 
