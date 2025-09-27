@@ -543,7 +543,7 @@ export default function UserManagement({ onBack }: UserManagementProps) {
       </div>
 
       {/* User Statistics */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
         <Card className="bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-950/20 dark:to-slate-900/20 border-slate-200 dark:border-slate-800">
           <CardContent className="p-4">
             <div className="flex items-center space-x-2">
@@ -582,8 +582,19 @@ export default function UserManagement({ onBack }: UserManagementProps) {
             <div className="flex items-center space-x-2">
               <Users className="h-4 w-4 text-orange-600" />
               <div>
-                <p className="text-sm font-medium text-orange-700 dark:text-orange-300">Internals</p>
-                <p className="text-2xl font-bold text-orange-600">{userStats.internals}</p>
+                <p className="text-sm font-medium text-orange-700 dark:text-orange-300">Internal - Full Access</p>
+                <p className="text-2xl font-bold text-orange-600">{userStats.internalFullAccess}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950/20 dark:to-blue-900/20 border-blue-200 dark:border-blue-800">
+          <CardContent className="p-4">
+            <div className="flex items-center space-x-2">
+              <Users className="h-4 w-4 text-blue-600" />
+              <div>
+                <p className="text-sm font-medium text-blue-700 dark:text-blue-300">Internal - Show Access</p>
+                <p className="text-2xl font-bold text-blue-600">{userStats.internalShowAccess}</p>
               </div>
             </div>
           </CardContent>
