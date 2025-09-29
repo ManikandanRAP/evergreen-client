@@ -231,14 +231,6 @@ export default function ImportCSVDialog({ open, onOpenChange, onImportComplete }
     document.body.removeChild(link)
   }
   
-  const handleDownloadGuide = () => {
-    const link = document.createElement('a');
-    link.href = '/CSV Import Template Guide.pdf';
-    link.setAttribute('download', 'CSV Import Template Guide.pdf');
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
 
   // Helper function to map user-friendly headers to database column names
   const mapHeadersToDbColumns = (row: any): any => {
@@ -573,7 +565,7 @@ export default function ImportCSVDialog({ open, onOpenChange, onImportComplete }
                     <CardDescription>Follow these steps to bulk import your shows.</CardDescription>
                 </CardHeader>
                 <CardContent className="text-sm text-muted-foreground space-y-2">
-                    <p><strong>Step 1: Download Resources.</strong> Get the CSV template and the PDF guide. The guide explains what each column means.</p>
+                    <p><strong>Step 1: Download Resources.</strong> Get the CSV template and view the import guide. The guide explains what each column means.</p>
                     <p><strong>Step 2: Fill Out the Template.</strong> Add your show data to the CSV file. Only the 'title' column is required for each show.</p>
                     <p><strong>Step 3: Upload the File.</strong> Drag and drop your completed CSV file into the area below and click 'Import'.</p>
                 </CardContent>
@@ -584,9 +576,9 @@ export default function ImportCSVDialog({ open, onOpenChange, onImportComplete }
                     <Download className="mr-2 h-4 w-4" />
                     Download Template (.csv)
                   </Button>
-                  <Button variant="outline" onClick={handleDownloadGuide}>
+                  <Button variant="outline" onClick={() => window.open('/import-shows-guide', '_blank')}>
                     <BookOpen className="mr-2 h-4 w-4" />
-                    Download Guide (.pdf)
+                    View Import Guide
                   </Button>
               </div>
 
