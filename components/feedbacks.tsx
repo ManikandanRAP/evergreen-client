@@ -339,7 +339,7 @@ export default function Feedbacks() {
   }
 
   const SortableHeader = ({ field, children }: { field: SortField; children: React.ReactNode }) => (
-    <TableHead className="cursor-pointer hover:bg-muted/50 select-none" onClick={() => handleSort(field)}>
+    <TableHead className="px-4 py-2 font-semibold border-r bg-muted/50 cursor-pointer hover:bg-muted/50 select-none" onClick={() => handleSort(field)}>
       <div className="flex items-center space-x-1">
         <span>{children}</span>
         {getSortIcon(field)}
@@ -388,38 +388,46 @@ export default function Feedbacks() {
                   <SortableHeader field="type">Type</SortableHeader>
                   <SortableHeader field="createdByName">Created By</SortableHeader>
                   <SortableHeader field="created_at">Created At</SortableHeader>
-                  <TableHead>Actions</TableHead>
+                  <TableHead className="px-4 py-2 font-semibold bg-muted/50">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredAndSortedFeedbacks.map((feedback) => (
                   <TableRow key={feedback.id}>
-                    <TableCell
-                      className="font-medium cursor-pointer hover:text-blue-600 hover:underline"
+                    <TableCell 
+                      className="font-medium border-r px-4 py-2 cursor-pointer hover:bg-accent/30 transition-colors"
                       onClick={() => handleViewFeedback(feedback)}
                     >
-                      {feedback.title}
+                      <span className="hover:underline hover:text-emerald-600 transition-colors">
+                        {feedback.title}
+                      </span>
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="border-r px-4 py-2">
                       <Badge {...getTypeBadgeVariant(feedback.type)}>{feedback.type}</Badge>
                     </TableCell>
-                    <TableCell>{feedback.createdByName}</TableCell>
-                    <TableCell>
+                    <TableCell className="border-r px-4 py-2">{feedback.createdByName}</TableCell>
+                    <TableCell className="border-r px-4 py-2">
                       {new Date(feedback.created_at).toLocaleDateString()}{" "}
                       {new Date(feedback.created_at).toLocaleTimeString()}
                     </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <Button variant="outline" size="sm" onClick={() => handleViewFeedback(feedback)}>
-                          <Eye className="h-4 w-4 mr-1" />
+                    <TableCell className="px-4 py-2">
+                      <div className="flex items-center gap-1">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-7 px-2"
+                          onClick={() => handleViewFeedback(feedback)}
+                        >
+                          <Eye className="h-3 w-3 mr-1" />
                           View
                         </Button>
                         <Button
                           variant="destructive"
                           size="sm"
+                          className="h-7 px-2"
                           onClick={() => handleDeleteClick(feedback)}
                         >
-                          <Trash2 className="h-4 w-4 mr-1" />
+                          <Trash2 className="h-3 w-3 mr-1" />
                           Delete
                         </Button>
                       </div>

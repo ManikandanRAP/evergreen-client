@@ -319,23 +319,49 @@ class ApiClient {
     }
   }
 
-  async login(credentials: LoginCredentials): Promise<Token> {
-    const formData = new URLSearchParams()
-    formData.append("username", credentials.username)
-    formData.append("password", credentials.password)
-    const response = await fetch(`${this.baseUrl}/login`, {
-      method: "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      body: formData,
-    })
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}))
-      throw new Error(errorData.detail || "Login failed")
+  async login(credentials: LoginCredentials): Promise<{ success: boolean; token?: Token; error?: string }> {
+    try {
+      const formData = new URLSearchParams()
+      formData.append("username", credentials.username)
+      formData.append("password", credentials.password)
+      
+      const response = await fetch(`${this.baseUrl}/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: formData,
+      })
+      
+      if (!response.ok) {
+        // Handle different types of errors
+        if (response.status === 401) {
+          return { success: false, error: "Invalid username or password" }
+        } else if (response.status === 422) {
+          return { success: false, error: "Invalid credentials format" }
+        } else if (response.status >= 500) {
+          return { success: false, error: "Server error. Please try again later" }
+        } else {
+          // Try to get error details from response
+          try {
+            const errorData = await response.json()
+            return { success: false, error: errorData.detail || `Login failed with status ${response.status}` }
+          } catch {
+            return { success: false, error: `Login failed with status ${response.status}` }
+          }
+        }
+      }
+      
+      const token = await response.json()
+      this.setToken(token.access_token)
+      localStorage.setItem("access_token", token.access_token)
+      return { success: true, token }
+    } catch (error) {
+      // Handle network errors and other exceptions
+      if (error instanceof TypeError && error.message.includes('fetch')) {
+        return { success: false, error: "Unable to connect to server. Please check your internet connection and try again." }
+      }
+      // Handle other unexpected errors
+      return { success: false, error: "An unexpected error occurred. Please try again." }
     }
-    const token = await response.json()
-    this.setToken(token.access_token)
-    localStorage.setItem("access_token", token.access_token)
-    return token
   }
 
   async getCurrentUser(): Promise<User> {
@@ -429,10 +455,10 @@ class ApiClient {
     }
   }
 
-  async checkSingleDuplicate(data: ShowCreate): Promise<{ exists: boolean; existing_show: any }> {
+  async checkSingleDuplicate(data: ShowCreate): Promise<{ exists: boolean; existing_show: any; is_archived: boolean }> {
     try {
       console.log("Checking single duplicate:", JSON.stringify(data, null, 2))
-      const response = await this.request<{ exists: boolean; existing_show: any }>("/podcasts/check-duplicate", {
+      const response = await this.request<{ exists: boolean; existing_show: any; is_archived: boolean }>("/podcasts/check-duplicate", {
         method: "POST",
         body: JSON.stringify(data),
       })

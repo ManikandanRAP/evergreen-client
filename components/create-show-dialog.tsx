@@ -12,10 +12,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { ArrowLeft, ArrowRight, Save, X, AlertCircle, Loader2, Edit } from "lucide-react"
+import { ArrowLeft, ArrowRight, Save, X, AlertCircle, Loader2, Edit, RotateCcw, FileText, DollarSign, Radio, Users, Check, BarChart3, Handshake } from "lucide-react"
 import { cn } from "@/lib/utils"
 import type { Show } from "@/lib/api-client"
 import { ShowCreate, ShowUpdate, fetchAllclass, apiClient } from "@/lib/api-client" // Import both types
+import { toast } from "@/hooks/use-toast"
 import { Popover, PopoverTrigger } from "@/components/ui/popover"
 import { CustomPopoverContent } from "@/components/ui/custom-popover-content"
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command"
@@ -245,7 +246,9 @@ export default function CreateShowDialog({
   const [isQboOpen, setIsQboOpen] = useState(false)
   const [genreName, setGenreName] = useState<string | null>(null);
   const [isCheckingDuplicate, setIsCheckingDuplicate] = useState(false)
-  const [duplicateCheckResult, setDuplicateCheckResult] = useState<{ isDuplicate: boolean; existingShow?: any } | null>(null)
+  const [duplicateCheckResult, setDuplicateCheckResult] = useState<{ isDuplicate: boolean; existingShow?: any; isArchived?: boolean } | null>(null)
+  const [isUnarchiving, setIsUnarchiving] = useState(false)
+  const [showUnarchiveConfirm, setShowUnarchiveConfirm] = useState(false)
 
 
   const isEditMode = !!editingShow
@@ -272,7 +275,8 @@ export default function CreateShowDialog({
         
         setDuplicateCheckResult({
           isDuplicate: result.exists,
-          existingShow: result.existing_show
+          existingShow: result.existing_show,
+          isArchived: result.is_archived
         })
       } catch (error) {
         console.error("Error checking duplicate:", error)
@@ -357,10 +361,10 @@ export default function CreateShowDialog({
   }, [open])
 
   const tabs = [
-    { id: "basic", label: "Basic Info", icon: "📝" },
-    { id: "financial", label: "Financial", icon: "💰" },
-    { id: "content", label: "Content Details", icon: "🎙️" },
-    { id: "demographics", label: "Demographics", icon: "👥" },
+    { id: "basic", label: "Basic Info", icon: <FileText className="h-4 w-4" /> },
+    { id: "financial", label: "Financial", icon: <DollarSign className="h-4 w-4" /> },
+    { id: "content", label: "Content Details", icon: <Radio className="h-4 w-4" /> },
+    { id: "demographics", label: "Demographics", icon: <Users className="h-4 w-4" /> },
   ]
 
   const currentTabIndex = tabs.findIndex((tab) => tab.id === currentTab)
@@ -373,7 +377,11 @@ export default function CreateShowDialog({
       
       // Use real-time duplicate check result if available
       if (duplicateCheckResult?.isDuplicate && duplicateCheckResult.existingShow) {
-        return `A show with this name already exists: "${duplicateCheckResult.existingShow.title}". Please choose a different name or edit the existing show.`
+        if (duplicateCheckResult.isArchived) {
+          return `A show with this name already exists and is archived: "${duplicateCheckResult.existingShow.title}". Please choose a different name or unarchive and edit the show.`
+        } else {
+          return `A show with this name already exists: "${duplicateCheckResult.existingShow.title}". Please choose a different name or edit the existing show.`
+        }
       }
       
       // Fallback to local check if real-time check hasn't completed yet
@@ -427,6 +435,15 @@ export default function CreateShowDialog({
             setErrors({ title: error });
             return false;
         }
+        
+        // Check for duplicate result and set error in the errors state
+        if (duplicateCheckResult?.isDuplicate) {
+            const duplicateError = duplicateCheckResult.isArchived 
+                ? `A show with this name already exists and is archived: "${duplicateCheckResult.existingShow.title}". Please choose a different name or unarchive and edit the show.`
+                : `A show with this name already exists: "${duplicateCheckResult.existingShow.title}". Please choose a different name or edit the existing show.`;
+            setErrors({ title: duplicateError });
+            return false;
+        }
     }
     setErrors({});
     return true;
@@ -468,8 +485,8 @@ export default function CreateShowDialog({
       })
     }
     
-    // Clear duplicate check result when title changes
-    if (field === "title") {
+    // Clear duplicate check result when title changes (but not when navigating tabs)
+    if (field === "title" && value !== formData.title) {
       setDuplicateCheckResult(null)
     }
   }
@@ -485,6 +502,50 @@ export default function CreateShowDialog({
   const handlePrevious = () => {
     if (currentTabIndex > 0) {
       setCurrentTab(tabs[currentTabIndex - 1].id)
+    }
+  }
+
+  const handleUnarchiveShow = () => {
+    if (!duplicateCheckResult?.existingShow) return
+    setShowUnarchiveConfirm(true)
+  }
+
+  const handleConfirmUnarchive = async () => {
+    if (!duplicateCheckResult?.existingShow) return
+    
+    setIsUnarchiving(true)
+    try {
+      await apiClient.unarchiveShow(duplicateCheckResult.existingShow.id)
+      toast({
+        title: "Show unarchived successfully",
+        description: `"${duplicateCheckResult.existingShow.title}" has been unarchived and is now available for editing.`,
+      })
+      
+      // Close the create dialog
+      onOpenChange(false)
+      setShowUnarchiveConfirm(false)
+      
+      // Refresh the shows list in the parent component
+      if (onShowUpdated) {
+        await onShowUpdated()
+      }
+      
+      // Open the edit dialog for the unarchived show after the list is refreshed
+      if (onEditExistingShow) {
+        // Small delay to ensure the shows list is refreshed before opening edit dialog
+        setTimeout(() => {
+          onEditExistingShow(duplicateCheckResult.existingShow)
+        }, 200)
+      }
+    } catch (error) {
+      console.error("Error unarchiving show:", error)
+      toast({
+        title: "Error unarchiving show",
+        description: "Failed to unarchive the show. Please try again.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsUnarchiving(false)
     }
   }
 
@@ -624,7 +685,7 @@ export default function CreateShowDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl h-[85vh] flex flex-col">
+      <DialogContent className="max-w-6xl h-[90vh] flex flex-col">
         <DialogHeader>
           <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-emerald-600 to-cyan-600 bg-clip-text text-transparent">
             {isEditMode ? "Edit Show" : "Create New Show"}
@@ -652,7 +713,7 @@ export default function CreateShowDialog({
                 <span className="hidden sm:inline">{tab.label}</span>
                 {isTabComplete(tab.id) && !hasTabErrors(tab.id) && (
                   <Badge variant="secondary" className="ml-1 h-4 w-4 p-0 text-xs bg-emerald-100 text-emerald-700">
-                    ✓
+                    <Check className="h-3 w-3" />
                   </Badge>
                 )}
                 {hasTabErrors(tab.id) && attemptedSubmit && (
@@ -669,11 +730,11 @@ export default function CreateShowDialog({
             <TabsContent value="basic" className="mt-0">
               <Card>
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2">📝 Basic Information</CardTitle>
+                  <CardTitle className="flex items-center gap-2"><FileText className="h-4 w-4" /> Basic Information</CardTitle>
                   <CardDescription>Enter the fundamental details about your show</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="title">
                         Show Name <span className="text-red-500">*</span>
@@ -685,33 +746,62 @@ export default function CreateShowDialog({
                         onChange={(e) => handleInputChange("title", e.target.value)}
                         className={cn("h-10", getFieldError("title") && "border-red-500")}
                       />
-                      {getFieldError("title") && (
-                        <p className="text-sm text-red-500 flex items-center gap-1">
-                          <AlertCircle className="h-3 w-3" />
-                          {getFieldError("title")}
-                        </p>
+                      {getFieldError("title") && !duplicateCheckResult?.isDuplicate && !getFieldError("title")?.includes("already exists") && (
+                        <div className="text-sm text-red-500">
+                          <div className="flex items-center gap-1 mb-2">
+                            <AlertCircle className="h-3 w-3" />
+                            {getFieldError("title")}
+                          </div>
+                        </div>
                       )}
-                      {!getFieldError("title") && formData.title && !isCheckingDuplicate && (
+                      {formData.title && !isCheckingDuplicate && (
                         <div className="text-xs text-muted-foreground">
                           {duplicateCheckResult?.isDuplicate ? (
-                            <div className="space-y-1">
-                              <p className="text-red-500">⚠ Show name is not available</p>
-                              <p className="text-xs text-muted-foreground">
-                                A show named "{duplicateCheckResult.existingShow?.title}" already exists. 
-                                Please choose a different name or{" "}
-                                <button
-                                  type="button"
-                                  onClick={handleEditExistingShow}
-                                  className="text-blue-600 hover:text-blue-800 underline inline-flex items-center gap-1 font-medium"
-                                >
-                                  <Edit className="h-3 w-3" />
-                                  edit the existing show
-                                </button>
-                                .
-                              </p>
+                            <div className="p-2 bg-orange-50 border border-orange-200 rounded-md">
+                              <div className="text-xs text-orange-800">
+                                <p className="mb-2">
+                                  A show named "{duplicateCheckResult.existingShow?.title}" already exists{duplicateCheckResult.isArchived ? " and is archived" : ""}. 
+                                  Choose a different name, or
+                                </p>
+                                <div>
+                                  {duplicateCheckResult.isArchived ? (
+                                    <Button
+                                      type="button"
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={handleUnarchiveShow}
+                                      disabled={isUnarchiving}
+                                      className="h-7 px-2 text-xs bg-orange-100 hover:bg-orange-200 border-orange-300 text-orange-800 hover:text-orange-900"
+                                    >
+                                      {isUnarchiving ? (
+                                        <>
+                                          <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                                          Unarchiving...
+                                        </>
+                                      ) : (
+                                        <>
+                                          <RotateCcw className="h-3 w-3 mr-1" />
+                                          Unarchive and edit the show
+                                        </>
+                                      )}
+                                    </Button>
+                                  ) : (
+                                    <Button
+                                      type="button"
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={handleEditExistingShow}
+                                      className="h-7 px-2 text-xs bg-blue-100 hover:bg-blue-200 border-blue-300 text-blue-800 hover:text-blue-900"
+                                    >
+                                      <Edit className="h-3 w-3 mr-1" />
+                                      Edit the existing show
+                                    </Button>
+                                  )}
+                                </div>
+                              </div>
                             </div>
                           ) : (
-                            <span className="text-green-600">✓ Show name is available</span>
+                            <span className="text-green-600 flex items-center gap-1"><Check className="h-3 w-3" /> Show name is available</span>
                           )}
                         </div>
                       )}
@@ -740,9 +830,6 @@ export default function CreateShowDialog({
                         </SelectContent>
                       </Select>
                     </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label>Ranking Category</Label>
                       <Select
@@ -763,6 +850,9 @@ export default function CreateShowDialog({
                         </SelectContent>
                       </Select>
                     </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     <div className="space-y-2">
                       <Label>Format</Label>
                       <Select
@@ -781,9 +871,6 @@ export default function CreateShowDialog({
                         </SelectContent>
                       </Select>
                     </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="subnetwork_id">Subnetwork Name</Label>
                       <Input
@@ -809,7 +896,7 @@ export default function CreateShowDialog({
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     <div className="space-y-2">
                       <Label>Relationship</Label>
                       <Select
@@ -880,9 +967,7 @@ export default function CreateShowDialog({
                         </CustomPopoverContent>
                       </Popover>
                     </div>
-
-
-                    
+                    <div></div>
                   </div>
 
                   <div className="flex gap-6">
@@ -927,11 +1012,11 @@ export default function CreateShowDialog({
             <TabsContent value="financial" className="mt-0 space-y-8">
               <Card>
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2">💰 Financial Information</CardTitle>
+                  <CardTitle className="flex items-center gap-2"><DollarSign className="h-4 w-4" /> Financial Information</CardTitle>
                   <CardDescription>Configure revenue and financial details</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="ownershipPercentage">Ownership by Evergreen (%)</Label>
                       <Input
@@ -970,7 +1055,7 @@ export default function CreateShowDialog({
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="revenue2023">Revenue 2023</Label>
                       <Input
@@ -1006,14 +1091,14 @@ export default function CreateShowDialog({
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  <div className="flex flex-wrap gap-x-6 gap-y-2">
                     <div className="flex items-center space-x-2">
                       <Checkbox
                         id="minimumGuarantee"
                         checked={formData.minimumGuarantee}
                         onCheckedChange={(checked) => handleInputChange("minimumGuarantee", checked)}
                       />
-                      <Label htmlFor="minimumGuarantee">Minimum Guarantee</Label>
+                      <Label htmlFor="minimumGuarantee" className="whitespace-nowrap">Minimum Guarantee</Label>
                     </div>
                     <div className="flex items-center space-x-2">
                       <Checkbox
@@ -1021,7 +1106,7 @@ export default function CreateShowDialog({
                         checked={formData.hasSponsorshipRevenue}
                         onCheckedChange={(checked) => handleInputChange("hasSponsorshipRevenue", checked)}
                       />
-                      <Label htmlFor="hasSponsorshipRevenue">Has Sponsorship Revenue</Label>
+                      <Label htmlFor="hasSponsorshipRevenue" className="whitespace-nowrap">Has Sponsorship Revenue</Label>
                     </div>
                     <div className="flex items-center space-x-2">
                       <Checkbox
@@ -1029,7 +1114,7 @@ export default function CreateShowDialog({
                         checked={formData.hasNonEvergreenRevenue}
                         onCheckedChange={(checked) => handleInputChange("hasNonEvergreenRevenue", checked)}
                       />
-                      <Label htmlFor="hasNonEvergreenRevenue">Has Non Evergreen Revenue</Label>
+                      <Label htmlFor="hasNonEvergreenRevenue" className="whitespace-nowrap">Has Non Evergreen Revenue</Label>
                     </div>
                     <div className="flex items-center space-x-2">
                       <Checkbox
@@ -1037,7 +1122,7 @@ export default function CreateShowDialog({
                         checked={formData.requiresPartnerLedgerAccess}
                         onCheckedChange={(checked) => handleInputChange("requiresPartnerLedgerAccess", checked)}
                       />
-                      <Label htmlFor="requiresPartnerLedgerAccess">Requires Partner Ledger Access</Label>
+                      <Label htmlFor="requiresPartnerLedgerAccess" className="whitespace-nowrap">Requires Partner Ledger Access</Label>
                     </div>
                     <div className="flex items-center space-x-2">
                       <Checkbox
@@ -1045,7 +1130,7 @@ export default function CreateShowDialog({
                         checked={formData.hasBrandedRevenue}
                         onCheckedChange={(checked) => handleInputChange("hasBrandedRevenue", checked)}
                       />
-                      <Label htmlFor="hasBrandedRevenue">Branded Revenue</Label>
+                      <Label htmlFor="hasBrandedRevenue" className="whitespace-nowrap">Branded Revenue</Label>
                     </div>
                     <div className="flex items-center space-x-2">
                       <Checkbox
@@ -1053,7 +1138,7 @@ export default function CreateShowDialog({
                         checked={formData.hasMarketingRevenue}
                         onCheckedChange={(checked) => handleInputChange("hasMarketingRevenue", checked)}
                       />
-                      <Label htmlFor="hasMarketingRevenue">Marketing Revenue</Label>
+                      <Label htmlFor="hasMarketingRevenue" className="whitespace-nowrap">Marketing Revenue</Label>
                     </div>
                     <div className="flex items-center space-x-2">
                       <Checkbox
@@ -1061,7 +1146,7 @@ export default function CreateShowDialog({
                         checked={formData.hasWebManagementRevenue}
                         onCheckedChange={(checked) => handleInputChange("hasWebManagementRevenue", checked)}
                       />
-                      <Label htmlFor="hasWebManagementRevenue">Web Management Revenue</Label>
+                      <Label htmlFor="hasWebManagementRevenue" className="whitespace-nowrap">Web Management Revenue</Label>
                     </div>
                   </div>
                 </CardContent>
@@ -1069,11 +1154,37 @@ export default function CreateShowDialog({
 
               <Card>
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2">📊 Contract Splits</CardTitle>
+                  <CardTitle className="flex items-center gap-2"><BarChart3 className="h-4 w-4" /> Contract Splits</CardTitle>
                   <CardDescription>Define how revenue is split for various contract types.</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="standardAdsPercent">Standard Ads (%)</Label>
+                      <Input
+                        id="standardAdsPercent"
+                        type="number"
+                        step="0.01"
+                        placeholder="0.00"
+                        min="0"
+                        max="100"
+                        value={formData.standardAdsPercent}
+                        onChange={(e) => handleInputChange("standardAdsPercent", e.target.value)}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="programmaticAdsSpanPercent">Programmatic Ads/Span (%)</Label>
+                      <Input
+                        id="programmaticAdsSpanPercent"
+                        type="number"
+                        step="0.01"
+                        placeholder="0.00"
+                        min="0"
+                        max="100"
+                        value={formData.programmaticAdsSpanPercent}
+                        onChange={(e) => handleInputChange("programmaticAdsSpanPercent", e.target.value)}
+                      />
+                    </div>
                     <div className="space-y-2">
                       <Label htmlFor="sideBonusPercent">Side Bonus (%)</Label>
                       <Input
@@ -1114,19 +1225,6 @@ export default function CreateShowDialog({
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="standardAdsPercent">Standard Ads (%)</Label>
-                      <Input
-                        id="standardAdsPercent"
-                        type="number"
-                        step="0.01"
-                        placeholder="0.00"
-                        min="0"
-                        max="100"
-                        value={formData.standardAdsPercent}
-                        onChange={(e) => handleInputChange("standardAdsPercent", e.target.value)}
-                      />
-                    </div>
-                    <div className="space-y-2">
                       <Label htmlFor="sponsorshipAdFpLeadPercent">Sponsorship Ad FP - Lead (%)</Label>
                       <Input
                         id="sponsorshipAdFpLeadPercent"
@@ -1163,19 +1261,6 @@ export default function CreateShowDialog({
                         max="100"
                         value={formData.sponsorshipAdPartnerSoldPercent}
                         onChange={(e) => handleInputChange("sponsorshipAdPartnerSoldPercent", e.target.value)}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="programmaticAdsSpanPercent">Programmatic Ads/Span (%)</Label>
-                      <Input
-                        id="programmaticAdsSpanPercent"
-                        type="number"
-                        step="0.01"
-                        placeholder="0.00"
-                        min="0"
-                        max="100"
-                        value={formData.programmaticAdsSpanPercent}
-                        onChange={(e) => handleInputChange("programmaticAdsSpanPercent", e.target.value)}
                       />
                     </div>
                     <div className="space-y-2">
@@ -1223,11 +1308,11 @@ export default function CreateShowDialog({
 
               <Card>
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2">🤝 Hands Off Splits</CardTitle>
+                  <CardTitle className="flex items-center gap-2"><Handshake className="h-4 w-4" /> Hands Off Splits</CardTitle>
                   <CardDescription>Define revenue splits for hands-off scenarios.</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="directCustomerHandsOffPercent">Direct Customer - Hands Off (%)</Label>
                       <Input
@@ -1276,11 +1361,11 @@ export default function CreateShowDialog({
             <TabsContent value="content" className="mt-0">
               <Card>
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2">🎙️ Content Details</CardTitle>
+                  <CardTitle className="flex items-center gap-2"><Radio className="h-4 w-4" /> Content Details</CardTitle>
                   <CardDescription>Specify content format and production details</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                     <div className="space-y-2">
                       <Label>Genre</Label>
                       <Select value={formData.genre_name} onValueChange={(value) => handleInputChange("genre_name", value)}>
@@ -1311,9 +1396,6 @@ export default function CreateShowDialog({
                         </SelectContent>
                       </Select>
                     </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="adSlots">Ad Slots</Label>
                       <Input
@@ -1379,11 +1461,11 @@ export default function CreateShowDialog({
             <TabsContent value="demographics" className="mt-0">
               <Card>
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2">👥 Demographics</CardTitle>
+                  <CardTitle className="flex items-center gap-2"><Users className="h-4 w-4" /> Demographics</CardTitle>
                   <CardDescription>Define your target audience and show status</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     <div className="space-y-2">
                       <Label>Age Demographic</Label>
                       <Select
@@ -1420,9 +1502,6 @@ export default function CreateShowDialog({
                         </p>
                       )}
                     </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label>Region Demographic</Label>
                       <Select
@@ -1441,7 +1520,7 @@ export default function CreateShowDialog({
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     <div className="space-y-2">
                       <Label>Primary Education Demographic</Label>
                       <Select
@@ -1482,6 +1561,7 @@ export default function CreateShowDialog({
                         </SelectContent>
                       </Select>
                     </div>
+                    <div></div>
                   </div>
                 </CardContent>
               </Card>
@@ -1523,6 +1603,47 @@ export default function CreateShowDialog({
           </div>
         </Tabs>
       </DialogContent>
+
+      {/* Unarchive Confirmation Dialog */}
+      <Dialog open={showUnarchiveConfirm} onOpenChange={setShowUnarchiveConfirm}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Unarchive Show</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              Are you sure you want to unarchive "{duplicateCheckResult?.existingShow?.title}"? 
+              This will restore the show and allow you to edit it.
+            </p>
+            <div className="flex justify-end space-x-2">
+              <Button
+                variant="outline"
+                onClick={() => setShowUnarchiveConfirm(false)}
+                disabled={isUnarchiving}
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleConfirmUnarchive}
+                disabled={isUnarchiving}
+                className="bg-orange-600 hover:bg-orange-700"
+              >
+                {isUnarchiving ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Unarchiving...
+                  </>
+                ) : (
+                  <>
+                    <RotateCcw className="h-4 w-4 mr-2" />
+                    Unarchive and Edit
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </Dialog>
   )
 }

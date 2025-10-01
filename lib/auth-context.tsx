@@ -8,7 +8,7 @@ export type UserRole = "admin" | "partner" | "internal_full_access" | "internal_
 interface AuthContextType {
   user: User | null
   token: string | null // Expose token in the context
-  login: (email: string, password: string) => Promise<boolean>
+  login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>
   logout: () => void
   isLoading: boolean
 }
@@ -43,23 +43,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     initAuth()
   }, [])
 
-  const login = async (email: string, password: string): Promise<boolean> => {
-    try {
-      const credentials: LoginCredentials = {
-        username: email, // API uses username field for email
-        password,
-      }
-
-      await apiClient.login(credentials)
-      const newToken = localStorage.getItem("access_token") // Get token after login
-      const currentUser = await apiClient.getCurrentUser()
-      setUser(currentUser)
-      setToken(newToken) // Set the new token in state
-      return true
-    } catch (error) {
-      console.error("Login failed:", error)
-      return false
+  const login = async (email: string, password: string): Promise<{ success: boolean; error?: string }> => {
+    const credentials: LoginCredentials = {
+      username: email, // API uses username field for email
+      password,
     }
+
+    const result = await apiClient.login(credentials)
+    
+    if (result.success && result.token) {
+      try {
+        const currentUser = await apiClient.getCurrentUser()
+        setUser(currentUser)
+        setToken(result.token.access_token) // Set the new token in state
+        return { success: true }
+      } catch (error: any) {
+        console.error("Failed to get user info after login:", error)
+        return { 
+          success: false, 
+          error: "Login successful but failed to load user information. Please try again." 
+        }
+      }
+    }
+    
+    return result
   }
 
   const logout = () => {

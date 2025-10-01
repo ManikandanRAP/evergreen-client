@@ -502,7 +502,7 @@ export default function ArchivedShowsManagement() {
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
           {/* Show Numbers - Moved to left */}
           <div className="flex items-center gap-2">
-            <Badge className="px-3 py-1 bg-orange-100 text-orange-800 border-orange-200 dark:bg-orange-900/50 dark:text-orange-300 dark:border-orange-700">
+            <Badge className="px-3 py-1 bg-orange-100 text-orange-800 border-orange-200 dark:bg-orange-900/50 dark:text-orange-300 dark:border-orange-700 hover:bg-orange-100 hover:text-orange-800 dark:hover:bg-orange-900/50 dark:hover:text-orange-300">
               {filteredShows.length} Archived Shows
             </Badge>
             {searchTerm && (

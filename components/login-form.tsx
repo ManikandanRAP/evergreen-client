@@ -25,9 +25,9 @@ export default function LoginForm() {
     setIsLoading(true)
     setError("")
 
-    const success = await login(email, password)
-    if (!success) {
-      setError("Invalid email or password")
+    const result = await login(email, password)
+    if (!result.success) {
+      setError(result.error || "Invalid email or password")
     }
     setIsLoading(false)
   }
@@ -45,9 +45,9 @@ export default function LoginForm() {
             <Image src="/myco-beta-logo.png" alt="Myco" width={200} height={50} className="h-12 w-auto" priority />
           </div>
           <CardTitle className="text-2xl font-bold bg-gradient-to-r from-emerald-600 to-cyan-600 bg-clip-text text-transparent">
-            Ledger and Partner Portal
+            Shows and Ledger Management
           </CardTitle>
-          <CardDescription>Sign in to access your podcast dashboard</CardDescription>
+          <CardDescription>Sign in to access Myco Dashboard</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
