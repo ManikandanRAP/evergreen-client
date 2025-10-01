@@ -36,7 +36,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { Check, ChevronsUpDown, Loader2, Pencil, Trash2, ArrowLeft, Eye, EyeOff, Search, ChevronLeft, ChevronRight, ArrowUpDown, ArrowUp, ArrowDown, Plus, Download, Users, UserCheck, UserX, MoreHorizontal, User as UserIcon, Building, FileText, Calendar, MoreVertical, Settings } from "lucide-react"
+import { Check, ChevronsUpDown, Loader2, Pencil, Trash2, ArrowLeft, Eye, EyeOff, Search, ChevronLeft, ChevronRight, ArrowUpDown, ArrowUp, ArrowDown, Plus, Download, Users, UserCheck, UserX, MoreHorizontal, User as UserIcon, Building, Calendar, MoreVertical, Settings } from "lucide-react"
 import clsx from "clsx"
 import { useToast } from "@/hooks/use-toast"
 import { useAuth } from "@/lib/auth-context"
@@ -734,10 +734,6 @@ export default function UserManagement({ onBack }: UserManagementProps) {
                                   <Trash2 className="h-4 w-4 mr-2" />
                                   Delete
                                 </DropdownMenuItem>
-                                <DropdownMenuItem>
-                                  <FileText className="h-4 w-4 mr-2" />
-                                  Activity Log
-                                </DropdownMenuItem>
                               </DropdownMenuContent>
                             </DropdownMenu>
                           </div>
@@ -1170,13 +1166,6 @@ export default function UserManagement({ onBack }: UserManagementProps) {
                     >
                       <Pencil className="h-4 w-4" />
                       Edit User Details
-                    </Button>
-                    <Button 
-                      variant="outline" 
-                      className="flex items-center gap-2 bg-gradient-to-br from-cyan-50 to-cyan-100 dark:from-cyan-950/20 dark:to-cyan-900/20 border-cyan-200 dark:border-cyan-800 text-cyan-700 dark:text-cyan-300 hover:from-cyan-100 hover:to-cyan-200 dark:hover:from-cyan-900/30 dark:hover:to-cyan-800/30"
-                    >
-                      <FileText className="h-4 w-4" />
-                      View Activity Log
                     </Button>
                   </div>
                 </CardContent>
