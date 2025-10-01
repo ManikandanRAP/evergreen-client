@@ -615,7 +615,7 @@ export default function UserManagement({ onBack }: UserManagementProps) {
                 />
               </div>
               <Select value={roleFilter} onValueChange={setRoleFilter}>
-                <SelectTrigger className="w-32">
+                <SelectTrigger className="w-64">
                   <SelectValue placeholder="Role" />
                 </SelectTrigger>
                 <SelectContent>
