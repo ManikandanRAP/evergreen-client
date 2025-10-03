@@ -223,7 +223,7 @@ export default function HomePage() {
     return (
       <div className="space-y-6">
         <div>
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-emerald-600 to-cyan-600 bg-clip-text text-transparent tracking-tight">
+          <h1 className="text-xl sm:text-3xl font-bold bg-gradient-to-r from-emerald-600 to-cyan-600 bg-clip-text text-transparent tracking-tight">
             Welcome back, {user?.name}!
           </h1>
           <p className="text-muted-foreground">Loading your dashboard…</p>
@@ -242,18 +242,61 @@ export default function HomePage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold bg-gradient-to-r from-emerald-600 to-cyan-600 bg-clip-text text-transparent">
+        <h1 className="text-xl sm:text-3xl font-bold bg-gradient-to-r from-emerald-600 to-cyan-600 bg-clip-text text-transparent">
           Welcome back, {user?.name}!
         </h1>
-        <p className="text-muted-foreground">
+        <p className="text-sm text-muted-foreground md:text-base md:text-muted-foreground">
           {user?.role === "admin"
             ? "Manage your podcast network and track performance"
             : "View your shows and revenue performance"}
         </p>
       </div>
 
-      {/* ---- Stats Grid ---- */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      {/* Mobile Stats - Hidden on Desktop */}
+      <div className="grid grid-cols-2 gap-2 md:hidden">
+        <Card className="evergreen-card bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-950/20 dark:to-emerald-900/20 border-emerald-200 dark:border-emerald-800">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-0 px-2 py-2">
+            <CardTitle className="text-xs font-medium text-emerald-700 dark:text-emerald-300">Total Shows</CardTitle>
+            <Radio className="h-3 w-3 text-emerald-600" />
+          </CardHeader>
+          <CardContent className="px-2 pb-2 pt-0">
+            <div className="text-base font-bold text-emerald-600">{shows.length}</div>
+          </CardContent>
+        </Card>
+
+        <Card className="evergreen-card bg-gradient-to-br from-cyan-50 to-cyan-100 dark:from-cyan-950/20 dark:to-cyan-900/20 border-cyan-200 dark:border-cyan-800">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-0 px-2 py-2">
+            <CardTitle className="text-xs font-medium text-cyan-700 dark:text-cyan-300">Total Net Revenue</CardTitle>
+            <DollarSign className="h-3 w-3 text-cyan-600" />
+          </CardHeader>
+          <CardContent className="px-2 pb-2 pt-0">
+            <div className="text-base font-bold text-cyan-600">{formatCurrency(summary.totalNetRevenue)}</div>
+          </CardContent>
+        </Card>
+
+        <Card className="evergreen-card bg-gradient-to-br from-green-50 to-green-100 dark:from-green-950/20 dark:to-green-900/20 border-green-200 dark:border-green-800">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-0 px-2 py-2">
+            <CardTitle className="text-xs font-medium text-green-700 dark:text-green-300">Total Evergreen Share</CardTitle>
+            <TrendingUp className="h-3 w-3 text-green-600" />
+          </CardHeader>
+          <CardContent className="px-2 pb-2 pt-0">
+            <div className="text-base font-bold text-green-600">{formatCurrency(summary.totalEvergreenShare)}</div>
+          </CardContent>
+        </Card>
+
+        <Card className="evergreen-card bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950/20 dark:to-blue-900/20 border-blue-200 dark:border-blue-800">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-0 px-2 py-2">
+            <CardTitle className="text-xs font-medium text-blue-700 dark:text-blue-300">Total Payments Made</CardTitle>
+            <CreditCard className="h-3 w-3 text-blue-600" />
+          </CardHeader>
+          <CardContent className="px-2 pb-2 pt-0">
+            <div className="text-base font-bold text-blue-600">{formatCurrency(summary.totalPaymentsMade)}</div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Desktop Stats - Hidden on Mobile */}
+      <div className="hidden md:grid grid-cols-2 lg:grid-cols-4 gap-4">
         <Card className="evergreen-card bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-950/20 dark:to-emerald-900/20 border-emerald-200 dark:border-emerald-800">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-emerald-700 dark:text-emerald-300">Total Shows</CardTitle>
@@ -304,11 +347,11 @@ export default function HomePage() {
       {/* Recent Shows — LIST VIEW with comfy container */}
       <Card className="evergreen-card">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
+          <CardTitle className="flex items-center gap-2 text-xl md:text-2xl">
             <Radio className="h-5 w-5 text-emerald-600" />
             {user?.role === "admin" ? "Recent Shows" : "Recent Shows"}
           </CardTitle>
-          <CardDescription>
+          <CardDescription className="text-muted-foreground md:text-muted-foreground">
             {user?.role === "admin" ? "Latest shows added to the network" : "Latest shows added to the network"}
           </CardDescription>
         </CardHeader>
@@ -316,17 +359,23 @@ export default function HomePage() {
         {/* CHANGED: added inner padding container so the table isn't edge-to-edge */}
         <CardContent className="p-0">
           <div className="px-4 pb-4 lg:px-6">
-            <div className="overflow-x-auto rounded-md border">
+            <div className="overflow-x-auto rounded-md border border-border">
               <table className="w-full text-sm">
-                <thead className="border-b bg-muted/40">
+                <thead className="border-b border-border bg-muted/40">
                   <tr className="text-left text-sm">
-                    <th className="p-3 px-6 font-semibold border-r">Show Name</th>
-                    <th className="p-3 font-semibold border-r">Type</th>
-                    <th className="p-3 font-semibold border-r">Ranking</th>
-                    <th className="p-3 font-semibold border-r">Rate Card</th>
-                    <th className="p-3 font-semibold border-r">Standard</th>
-                    <th className="p-3 font-semibold border-r">Programmatic</th>
-                    <th className="p-3 font-semibold">Cadence</th>
+                    <th className="p-3 px-6 font-semibold border-r border-border">Show Name</th>
+                    <th className="p-3 font-semibold border-r border-border hidden md:table-cell">Type</th>
+                    <th className="p-3 font-semibold border-r border-border hidden md:table-cell">Ranking</th>
+                    <th className="p-3 font-semibold border-r border-border hidden md:table-cell">Rate Card</th>
+                    <th className="p-3 font-semibold border-r border-border">
+                      <span className="md:hidden">Std</span>
+                      <span className="hidden md:inline">Standard</span>
+                    </th>
+                    <th className="p-3 font-semibold md:border-r border-border">
+                      <span className="md:hidden">Prog</span>
+                      <span className="hidden md:inline">Programmatic</span>
+                    </th>
+                    <th className="p-3 font-semibold hidden md:table-cell">Cadence</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -338,11 +387,11 @@ export default function HomePage() {
                       return dateB - dateA
                     })
                     .slice(0, 5)
-                    .map((show) => (
-                    <tr key={show.id} className="border-b hover:bg-accent/50 transition-colors">
-                      <td className="p-3 px-6 font-medium border-r">{show.title ?? "N/A"}</td>
-                      <td className="p-3 capitalize border-r">{(show as any).show_type ?? "N/A"}</td>
-                      <td className="p-3 border-r">
+                    .map((show, index, array) => (
+                    <tr key={show.id} className={`${index < array.length - 1 ? 'border-b border-border' : ''} hover:bg-accent/50 transition-colors`}>
+                      <td className="p-3 px-6 font-medium border-r border-border">{show.title ?? "N/A"}</td>
+                      <td className="p-3 capitalize border-r border-border hidden md:table-cell">{(show as any).show_type ?? "N/A"}</td>
+                      <td className="p-3 border-r border-border hidden md:table-cell">
                         {(() => {
                           const rankingInfo = getRankingInfo((show as any).ranking_category);
                           return rankingInfo.hasRanking ? (
@@ -352,7 +401,7 @@ export default function HomePage() {
                           ) : "N/A";
                         })()}
                       </td>
-                      <td className="p-3 border-r">
+                      <td className="p-3 border-r border-border hidden md:table-cell">
                         <Badge
                           className={`text-xs border pointer-events-none ${
                             show.rate_card
@@ -363,19 +412,19 @@ export default function HomePage() {
                           {show.rate_card ? "Yes" : "No"}
                         </Badge>
                       </td>
-                      <td className="p-3 border-r">
+                      <td className="p-3 border-r border-border">
                         {(() => {
                           const standardSplit = show.standard_ads_percent ?? null;
                           return standardSplit !== null ? `${standardSplit}%` : "N/A";
                         })()}
                       </td>
-                      <td className="p-3 border-r">
+                      <td className="p-3 md:border-r border-border">
                         {(() => {
                           const programmaticSplit = show.programmatic_ads_span_percent ?? null;
                           return programmaticSplit !== null ? `${programmaticSplit}%` : "N/A";
                         })()}
                       </td>
-                      <td className="p-3">{show.cadence ?? "N/A"}</td>
+                      <td className="p-3 hidden md:table-cell">{show.cadence ?? "N/A"}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -389,45 +438,45 @@ export default function HomePage() {
       {user?.role === "admin" && (
         <Card className="evergreen-card">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
+            <CardTitle className="flex items-center gap-2 text-xl md:text-2xl">
               <Zap className="h-5 w-5 text-yellow-600" />
               Quick Actions
             </CardTitle>
-            <CardDescription>Common tasks and shortcuts</CardDescription>
+            <CardDescription className="text-muted-foreground md:text-muted-foreground">Common tasks and shortcuts</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-3">
               <Button 
                 variant="outline" 
-                className="h-20 flex flex-col gap-2 bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-950/20 dark:to-emerald-900/20 border-emerald-200 dark:border-emerald-800 hover:from-emerald-100 hover:to-emerald-200 dark:hover:from-emerald-900/30 dark:hover:to-emerald-800/30"
+                className="h-16 sm:h-20 flex flex-col gap-1 sm:gap-2 bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-950/20 dark:to-emerald-900/20 border-emerald-200 dark:border-emerald-800 hover:from-emerald-100 hover:to-emerald-200 dark:hover:from-emerald-900/30 dark:hover:to-emerald-800/30"
                 onClick={() => handleQuickAction('add-show')}
               >
-                <Plus className="h-6 w-6 text-emerald-600" />
-                <span className="text-sm text-emerald-700 dark:text-emerald-300">Add Show</span>
+                <Plus className="h-4 w-4 sm:h-6 sm:w-6 text-emerald-600" />
+                <span className="text-xs sm:text-sm text-emerald-700 dark:text-emerald-300">Add Show</span>
               </Button>
               <Button 
                 variant="outline" 
-                className="h-20 flex flex-col gap-2 bg-gradient-to-br from-green-50 to-green-100 dark:from-green-950/20 dark:to-green-900/20 border-green-200 dark:border-green-800 hover:from-green-100 hover:to-green-200 dark:hover:from-green-900/30 dark:hover:to-green-800/30"
+                className="h-16 sm:h-20 flex flex-col gap-1 sm:gap-2 bg-gradient-to-br from-green-50 to-green-100 dark:from-green-950/20 dark:to-green-900/20 border-green-200 dark:border-green-800 hover:from-green-100 hover:to-green-200 dark:hover:from-green-900/30 dark:hover:to-green-800/30"
                 onClick={() => handleQuickAction('import-shows')}
               >
-                <Upload className="h-6 w-6 text-green-600" />
-                <span className="text-sm text-green-700 dark:text-green-300">Import Shows</span>
+                <Upload className="h-4 w-4 sm:h-6 sm:w-6 text-green-600" />
+                <span className="text-xs sm:text-sm text-green-700 dark:text-green-300">Import Shows</span>
               </Button>
               <Button 
                 variant="outline" 
-                className="h-20 flex flex-col gap-2 bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-950/20 dark:to-purple-900/20 border-purple-200 dark:border-purple-800 hover:from-purple-100 hover:to-purple-200 dark:hover:from-purple-900/30 dark:hover:to-purple-800/30"
+                className="h-16 sm:h-20 flex flex-col gap-1 sm:gap-2 bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-950/20 dark:to-purple-900/20 border-purple-200 dark:border-purple-800 hover:from-purple-100 hover:to-purple-200 dark:hover:from-purple-900/30 dark:hover:to-purple-800/30"
                 onClick={() => handleQuickAction('split-history')}
               >
-                <History className="h-6 w-6 text-purple-600" />
-                <span className="text-sm text-purple-700 dark:text-purple-300">Split History</span>
+                <History className="h-4 w-4 sm:h-6 sm:w-6 text-purple-600" />
+                <span className="text-xs sm:text-sm text-purple-700 dark:text-purple-300">Split History</span>
               </Button>
               <Button 
                 variant="outline" 
-                className="h-20 flex flex-col gap-2 bg-gradient-to-br from-indigo-50 to-indigo-100 dark:from-indigo-950/20 dark:to-indigo-900/20 border-indigo-200 dark:border-indigo-800 hover:from-indigo-100 hover:to-indigo-200 dark:hover:from-indigo-900/30 dark:hover:to-indigo-800/30"
+                className="h-16 sm:h-20 flex flex-col gap-1 sm:gap-2 bg-gradient-to-br from-indigo-50 to-indigo-100 dark:from-indigo-950/20 dark:to-indigo-900/20 border-indigo-200 dark:border-indigo-800 hover:from-indigo-100 hover:to-indigo-200 dark:hover:from-indigo-900/30 dark:hover:to-indigo-800/30"
                 onClick={() => handleQuickAction('user-management')}
               >
-                <Settings className="h-6 w-6 text-indigo-600" />
-                <span className="text-sm text-indigo-700 dark:text-indigo-300">User Management</span>
+                <Settings className="h-4 w-4 sm:h-6 sm:w-6 text-indigo-600" />
+                <span className="text-xs sm:text-sm text-indigo-700 dark:text-indigo-300">User Management</span>
               </Button>
             </div>
           </CardContent>
