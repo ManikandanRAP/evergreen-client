@@ -36,7 +36,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { Check, ChevronsUpDown, Loader2, Pencil, Trash2, ArrowLeft, Eye, EyeOff, Search, ChevronLeft, ChevronRight, ArrowUpDown, ArrowUp, ArrowDown, Plus, Download, Users, UserCheck, UserX, MoreHorizontal, User as UserIcon, Building, Calendar, MoreVertical, Settings } from "lucide-react"
+import { Check, ChevronsUpDown, Loader2, Pencil, Trash2, ArrowLeft, Eye, EyeOff, Search, ChevronLeft, ChevronRight, ArrowUpDown, ArrowUp, ArrowDown, Plus, Download, Users, UserCheck, UserX, MoreHorizontal, User as UserIcon, Building, Calendar, MoreVertical, Settings, UserPlus } from "lucide-react"
 import clsx from "clsx"
 import { useToast } from "@/hooks/use-toast"
 import { useAuth } from "@/lib/auth-context"
@@ -533,17 +533,23 @@ export default function UserManagement({ onBack }: UserManagementProps) {
 
   return (
     <div className="space-y-6">
-      {/* Header with back button */}
-      <div className="flex items-center gap-2">
-        <Button variant="outline" size="sm" onClick={onBack} className="gap-2">
-          <ArrowLeft className="h-4 w-4" />
-          Back
-        </Button>
-        <h1 className="text-3xl font-bold bg-gradient-to-r from-emerald-600 to-cyan-600 bg-clip-text text-transparent tracking-tight">User Management</h1>
+      {/* Header with back button - Mobile: below title, Desktop: same line */}
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <h1 className="text-xl sm:text-3xl font-bold bg-gradient-to-r from-emerald-600 to-cyan-600 bg-clip-text text-transparent tracking-tight">User Management</h1>
+        <div className="flex items-center justify-between md:justify-end gap-2">
+          <Button variant="outline" onClick={onBack} className="gap-2 w-fit">
+            <ArrowLeft className="h-4 w-4" />
+            Back
+          </Button>
+          <Button className="evergreen-button" onClick={() => setIsCreateDialogOpen(true)}>
+            <Plus className="h-4 w-4 mr-2" />
+            Add User
+          </Button>
+        </div>
       </div>
 
-      {/* User Statistics */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+      {/* User Statistics - Hidden on mobile, visible on desktop */}
+      <div className="hidden md:grid grid-cols-2 lg:grid-cols-5 gap-3 md:gap-4">
         <Card className="bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-950/20 dark:to-slate-900/20 border-slate-200 dark:border-slate-800">
           <CardContent className="p-4">
             <div className="flex items-center space-x-2">
@@ -603,19 +609,29 @@ export default function UserManagement({ onBack }: UserManagementProps) {
 
       <Card>
         <CardHeader>
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-                <Input
-                  placeholder="Search users..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10 w-64"
-                />
+          {/* Mobile: Stack controls vertically, Desktop: Keep horizontal */}
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div className="flex flex-col md:flex-row md:items-center gap-4 w-full md:w-auto">
+              <div className="flex flex-row md:flex-row md:items-center gap-3 w-full md:w-auto">
+                <div className="relative flex-1 md:w-64">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                  <Input
+                    placeholder="Search users..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-10 w-full"
+                  />
+                </div>
+                {/* Mobile: Button-style user count on same line, Desktop: Regular text */}
+                <div className="md:hidden flex-shrink-0">
+                  <Button variant="outline" className="h-10 px-2 flex flex-col items-center justify-center min-w-[60px] gap-0">
+                    <span className="text-sm font-bold leading-none">{filteredAndSortedUsers.length}</span>
+                    <span className="text-xs text-muted-foreground leading-none">Users</span>
+                  </Button>
+                </div>
               </div>
               <Select value={roleFilter} onValueChange={setRoleFilter}>
-                <SelectTrigger className="w-64">
+                <SelectTrigger className="w-full md:w-64">
                   <SelectValue placeholder="Role" />
                 </SelectTrigger>
                 <SelectContent>
@@ -626,18 +642,14 @@ export default function UserManagement({ onBack }: UserManagementProps) {
                   <SelectItem value="internal_show_access">Internal - Show Access</SelectItem>
                 </SelectContent>
               </Select>
-              <div className="text-sm text-muted-foreground">
+              <div className="hidden md:block text-sm text-muted-foreground">
                 {filteredAndSortedUsers.length} user{filteredAndSortedUsers.length !== 1 ? "s" : ""}
               </div>
             </div>
-            <div className="flex items-center space-x-2">
-              <Button variant="outline" onClick={handleExportUsers} disabled={filteredAndSortedUsers.length === 0}>
+            <div className="flex items-center justify-end w-full md:w-auto">
+              <Button variant="outline" onClick={handleExportUsers} disabled={filteredAndSortedUsers.length === 0} className="w-full md:w-auto">
                 <Download className="h-4 w-4 mr-2" />
                 Export
-              </Button>
-              <Button className="evergreen-button" onClick={() => setIsCreateDialogOpen(true)}>
-                <Plus className="h-4 w-4 mr-2" />
-                Add User
               </Button>
             </div>
           </div>
@@ -650,7 +662,88 @@ export default function UserManagement({ onBack }: UserManagementProps) {
             </div>
           ) : (
             <>
-              <div className="rounded-md border">
+              {/* Mobile Table View - Simplified columns */}
+              <div className="md:hidden rounded-md border">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="px-3 py-2 font-semibold bg-muted/50 w-1/3 border-r">Name</TableHead>
+                      <TableHead className="px-3 py-2 font-semibold bg-muted/50 w-1/6 border-r">Email</TableHead>
+                      <TableHead className="px-3 py-2 font-semibold bg-muted/50 w-1/3 border-r">Role</TableHead>
+                      <TableHead className="px-3 py-2 font-semibold bg-muted/50 w-1/6">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {paginatedUsers.map((u) => (
+                      <TableRow key={u.id}>
+                        <TableCell 
+                          className="font-medium px-3 py-2 cursor-pointer hover:bg-accent/30 transition-colors w-1/3 border-r"
+                          onClick={() => { setViewingUser(u); setIsProfileDialogOpen(true); }}
+                        >
+                          <span className="hover:underline hover:text-emerald-600 transition-colors text-sm whitespace-nowrap">
+                            {u.name || "—"}
+                          </span>
+                        </TableCell>
+                        <TableCell className="font-mono px-3 py-2 text-sm truncate w-1/6 whitespace-nowrap border-r">{u.email}</TableCell>
+                        <TableCell className="px-3 py-2 w-1/3 border-r">
+                          <Badge 
+                            className={`text-xs border pointer-events-none uppercase font-semibold whitespace-nowrap ${
+                              u.role === 'admin' 
+                                ? "bg-emerald-100 text-emerald-800 border-emerald-300 dark:bg-emerald-900/50 dark:text-emerald-300 dark:border-emerald-700"
+                                : u.role === 'internal_full_access'
+                                ? "bg-orange-100 text-orange-800 border-orange-300 dark:bg-orange-900/50 dark:text-orange-300 dark:border-orange-700"
+                                : u.role === 'internal_show_access'
+                                ? "bg-blue-100 text-blue-800 border-blue-300 dark:bg-blue-900/50 dark:text-blue-300 dark:border-blue-700"
+                                : u.role === 'partner'
+                                ? "bg-purple-100 text-purple-800 border-purple-300 dark:bg-purple-900/50 dark:text-purple-300 dark:border-purple-700"
+                                : "bg-gray-100 text-gray-800 border-gray-300 dark:bg-gray-900/50 dark:text-gray-300 dark:border-gray-700"
+                            }`}
+                          >
+                            {formatRoleName(u.role)}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="px-3 py-2 w-1/6">
+                          <div className="flex items-center gap-1">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="h-6 px-2 text-xs"
+                              onClick={() => { setViewingUser(u); setIsProfileDialogOpen(true); }}
+                            >
+                              <Eye className="h-3 w-3 mr-1" />
+                              View
+                            </Button>
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button variant="outline" size="sm" className="h-6 px-2">
+                                  <MoreHorizontal className="h-3 w-3" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <DropdownMenuItem onClick={() => openEditor(u)}>
+                                  <Pencil className="h-4 w-4 mr-2" />
+                                  Edit
+                                </DropdownMenuItem>
+                                <DropdownMenuItem 
+                                  onClick={() => requestDelete(u)}
+                                  disabled={!canDelete(u)}
+                                  className="text-red-600 focus:text-red-600"
+                                >
+                                  <Trash2 className="h-4 w-4 mr-2" />
+                                  Delete
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+
+              {/* Desktop Table View - Full columns */}
+              <div className="hidden md:block rounded-md border">
                 <Table>
                   <TableHeader>
                     <TableRow>
@@ -753,13 +846,13 @@ export default function UserManagement({ onBack }: UserManagementProps) {
                 </div>
               )}
 
-              {/* Pagination controls */}
+              {/* Pagination controls - Centered for mobile */}
               {filteredAndSortedUsers.length > 0 && (
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mt-4">
-                  <span className="text-xs text-muted-foreground">
+                  <span className="text-xs text-muted-foreground text-center sm:text-left">
                     Showing {Math.min((page - 1) * PAGE_SIZE + 1, filteredAndSortedUsers.length)} to {Math.min(page * PAGE_SIZE, filteredAndSortedUsers.length)} of {filteredAndSortedUsers.length} users
                   </span>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center justify-center gap-2">
                     <Button 
                       variant="outline" 
                       size="sm" 

@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -10,7 +10,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/command"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { Loader2, Eye, Check, ChevronsUpDown, Link2, Trash2, History } from "lucide-react"
+import { Loader2, Eye, Check, ChevronsUpDown, Link2, Trash2, History, ArrowLeft, Radio, Building, Percent, Settings, X } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { useAuth } from "@/lib/auth-context"
 import { useRouter } from "next/navigation"
@@ -47,8 +47,13 @@ interface Split {
   effective_date: string
 }
 
+type VendorSplitManagementProps = {
+  onBack?: () => void
+  refreshSignal?: number
+}
+
 // NEW: accept a refresh signal from parent
-export default function VendorSplitManagement({ refreshSignal = 0 }: { refreshSignal?: number }) {
+export default function VendorSplitManagement({ onBack, refreshSignal = 0 }: VendorSplitManagementProps) {
   const { user, token } = useAuth()
   const { toast } = useToast()
   const router = useRouter()
@@ -57,6 +62,7 @@ export default function VendorSplitManagement({ refreshSignal = 0 }: { refreshSi
   const [shows, setShows] = useState<Show[]>([])
   const [vendors, setVendors] = useState<Vendor[]>([])
   const [splits, setSplits] = useState<Split[]>([])
+  const [allSplits, setAllSplits] = useState<Split[]>([])
 
   // Selection states
   const [selectedShow, setSelectedShow] = useState<Show | null>(null)
@@ -65,7 +71,11 @@ export default function VendorSplitManagement({ refreshSignal = 0 }: { refreshSi
   // UI states
   const [isShowsPopoverOpen, setIsShowsPopoverOpen] = useState(false)
   const [isVendorsPopoverOpen, setIsVendorsPopoverOpen] = useState(false)
-  const [showSplitsTable, setShowSplitsTable] = useState(false)
+  const [showCurrentSplits, setShowCurrentSplits] = useState(false)
+  const [showUpdateForm, setShowUpdateForm] = useState(false)
+  const [isClosingCurrentSplits, setIsClosingCurrentSplits] = useState(false)
+  const [isClosingUpdateForm, setIsClosingUpdateForm] = useState(false)
+  const [isClosingContainer, setIsClosingContainer] = useState(false)
 
   // Loading states
   const [isLoadingShows, setIsLoadingShows] = useState(false)
@@ -90,11 +100,46 @@ export default function VendorSplitManagement({ refreshSignal = 0 }: { refreshSi
   const [isCatalogShowsPopoverOpen, setIsCatalogShowsPopoverOpen] = useState(false)
   const [isCatalogVendorsPopoverOpen, setIsCatalogVendorsPopoverOpen] = useState(false)
   const [isMappingOpen, setIsMappingOpen] = useState(false)
-  const [isUpdatingOpen, setIsUpdatingOpen] = useState(false)
 
   const [newMappedSplit, setNewMappedSplit] = useState({ adPercent: "", programmaticPercent: "", effectiveDate: "" })
   const [mapErrors, setMapErrors] = useState<Record<string, string>>({})
   const [isLoadingCatalog, setIsLoadingCatalog] = useState({ shows: false, vendors: false, save: false })
+  const [isLoadingStats, setIsLoadingStats] = useState(false)
+
+  // Statistics calculation (same as split history page)
+  const splitStats = useMemo(() => {
+    const totalSplits = allSplits.length
+    const uniqueShows = new Set(allSplits.map(s => s.show_qbo_id)).size
+    const uniqueVendors = new Set(allSplits.map(s => s.vendor_qbo_id)).size
+    const activeSplits = allSplits.filter(split => {
+      const effectiveDate = new Date(split.effective_date)
+      const today = new Date()
+      return effectiveDate <= today
+    }).length
+    
+    return { totalSplits, uniqueShows, uniqueVendors, activeSplits }
+  }, [allSplits])
+
+  // Load statistics data (only need splits data)
+  const loadStatsData = async () => {
+    if (!token) return
+    
+    setIsLoadingStats(true)
+    try {
+      // Load all splits for stats
+      const splitsResponse = await fetch(`${API_URL}/split-management/split-history`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      if (splitsResponse.ok) {
+        const splitsData = await splitsResponse.json()
+        setAllSplits(splitsData)
+      }
+    } catch (error) {
+      console.error("Error loading stats data:", error)
+    } finally {
+      setIsLoadingStats(false)
+    }
+  }
 
   // Fetch shows on component mount
   useEffect(() => {
@@ -115,6 +160,7 @@ export default function VendorSplitManagement({ refreshSignal = 0 }: { refreshSi
         }
       }
       fetchShows()
+      loadStatsData()
     }
   }, [user, token, toast])
 
@@ -126,7 +172,9 @@ export default function VendorSplitManagement({ refreshSignal = 0 }: { refreshSi
         setVendors([])
         setSelectedVendor(null)
         setSplits([])
-        setShowSplitsTable(false)
+        // Close both sections when show changes
+        setShowCurrentSplits(false)
+        setShowUpdateForm(false)
         try {
           const response = await fetch(`${API_URL}/split-management/vendors/${selectedShow.show_qbo_id}`, {
             headers: { Authorization: `Bearer ${token}` },
@@ -139,12 +187,25 @@ export default function VendorSplitManagement({ refreshSignal = 0 }: { refreshSi
         } finally {
           setIsLoadingVendors(false)
         }
+      } else {
+        // Close both sections when no show is selected
+        setShowCurrentSplits(false)
+        setShowUpdateForm(false)
       }
     }
     fetchVendors()
   }, [selectedShow, token, toast])
 
-  const handleViewSplits = async () => {
+  // Close sections when vendor changes
+  useEffect(() => {
+    if (selectedVendor === null) {
+      setSplits([])
+      setShowCurrentSplits(false)
+      setShowUpdateForm(false)
+    }
+  }, [selectedVendor])
+
+  const handleViewCurrentSplits = async () => {
     if (!selectedShow || !selectedVendor || !token) {
       toast({
         title: "Selection required",
@@ -163,13 +224,56 @@ export default function VendorSplitManagement({ refreshSignal = 0 }: { refreshSi
       if (!response.ok) throw new Error("Failed to fetch splits")
       const data = await response.json()
       setSplits(data)
-      setShowSplitsTable(true)
-      setIsUpdatingOpen(true)
+      setShowCurrentSplits(true)
+      // Don't close the update form if it's open
     } catch (error) {
       toast({ title: "Error", description: "Could not load splits.", variant: "destructive" })
     } finally {
       setIsLoadingSplits(false)
     }
+  }
+
+  const handleUpdateNewSplit = () => {
+    if (!selectedShow || !selectedVendor) {
+      toast({
+        title: "Selection required",
+        description: "Please select both a show and a vendor.",
+        variant: "destructive",
+      })
+      return
+    }
+    setShowUpdateForm(true)
+    // Don't close the current splits if it's open
+  }
+
+  const handleCloseCurrentSplits = () => {
+    setIsClosingCurrentSplits(true)
+    setTimeout(() => {
+      setShowCurrentSplits(false)
+      setIsClosingCurrentSplits(false)
+      // If both sections are now closed, close the container
+      if (!showUpdateForm) {
+        setIsClosingContainer(true)
+        setTimeout(() => {
+          setIsClosingContainer(false)
+        }, 300)
+      }
+    }, 300)
+  }
+
+  const handleCloseUpdateForm = () => {
+    setIsClosingUpdateForm(true)
+    setTimeout(() => {
+      setShowUpdateForm(false)
+      setIsClosingUpdateForm(false)
+      // If both sections are now closed, close the container
+      if (!showCurrentSplits) {
+        setIsClosingContainer(true)
+        setTimeout(() => {
+          setIsClosingContainer(false)
+        }, 300)
+      }
+    }, 300)
   }
 
   const validateNewSplit = () => {
@@ -189,7 +293,7 @@ export default function VendorSplitManagement({ refreshSignal = 0 }: { refreshSi
   const handleCancelExistingSplit = () => {
     setNewSplit({ adPercent: "", programmaticPercent: "", effectiveDate: "" })
     setErrors({})
-    setIsUpdatingOpen(false)
+    setShowUpdateForm(false)
   }
 
   const handleSaveSplit = async (e: React.FormEvent) => {
@@ -222,7 +326,18 @@ export default function VendorSplitManagement({ refreshSignal = 0 }: { refreshSi
       toast({ title: "Success", description: "New split added." })
       setNewSplit({ adPercent: "", programmaticPercent: "", effectiveDate: "" })
       setErrors({})
-      handleViewSplits() // Refresh the splits table
+      // Don't automatically close the update form or switch sections
+      // Refresh the splits table if current splits are visible
+      if (showCurrentSplits) {
+        const refreshResponse = await fetch(
+          `${API_URL}/split-management/splits?show_qbo_id=${selectedShow.show_qbo_id}&vendor_qbo_id=${selectedVendor.vendor_qbo_id}`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        )
+        if (refreshResponse.ok) {
+          const data = await refreshResponse.json()
+          setSplits(data)
+        }
+      }
     } catch (error: any) {
       toast({ title: "Save Failed", description: `Error: ${error.message}`, variant: "destructive" })
     } finally {
@@ -408,7 +523,6 @@ export default function VendorSplitManagement({ refreshSignal = 0 }: { refreshSi
     // 4) If both show & vendor are selected, refresh current splits table
     const refreshSplitsIfNeeded = async () => {
       if (!selectedShow || !selectedVendor) {
-        setShowSplitsTable(false)
         setSplits([])
         return
       }
@@ -421,8 +535,7 @@ export default function VendorSplitManagement({ refreshSignal = 0 }: { refreshSi
         if (!res.ok) throw new Error("Failed to refresh splits")
         const data = await res.json()
         setSplits(data || [])
-        setShowSplitsTable(true)
-        setIsUpdatingOpen(true)
+        setShowCurrentSplits(true)
       } catch (e: any) {
         toast({ title: "Refresh failed", description: e.message || "Could not refresh splits", variant: "destructive" })
       } finally {
@@ -435,35 +548,93 @@ export default function VendorSplitManagement({ refreshSignal = 0 }: { refreshSi
     refreshCatalog()
     refreshVendorsIfNeeded()
     refreshSplitsIfNeeded()
+    loadStatsData()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [refreshSignal]) // react to parent refresh
 
   return (
     <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle>View and Update Existing Vendor Split Percentage</CardTitle>
-              <CardDescription>Select shows and vendors to view and update split configurations.</CardDescription>
-            </div>
-            <Button 
-              variant="outline" 
+      {/* Header with back button and split history button - Desktop: same line, Mobile: below */}
+      {onBack && (
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <h1 className="text-xl sm:text-3xl font-bold bg-gradient-to-r from-emerald-600 to-cyan-600 bg-clip-text text-transparent tracking-tight">Vendor Split Management</h1>
+          <div className="flex items-center justify-between md:justify-end gap-2">
+            <Button variant="outline" onClick={onBack} className="gap-2 w-fit">
+              <ArrowLeft className="h-4 w-4" />
+              Back
+            </Button>
+            <Button
+              variant="outline"
               onClick={() => router.push("/split-history")}
-              className="flex items-center gap-2"
+              className="flex items-center gap-2 h-10 w-fit"
             >
               <History className="h-4 w-4" />
               View All Split History
             </Button>
           </div>
+        </div>
+      )}
+
+      {/* Vendor Split Statistics - Hidden on mobile, visible on desktop */}
+      <div className="hidden md:grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
+        <Card className="bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-950/20 dark:to-slate-900/20 border-slate-200 dark:border-slate-800">
+          <CardContent className="p-3 md:p-4">
+            <div className="flex items-center space-x-2">
+              <History className="h-4 w-4 text-slate-600" />
+              <div>
+                <p className="text-xs md:text-sm font-medium text-slate-700 dark:text-slate-300">Total Splits</p>
+                <p className="text-lg md:text-2xl font-bold text-slate-600">{isLoadingStats ? "..." : splitStats.totalSplits}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-950/20 dark:to-emerald-900/20 border-emerald-200 dark:border-emerald-800">
+          <CardContent className="p-3 md:p-4">
+            <div className="flex items-center space-x-2">
+              <Radio className="h-4 w-4 text-emerald-600" />
+              <div>
+                <p className="text-xs md:text-sm font-medium text-emerald-700 dark:text-emerald-300">Unique Shows</p>
+                <p className="text-lg md:text-2xl font-bold text-emerald-600">{isLoadingStats ? "..." : splitStats.uniqueShows}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-950/20 dark:to-purple-900/20 border-purple-200 dark:border-purple-800">
+          <CardContent className="p-3 md:p-4">
+            <div className="flex items-center space-x-2">
+              <Building className="h-4 w-4 text-purple-600" />
+              <div>
+                <p className="text-xs md:text-sm font-medium text-purple-700 dark:text-purple-300">Unique Vendors</p>
+                <p className="text-lg md:text-2xl font-bold text-purple-600">{isLoadingStats ? "..." : splitStats.uniqueVendors}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-950/20 dark:to-orange-900/20 border-orange-200 dark:border-orange-800">
+          <CardContent className="p-3 md:p-4">
+            <div className="flex items-center space-x-2">
+              <Percent className="h-4 w-4 text-orange-600" />
+              <div>
+                <p className="text-xs md:text-sm font-medium text-orange-700 dark:text-orange-300">Active Splits</p>
+                <p className="text-lg md:text-2xl font-bold text-orange-600">{isLoadingStats ? "..." : splitStats.activeSplits}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+      
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg md:text-xl">View and Update Existing Vendor Split Percentage</CardTitle>
+          <CardDescription className="text-sm md:text-muted-foreground">Select shows and vendors to view and update split configurations.</CardDescription>
         </CardHeader>
-        <CardContent className="space-y-6">
+        <CardContent>
           <div className="grid gap-4 md:grid-cols-3">
             <div className="space-y-2">
-              <Label>Select Show Name</Label>
+              <Label className="text-sm md:text-sm">Select Show Name</Label>
               <Popover open={isShowsPopoverOpen} onOpenChange={setIsShowsPopoverOpen}>
                 <PopoverTrigger asChild>
-                  <Button variant="outline" role="combobox" className="w-full justify-between" disabled={isLoadingShows}>
+                  <Button variant="outline" role="combobox" className="w-full justify-between md:h-10" disabled={isLoadingShows}>
                     {isLoadingShows ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : selectedShow?.show_name ?? "Select a show..."}
                     <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                   </Button>
@@ -495,10 +666,10 @@ export default function VendorSplitManagement({ refreshSignal = 0 }: { refreshSi
             </div>
 
             <div className="space-y-2">
-              <Label>Select Vendor Name</Label>
+              <Label className="text-sm md:text-sm">Select Vendor Name</Label>
               <Popover open={isVendorsPopoverOpen} onOpenChange={setIsVendorsPopoverOpen}>
                 <PopoverTrigger asChild>
-                  <Button variant="outline" role="combobox" className="w-full justify-between" disabled={!selectedShow || isLoadingVendors}>
+                  <Button variant="outline" role="combobox" className="w-full justify-between md:h-10" disabled={!selectedShow || isLoadingVendors}>
                     {isLoadingVendors ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : selectedVendor?.vendor_name ?? "Select a vendor..."}
                     <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                   </Button>
@@ -530,46 +701,89 @@ export default function VendorSplitManagement({ refreshSignal = 0 }: { refreshSi
             </div>
 
             <div className="flex items-end">
-              <Button onClick={handleViewSplits} disabled={isLoadingSplits || !selectedShow || !selectedVendor} className="evergreen-button w-full">
-                {isLoadingSplits ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Eye className="mr-2 h-4 w-4" />}
-                View and Update Splits
-              </Button>
+              <div className="flex flex-col md:flex-row gap-3 md:gap-2 w-full">
+                <Button 
+                  onClick={handleViewCurrentSplits} 
+                  disabled={isLoadingSplits || !selectedShow || !selectedVendor} 
+                  className="evergreen-button w-full md:h-10"
+                >
+                  {isLoadingSplits ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Eye className="mr-2 h-4 w-4" />}
+                  View Current Splits
+                </Button>
+                <Button 
+                  onClick={handleUpdateNewSplit} 
+                  disabled={!selectedShow || !selectedVendor} 
+                  className="evergreen-button w-full md:h-10"
+                  variant="secondary"
+                >
+                  <Settings className="mr-2 h-4 w-4" />
+                  Update New Split
+                </Button>
+              </div>
             </div>
           </div>
 
-          {showSplitsTable && (
-            <div className="space-y-4 pt-4 border-t">
-              <div>
-                <h3 className="text-lg font-semibold">Current Splits</h3>
-              </div>
-              <div className="border rounded-lg">
+          {(showCurrentSplits || showUpdateForm) && (
+            <div className={`space-y-4 pt-4 transition-all duration-300 ease-in-out ${
+              isClosingContainer 
+                ? 'opacity-0 transform -translate-y-4 scale-95' 
+                : 'opacity-100 transform translate-y-0 scale-100'
+            }`}>
+              {/* Current Splits Card */}
+              {showCurrentSplits && (
+                <Card className={`transition-all duration-300 ease-in-out ${
+                  isClosingCurrentSplits 
+                    ? 'opacity-0 transform -translate-y-4 scale-95' 
+                    : 'opacity-100 transform translate-y-0 scale-100 animate-in slide-in-from-top-4'
+                }`}>
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="text-lg font-semibold">
+                      <span className="hidden md:inline">Current Splits for {selectedShow?.show_name} and {selectedVendor?.vendor_name}</span>
+                      <span className="md:hidden">Current Splits</span>
+                    </CardTitle>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleCloseCurrentSplits}
+                      className="h-8 w-8 p-0 border md:ml-2 ml-1 min-w-8 min-h-8"
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </CardHeader>
+                <CardContent>
+              
+              {/* Desktop Table - Hidden on Mobile */}
+              <div className="hidden md:block border rounded-lg">
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Show Name</TableHead>
-                      <TableHead>Vendor Name</TableHead>
-                      <TableHead>AD %</TableHead>
-                      <TableHead>Programmatic %</TableHead>
-                      <TableHead>Effective Date</TableHead>
-                      <TableHead className="w-24">Actions</TableHead>
+                      <TableHead className="border-r border-b px-4 py-2">Show Name</TableHead>
+                      <TableHead className="border-r border-b px-4 py-2">Vendor Name</TableHead>
+                      <TableHead className="border-r border-b px-4 py-2">AD %</TableHead>
+                      <TableHead className="border-r border-b px-4 py-2">Programmatic %</TableHead>
+                      <TableHead className="border-r border-b px-4 py-2">Effective Date</TableHead>
+                      <TableHead className="w-24 border-b px-4 py-2">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {splits.length > 0 ? (
-                      splits.map((split) => (
+                      splits.map((split, index) => (
                         <TableRow key={split.split_id}>
-                          <TableCell>{split.show_name}</TableCell>
-                          <TableCell>{split.vendor_name}</TableCell>
-                          <TableCell>{split.partner_pct_ads * 100}%</TableCell>
-                          <TableCell>{split.partner_pct_programmatic * 100}%</TableCell>
-                          <TableCell>{new Date(split.effective_date).toLocaleDateString()}</TableCell>
-                          <TableCell>
+                          <TableCell className={`border-r px-4 py-2 ${index === splits.length - 1 ? '' : 'border-b'}`}>{split.show_name}</TableCell>
+                          <TableCell className={`border-r px-4 py-2 ${index === splits.length - 1 ? '' : 'border-b'}`}>{split.vendor_name}</TableCell>
+                          <TableCell className={`border-r px-4 py-2 ${index === splits.length - 1 ? '' : 'border-b'}`}>{split.partner_pct_ads * 100}%</TableCell>
+                          <TableCell className={`border-r px-4 py-2 ${index === splits.length - 1 ? '' : 'border-b'}`}>{split.partner_pct_programmatic * 100}%</TableCell>
+                          <TableCell className={`border-r px-4 py-2 ${index === splits.length - 1 ? '' : 'border-b'}`}>{new Date(split.effective_date).toLocaleDateString()}</TableCell>
+                          <TableCell className={`px-4 py-2 ${index === splits.length - 1 ? '' : 'border-b'}`}>
                             <Button
                               variant="destructive"
                               size="sm"
                               onClick={() => confirmDelete(split)}
+                              className="h-7 px-2"
                             >
-                              <Trash2 className="mr-2 h-4 w-4" />
+                              <Trash2 className="mr-2 h-3 w-3" />
                               Delete
                             </Button>
                           </TableCell>
@@ -577,12 +791,64 @@ export default function VendorSplitManagement({ refreshSignal = 0 }: { refreshSi
                       ))
                     ) : (
                       <TableRow>
-                        <TableCell colSpan={6} className="text-center h-24">No splits found.</TableCell>
+                        <TableCell colSpan={6} className="text-center h-24 px-4 py-2">No splits found.</TableCell>
                       </TableRow>
                     )}
                   </TableBody>
                 </Table>
               </div>
+
+              {/* Mobile Cards - Hidden on Desktop */}
+              <div className="md:hidden space-y-3">
+                {splits.length > 0 ? (
+                  splits.map((split) => (
+                    <Card key={split.split_id} className="p-4">
+                      <div className="space-y-3">
+                        <div>
+                          <h4 className="font-semibold text-sm text-muted-foreground">Show Name</h4>
+                          <p className="text-base">{split.show_name}</p>
+                        </div>
+                        <div>
+                          <h4 className="font-semibold text-sm text-muted-foreground">Vendor Name</h4>
+                          <p className="text-base">{split.vendor_name}</p>
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <h4 className="font-semibold text-sm text-muted-foreground">AD %</h4>
+                            <p className="text-base">{split.partner_pct_ads * 100}%</p>
+                          </div>
+                          <div>
+                            <h4 className="font-semibold text-sm text-muted-foreground">Prog %</h4>
+                            <p className="text-base">{split.partner_pct_programmatic * 100}%</p>
+                          </div>
+                        </div>
+                        <div>
+                          <h4 className="font-semibold text-sm text-muted-foreground">Effective Date</h4>
+                          <p className="text-base">{new Date(split.effective_date).toLocaleDateString()}</p>
+                        </div>
+                        <div className="pt-2">
+                          <Button
+                            variant="destructive"
+                            size="sm"
+                            onClick={() => confirmDelete(split)}
+                            className="w-full h-10"
+                          >
+                            <Trash2 className="mr-2 h-4 w-4" />
+                            Delete
+                          </Button>
+                        </div>
+                      </div>
+                    </Card>
+                  ))
+                ) : (
+                  <div className="text-center h-24 flex items-center justify-center text-muted-foreground">
+                    No splits found.
+                  </div>
+                )}
+              </div>
+                </CardContent>
+                </Card>
+              )}
 
               {/* Confirm Delete Dialog */}
               <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
@@ -603,39 +869,60 @@ export default function VendorSplitManagement({ refreshSignal = 0 }: { refreshSi
                 </AlertDialogContent>
               </AlertDialog>
 
-              {isUpdatingOpen && (
-                <div className="border-t pt-6">
-                  <h3 className="text-lg font-semibold mb-4">Update New Split</h3>
+              {showUpdateForm && (
+                <Card className={`transition-all duration-300 ease-in-out ${
+                  isClosingUpdateForm 
+                    ? 'opacity-0 transform -translate-y-4 scale-95' 
+                    : 'opacity-100 transform translate-y-0 scale-100 animate-in slide-in-from-top-4'
+                }`}>
+                  <CardHeader>
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="text-lg font-semibold">
+                        <span className="hidden md:inline">Update New Split for {selectedShow?.show_name} and {selectedVendor?.vendor_name}</span>
+                        <span className="md:hidden">Update New Split</span>
+                      </CardTitle>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={handleCloseUpdateForm}
+                        className="h-8 w-8 p-0 border md:ml-2 ml-1 min-w-8 min-h-8"
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
                   <form onSubmit={handleSaveSplit} className="space-y-4">
                     <div className="grid gap-4 md:grid-cols-3">
                       <div className="space-y-2">
-                        <Label htmlFor="ad-percent">AD %</Label>
-                        <Input id="ad-percent" type="number" min="0" max="100" step="0.01" placeholder="e.g., 60.5" value={newSplit.adPercent} onChange={(e) => handleInputChange("adPercent", e.target.value)} />
+                        <Label htmlFor="ad-percent" className="text-sm md:text-base">AD %</Label>
+                        <Input id="ad-percent" type="number" min="0" max="100" step="0.01" placeholder="e.g., 60.5" value={newSplit.adPercent} onChange={(e) => handleInputChange("adPercent", e.target.value)} className="md:h-10" />
                         {errors.adPercent && <p className="text-sm text-red-500">{errors.adPercent}</p>}
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="programmatic-percent">Programmatic %</Label>
-                        <Input id="programmatic-percent" type="number" min="0" max="100" step="0.01" placeholder="e.g., 39.5" value={newSplit.programmaticPercent} onChange={(e) => handleInputChange("programmaticPercent", e.target.value)} />
+                        <Label htmlFor="programmatic-percent" className="text-sm md:text-base">Programmatic %</Label>
+                        <Input id="programmatic-percent" type="number" min="0" max="100" step="0.01" placeholder="e.g., 39.5" value={newSplit.programmaticPercent} onChange={(e) => handleInputChange("programmaticPercent", e.target.value)} className="md:h-10" />
                         {errors.programmaticPercent && <p className="text-sm text-red-500">{errors.programmaticPercent}</p>}
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="effective-date">Effective Date</Label>
-                        <Input id="effective-date" type="date" value={newSplit.effectiveDate} onChange={(e) => handleInputChange("effectiveDate", e.target.value)} />
+                        <Label htmlFor="effective-date" className="text-sm md:text-base">Effective Date</Label>
+                        <Input id="effective-date" type="date" value={newSplit.effectiveDate} onChange={(e) => handleInputChange("effectiveDate", e.target.value)} className="md:h-10" />
                         {errors.effectiveDate && <p className="text-sm text-red-500">{errors.effectiveDate}</p>}
                       </div>
                     </div>
-                    {/* UPDATED: right-aligned Save + Cancel (first section) */}
-                    <div className="flex justify-end gap-3">
-                      <Button type="submit" disabled={isLoadingSave}>
+                    {/* Mobile: Stack buttons vertically, Desktop: Right-aligned */}
+                    <div className="flex flex-col md:flex-row md:justify-end gap-3">
+                      <Button type="submit" disabled={isLoadingSave} className="md:h-10 w-full md:w-auto">
                         {isLoadingSave && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                         Save Split
                       </Button>
-                      <Button type="button" variant="outline" onClick={handleCancelExistingSplit}>
+                      <Button type="button" variant="outline" onClick={handleCancelExistingSplit} className="md:h-10 w-full md:w-auto">
                         Cancel
                       </Button>
                     </div>
                   </form>
-                </div>
+                  </CardContent>
+                </Card>
               )}
             </div>
           )}
@@ -644,20 +931,20 @@ export default function VendorSplitManagement({ refreshSignal = 0 }: { refreshSi
 
       <Card>
         <CardHeader>
-          <CardTitle>Map Show, Vendor and Add New Split Percentage</CardTitle>
-          <CardDescription>Pick any show and any vendor independently, map it and then create a new split.</CardDescription>
+          <CardTitle className="text-lg md:text-xl">Map Show, Vendor and Add New Split Percentage</CardTitle>
+          <CardDescription className="text-sm md:text-muted-foreground">Pick any show and any vendor independently, map it and then create a new split.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="grid gap-4 md:grid-cols-3">
             <div className="space-y-2">
-              <Label>Select Show Name</Label>
+              <Label className="text-sm md:text-sm">Select Show Name</Label>
               <Popover open={isCatalogShowsPopoverOpen} onOpenChange={setIsCatalogShowsPopoverOpen}>
                 <PopoverTrigger asChild>
                   <Button
                     variant="outline"
                     role="combobox"
                     aria-expanded={isCatalogShowsPopoverOpen}
-                    className="w-full justify-between"
+                    className="w-full justify-between md:h-10"
                   >
                     {selectedCatalogShow ? selectedCatalogShow.show_name : "Select show"}
                     <ChevronsUpDown className="ml-2 h-4 w-4 opacity-50" />
@@ -693,14 +980,14 @@ export default function VendorSplitManagement({ refreshSignal = 0 }: { refreshSi
             </div>
 
             <div className="space-y-2">
-              <Label>Select Vendor Name</Label>
+              <Label className="text-sm md:text-sm">Select Vendor Name</Label>
               <Popover open={isCatalogVendorsPopoverOpen} onOpenChange={setIsCatalogVendorsPopoverOpen}>
                 <PopoverTrigger asChild>
                   <Button
                     variant="outline"
                     role="combobox"
                     aria-expanded={isCatalogVendorsPopoverOpen}
-                    className="w-full justify-between"
+                    className="w-full justify-between md:h-10"
                   >
                     {selectedCatalogVendor ? selectedCatalogVendor.vendor_name : "Select vendor"}
                     <ChevronsUpDown className="ml-2 h-4 w-4 opacity-50" />
@@ -739,7 +1026,7 @@ export default function VendorSplitManagement({ refreshSignal = 0 }: { refreshSi
               <Button
                 onClick={() => setIsMappingOpen(true)}
                 disabled={!selectedCatalogShow || !selectedCatalogVendor}
-                className="evergreen-button w-full"
+                className="evergreen-button w-full md:h-10"
               >
                 <Link2 className="mr-2 h-4 w-4" />
                 Map Show and Vendor for Split
@@ -748,12 +1035,12 @@ export default function VendorSplitManagement({ refreshSignal = 0 }: { refreshSi
           </div>
 
           {isMappingOpen && (
-            <div className="border-t pt-6">
+            <div className="pt-6">
               <h3 className="text-lg font-semibold mb-4">Add New Split</h3>
               <form onSubmit={handleSaveMappedSplit} className="space-y-4">
                 <div className="grid gap-4 md:grid-cols-3">
                   <div className="space-y-2">
-                    <Label htmlFor="map-ad-percent">AD %</Label>
+                    <Label htmlFor="map-ad-percent" className="text-sm md:text-base">AD %</Label>
                     <Input
                       id="map-ad-percent"
                       type="number"
@@ -763,11 +1050,12 @@ export default function VendorSplitManagement({ refreshSignal = 0 }: { refreshSi
                       placeholder="e.g., 70"
                       value={newMappedSplit.adPercent}
                       onChange={(e) => handleMappedInputChange("adPercent", e.target.value)}
+                      className="md:h-10"
                     />
                     {mapErrors.adPercent && <p className="text-sm text-red-600">{mapErrors.adPercent}</p>}
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="map-programmatic-percent">Programmatic %</Label>
+                    <Label htmlFor="map-programmatic-percent" className="text-sm md:text-base">Programmatic %</Label>
                     <Input
                       id="map-programmatic-percent"
                       type="number"
@@ -777,27 +1065,29 @@ export default function VendorSplitManagement({ refreshSignal = 0 }: { refreshSi
                       placeholder="e.g., 30"
                       value={newMappedSplit.programmaticPercent}
                       onChange={(e) => handleMappedInputChange("programmaticPercent", e.target.value)}
+                      className="md:h-10"
                     />
                     {mapErrors.programmaticPercent && <p className="text-sm text-red-600">{mapErrors.programmaticPercent}</p>}
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="map-effective-date">Effective Date</Label>
+                    <Label htmlFor="map-effective-date" className="text-sm md:text-base">Effective Date</Label>
                     <Input
                       id="map-effective-date"
                       type="date"
                       value={newMappedSplit.effectiveDate}
                       onChange={(e) => handleMappedInputChange("effectiveDate", e.target.value)}
+                      className="md:h-10"
                     />
                     {mapErrors.effectiveDate && <p className="text-sm text-red-600">{mapErrors.effectiveDate}</p>}
                   </div>
                 </div>
-                {/* UPDATED: right-aligned Save New Split + Cancel (new mapping section) */}
-                <div className="flex justify-end gap-3">
-                  <Button type="submit" disabled={isLoadingCatalog.save}>
+                {/* Mobile: Stack buttons vertically, Desktop: Right-aligned */}
+                <div className="flex flex-col md:flex-row md:justify-end gap-3">
+                  <Button type="submit" disabled={isLoadingCatalog.save} className="md:h-10 w-full md:w-auto">
                     {isLoadingCatalog.save && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                     Save New Split
                   </Button>
-                  <Button type="button" variant="outline" onClick={() => setIsMappingOpen(false)}>
+                  <Button type="button" variant="outline" onClick={() => setIsMappingOpen(false)} className="md:h-10 w-full md:w-auto">
                     Cancel
                   </Button>
                 </div>

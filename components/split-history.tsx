@@ -217,17 +217,29 @@ export default function SplitHistory({ onBack }: SplitHistoryProps) {
 
   return (
     <div className="space-y-6">
-      {/* Header with back button */}
-      <div className="flex items-center gap-2">
-        <Button variant="outline" size="sm" onClick={onBack} className="gap-2">
-          <ArrowLeft className="h-4 w-4" />
-          Back
-        </Button>
-        <h1 className="text-3xl font-bold bg-gradient-to-r from-emerald-600 to-cyan-600 bg-clip-text text-transparent tracking-tight">Split History</h1>
+      {/* Header with back button - Desktop: top right, Mobile: below title */}
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <h1 className="text-xl sm:text-3xl font-bold bg-gradient-to-r from-emerald-600 to-cyan-600 bg-clip-text text-transparent tracking-tight">Split History</h1>
+        <div className="flex items-center justify-between md:justify-end gap-2">
+          <Button variant="outline" onClick={onBack} className="gap-2 w-fit">
+            <ArrowLeft className="h-4 w-4" />
+            Back
+          </Button>
+          {/* Export button for mobile - only show on mobile */}
+          <Button variant="outline" onClick={handleExportSplits} disabled={filteredAndSortedSplits.length === 0} className="md:hidden gap-2 w-fit">
+            <Download className="h-4 w-4" />
+            Export
+          </Button>
+          {/* Export button for desktop - only show on desktop */}
+          <Button variant="outline" onClick={handleExportSplits} disabled={filteredAndSortedSplits.length === 0} className="hidden md:flex gap-2 w-fit">
+            <Download className="h-4 w-4" />
+            Export
+          </Button>
+        </div>
       </div>
 
-      {/* Statistics */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      {/* Statistics - Hidden on mobile, visible on desktop */}
+      <div className="hidden md:grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card className="bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-950/20 dark:to-slate-900/20 border-slate-200 dark:border-slate-800">
           <CardContent className="p-4">
             <div className="flex items-center space-x-2">
@@ -276,26 +288,28 @@ export default function SplitHistory({ onBack }: SplitHistoryProps) {
 
       <Card>
         <CardHeader>
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <div className="relative">
+          {/* Mobile: Search and count on same line, Desktop: Keep horizontal */}
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div className="flex flex-row md:flex-row md:items-center gap-3 w-full md:w-auto">
+              <div className="relative flex-1 md:w-64">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
                 <Input
                   placeholder="Search splits..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10 w-64"
+                  className="pl-10 w-full"
                 />
               </div>
-              <div className="text-sm text-muted-foreground">
+              {/* Mobile: Button-style split count on same line, Desktop: Regular text */}
+              <div className="md:hidden flex-shrink-0">
+                <Button variant="outline" className="h-10 px-2 flex flex-col items-center justify-center min-w-[60px] gap-0">
+                  <span className="text-sm font-bold leading-none">{filteredAndSortedSplits.length}</span>
+                  <span className="text-xs text-muted-foreground leading-none">Splits</span>
+                </Button>
+              </div>
+              <div className="hidden md:block text-sm text-muted-foreground">
                 {filteredAndSortedSplits.length} split{filteredAndSortedSplits.length !== 1 ? "s" : ""}
               </div>
-            </div>
-            <div className="flex items-center space-x-2">
-              <Button variant="outline" onClick={handleExportSplits} disabled={filteredAndSortedSplits.length === 0}>
-                <Download className="h-4 w-4 mr-2" />
-                Export
-              </Button>
             </div>
           </div>
         </CardHeader>
@@ -307,7 +321,52 @@ export default function SplitHistory({ onBack }: SplitHistoryProps) {
             </div>
           ) : (
             <>
-              <div className="rounded-md border">
+              {/* Mobile Table View - Simplified columns without QBO IDs */}
+              <div className="md:hidden rounded-md border">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="px-3 py-2 font-semibold bg-muted/50 w-1/6 border-r whitespace-nowrap">Split ID</TableHead>
+                      <TableHead className="px-3 py-2 font-semibold bg-muted/50 w-1/3 border-r">Show Name</TableHead>
+                      <TableHead className="px-3 py-2 font-semibold bg-muted/50 w-1/3 border-r">Vendor Name</TableHead>
+                      <TableHead className="px-3 py-2 font-semibold bg-muted/50 w-1/6 border-r">Ads %</TableHead>
+                      <TableHead className="px-3 py-2 font-semibold bg-muted/50 w-1/6 border-r">Prog %</TableHead>
+                      <TableHead className="px-3 py-2 font-semibold bg-muted/50 w-1/4">Date</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {paginatedSplits.map((split) => (
+                      <TableRow key={split.split_id}>
+                        <TableCell className="font-medium px-3 py-2 whitespace-nowrap border-r">
+                          #{split.split_id}
+                        </TableCell>
+                        <TableCell className="px-3 py-2 whitespace-nowrap border-r">{split.show_name || "—"}</TableCell>
+                        <TableCell className="px-3 py-2 whitespace-nowrap border-r">{split.vendor_name || "—"}</TableCell>
+                        <TableCell className="px-3 py-2 whitespace-nowrap border-r">
+                          {split.partner_pct_ads ? (
+                            <Badge className="bg-emerald-100 text-emerald-800 border-emerald-300 dark:bg-emerald-900/50 dark:text-emerald-300 dark:border-emerald-700 pointer-events-none whitespace-nowrap">
+                              {(split.partner_pct_ads * 100).toFixed(2)}%
+                            </Badge>
+                          ) : "—"}
+                        </TableCell>
+                        <TableCell className="px-3 py-2 whitespace-nowrap border-r">
+                          {split.partner_pct_programmatic ? (
+                            <Badge className="bg-orange-100 text-orange-800 border-orange-300 dark:bg-orange-900/50 dark:text-orange-300 dark:border-orange-700 pointer-events-none whitespace-nowrap">
+                              {(split.partner_pct_programmatic * 100).toFixed(2)}%
+                            </Badge>
+                          ) : "—"}
+                        </TableCell>
+                        <TableCell className="px-3 py-2 whitespace-nowrap">
+                          {split.effective_date ? new Date(split.effective_date).toLocaleDateString() : "—"}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+
+              {/* Desktop Table View - Full columns with QBO IDs */}
+              <div className="hidden md:block rounded-md border">
                 <Table>
                   <TableHeader>
                     <TableRow>
@@ -363,13 +422,13 @@ export default function SplitHistory({ onBack }: SplitHistoryProps) {
                 </div>
               )}
 
-              {/* Pagination controls */}
+              {/* Pagination controls - Centered for mobile */}
               {filteredAndSortedSplits.length > 0 && (
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mt-4">
-                  <span className="text-xs text-muted-foreground">
+                  <span className="text-xs text-muted-foreground text-center sm:text-left">
                     Showing {Math.min((page - 1) * PAGE_SIZE + 1, filteredAndSortedSplits.length)} to {Math.min(page * PAGE_SIZE, filteredAndSortedSplits.length)} of {filteredAndSortedSplits.length} splits
                   </span>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center justify-center gap-2">
                     <Button 
                       variant="outline" 
                       size="sm" 

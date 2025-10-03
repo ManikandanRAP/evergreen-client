@@ -3,9 +3,8 @@
 import { useState } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { UserPlus, Users, Loader2, RotateCcw } from "lucide-react"
+import { UserPlus, Users, Loader2, Settings, Eye, History } from "lucide-react"
 import CreateUserDialog from "@/components/create-user-dialog"
-import VendorSplitManagement from "@/components/vendor-split-management"
 import { useAuth } from "@/lib/auth-context"
 import { useRouter } from "next/navigation"
 import { Toaster } from "@/components/ui/toaster"
@@ -15,9 +14,6 @@ export default function AdministratorPage() {
   const { user, token, isLoading } = useAuth()
   const router = useRouter()
 
-  // Global refresh signal for children
-  const [refreshCounter, setRefreshCounter] = useState(0)
-  const triggerRefresh = () => setRefreshCounter((c) => c + 1)
 
   const isCreateUserDisabled = isLoading || !user || !token
   const isEditUsersDisabled = isCreateUserDisabled
@@ -42,40 +38,33 @@ export default function AdministratorPage() {
   return (
     <>
       <div className="space-y-8">
-        {/* Header + Refresh */}
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-emerald-600 to-cyan-600 bg-clip-text text-transparent tracking-tight">
-              Administrator
-            </h1>
-            <p className="text-muted-foreground">Manage users and vendor split configurations.</p>
-          </div>
-
-          <Button variant="outline" onClick={triggerRefresh} disabled={isLoading} title="Refresh data in this page">
-            {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <RotateCcw className="mr-2 h-4 w-4" />}
-            Refresh
-          </Button>
+        {/* Header */}
+        <div>
+          <h1 className="text-xl md:text-3xl font-bold bg-gradient-to-r from-emerald-600 to-cyan-600 bg-clip-text text-transparent tracking-tight">
+            Administrator
+          </h1>
+          <p className="text-sm text-muted-foreground md:text-base md:text-muted-foreground">Manage users and vendor split configurations.</p>
         </div>
 
-        {/* Single Section: User Management */}
+        {/* User Management Section */}
         <div className="grid gap-6 md:grid-cols-1">
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
+              <CardTitle className="flex items-center gap-2 text-lg md:text-xl">
                 <Users className="h-5 w-5" />
                 User Management
               </CardTitle>
-              <CardDescription>
+              <CardDescription className="text-sm md:text-muted-foreground">
                 Manage users on the platform: create Admin, Internal, or Partner accounts, and view, edit, or delete
                 existing users.
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="flex gap-2 flex-wrap">
+              <div className="flex flex-col md:flex-row gap-3 md:gap-2 flex-wrap">
                 {/* First button: Create User (moved here) */}
                 <Button
                   onClick={() => setIsCreateUserOpen(true)}
-                  className="evergreen-button"
+                  className="evergreen-button md:h-10"
                   disabled={isCreateUserDisabled}
                 >
                   {isCreateUserDisabled ? (
@@ -89,7 +78,7 @@ export default function AdministratorPage() {
                 {/* Second button: View Users List */}
                 <Button
                   onClick={() => router.push("/user-management")}
-                  className="evergreen-button"
+                  className="evergreen-button md:h-10"
                   disabled={isEditUsersDisabled}
                   variant="secondary"
                 >
@@ -109,8 +98,57 @@ export default function AdministratorPage() {
           </Card>
         </div>
 
-        {/* Vendor Split Management - Full Width (unchanged) */}
-        <VendorSplitManagement refreshSignal={refreshCounter} />
+        {/* Vendor Split Management Section */}
+        <div className="grid gap-6 md:grid-cols-1">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-lg md:text-xl">
+                <Settings className="h-5 w-5" />
+                Vendor Split Management
+              </CardTitle>
+              <CardDescription className="text-sm md:text-muted-foreground">
+                Manage vendor split configurations: view and update split percentages for shows and vendors, map show-vendor relationships.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex flex-col md:flex-row gap-3 md:gap-2 flex-wrap">
+                {/* View and Update button */}
+                <Button
+                  onClick={() => router.push("/vendor-split-management")}
+                  className="evergreen-button md:h-10"
+                  disabled={isCreateUserDisabled}
+                >
+                  {isCreateUserDisabled ? (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  ) : (
+                    <Eye className="mr-2 h-4 w-4" />
+                  )}
+                  View and Update
+                </Button>
+
+                {/* View All Split History button */}
+                <Button
+                  onClick={() => router.push("/split-history")}
+                  className="evergreen-button md:h-10"
+                  disabled={isCreateUserDisabled}
+                  variant="secondary"
+                >
+                  {isCreateUserDisabled ? (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  ) : (
+                    <History className="mr-2 h-4 w-4" />
+                  )}
+                  View All Split History
+                </Button>
+              </div>
+
+              {isCreateUserDisabled && (
+                <p className="text-xs text-center text-muted-foreground mt-2">Waiting for authentication...</p>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+
 
         {/* Create User Dialog (kept mounted) */}
         <CreateUserDialog open={isCreateUserOpen} onOpenChange={setIsCreateUserOpen} />
