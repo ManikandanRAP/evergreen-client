@@ -396,9 +396,9 @@ export default function Feedbacks() {
             </div>
             
             {/* Type Filter and Export Button for Mobile */}
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-4 w-full">
               <Select value={typeFilter} onValueChange={setTypeFilter}>
-                <SelectTrigger className="w-48">
+                <SelectTrigger className="flex-1">
                   <SelectValue placeholder="Filter by type" />
                 </SelectTrigger>
                 <SelectContent>
