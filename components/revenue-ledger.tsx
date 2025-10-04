@@ -460,14 +460,100 @@ export default function RevenueLedger() {
     <div className="space-y-8">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-emerald-600 to-cyan-600 bg-clip-text text-transparent tracking-tight">
+          <h1 className="text-xl sm:text-3xl font-bold bg-gradient-to-r from-emerald-600 to-cyan-600 bg-clip-text text-transparent tracking-tight">
             Revenue Ledger
           </h1>
-          <p className="text-muted-foreground">Track revenue transactions and partner payments</p>
+          <p className="text-sm text-muted-foreground md:text-base md:text-muted-foreground">Track revenue transactions and partner payments</p>
         </div>
 
-        {/* actions */}
-        <div className="flex items-center gap-2">
+        {/* Mobile Layout */}
+        <div className="flex flex-col gap-4 md:hidden">
+          {/* Refresh and Export - Above stats */}
+          <div className="flex items-center gap-2">
+            <Button variant="outline" onClick={onRefresh} disabled={fetching} className="flex-1">
+              {fetching ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <RotateCcw className="mr-2 h-4 w-4" />}
+              Refresh
+            </Button>
+            <Button className="evergreen-button flex-1" onClick={exportToExcel}>
+              <Download className="mr-2 h-4 w-4" />
+              Export CSV
+            </Button>
+          </div>
+
+          {/* Mobile Stats Cards - Above pills */}
+          <div className="space-y-3">
+            <Card className="evergreen-card bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-950/20 dark:to-emerald-900/20 border-emerald-200 dark:border-emerald-800">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 px-3 py-3">
+                <CardTitle className="text-xs font-medium text-emerald-700 dark:text-emerald-300 leading-tight">Completed Partner Payments</CardTitle>
+                <DollarSign className="h-3 w-3 text-emerald-600 flex-shrink-0 ml-2" />
+              </CardHeader>
+              <CardContent className="px-3 pb-3 pt-0">
+                <div className="text-lg font-bold text-emerald-600">{formatCurrency(filteredStats.total_effective_billed_paid)}</div>
+                <p className="text-xs text-emerald-600/70 dark:text-emerald-400/70">Billed and Paid</p>
+              </CardContent>
+            </Card>
+
+            <Card className="evergreen-card bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950/20 dark:to-blue-900/20 border-blue-200 dark:border-blue-800">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 px-3 py-3">
+                <CardTitle className="text-xs font-medium text-blue-700 dark:text-blue-300 leading-tight">Partner Payments to be included Next Payout</CardTitle>
+                <TrendingUp className="h-3 w-3 text-blue-600 flex-shrink-0 ml-2" />
+              </CardHeader>
+              <CardContent className="px-3 pb-3 pt-0">
+                <div className="text-lg font-bold text-blue-600">{formatCurrency(filteredStats.total_billed_outstanding)}</div>
+                <p className="text-xs text-blue-600/70 dark:text-blue-400/70">Revenue Received and awaiting Partner Payment</p>
+              </CardContent>
+            </Card>
+
+            <Card className="evergreen-card bg-gradient-to-br from-green-50 to-green-100 dark:from-green-950/20 dark:to-green-900/20 border-green-200 dark:border-green-800">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 px-3 py-3">
+                <CardTitle className="text-xs font-medium text-green-700 dark:text-green-300 leading-tight">Pending Invoices from Customers</CardTitle>
+                <CreditCard className="h-3 w-3 text-green-600 flex-shrink-0 ml-2" />
+              </CardHeader>
+              <CardContent className="px-3 pb-3 pt-0">
+                <div className="text-lg font-bold text-green-600">{formatCurrency(filteredStats.total_comp_waiting)}</div>
+                <p className="text-xs text-green-600/70 dark:text-green-400/70">Partner share awaiting for Invoice Payment from Customer</p>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Stats Pills - Full width on mobile */}
+          <div className="flex items-center gap-2 w-full">
+            <Badge className="flex-1 px-3 py-1 bg-green-100 text-green-800 border-green-200 dark:bg-green-900/50 dark:text-green-300 dark:border-green-700 hover:bg-green-100 hover:text-green-800 dark:hover:bg-green-900/50 dark:hover:text-green-300 text-center justify-center">
+              {filteredRevenueData.length} Revenue Entries
+            </Badge>
+            <Badge className="flex-1 px-3 py-1 bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-900/50 dark:text-blue-300 dark:border-blue-700 hover:bg-blue-100 hover:text-blue-800 dark:hover:bg-blue-900/50 dark:hover:text-blue-300 text-center justify-center">
+              {filteredPartnerPayments.length} Partner Payments
+            </Badge>
+          </div>
+
+          {/* Filters and Clear Filters - Same line on mobile, 50/50 when both visible */}
+          <div className="flex items-center gap-2">
+            {/* Filter Button - 50% when clear filters is visible, 100% when not */}
+            <Button 
+              variant="outline" 
+              onClick={() => setIsSlideOutOpen(true)}
+              className={`flex items-center gap-2 ${(selectedShow !== "all" || dateFrom || dateTo) ? 'w-1/2' : 'w-full'}`}
+            >
+              <Filter className="h-4 w-4" />
+              Filters
+            </Button>
+
+            {/* Clear Filters Button - Only show when filters are applied, 50% width */}
+            <div className={`transition-all duration-300 ease-in-out ${(selectedShow !== "all" || dateFrom || dateTo) ? 'w-1/2 opacity-100' : 'w-0 opacity-0 overflow-hidden'}`}>
+              <Button 
+                variant="outline" 
+                onClick={handleClearFilters}
+                className="flex items-center gap-2 text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950 w-full"
+              >
+                <RotateCcw className="h-4 w-4" />
+                Clear Filters
+              </Button>
+            </div>
+          </div>
+        </div>
+
+        {/* Desktop Layout */}
+        <div className="hidden md:flex items-center gap-2">
           {/* Stats Pills */}
           <div className="flex items-center gap-2">
             <Badge className="px-3 py-1 bg-green-100 text-green-800 border-green-200 dark:bg-green-900/50 dark:text-green-300 dark:border-green-700 hover:bg-green-100 hover:text-green-800 dark:hover:bg-green-900/50 dark:hover:text-green-300">
@@ -512,8 +598,8 @@ export default function RevenueLedger() {
         </div>
       </div>
 
-      {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      {/* Summary Cards - Desktop Only */}
+      <div className="hidden md:grid grid-cols-3 gap-4">
         <Card className="evergreen-card bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-950/20 dark:to-emerald-900/20 border-emerald-200 dark:border-emerald-800">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-emerald-700 dark:text-emerald-300">Completed Partner Payments</CardTitle>
@@ -552,7 +638,7 @@ export default function RevenueLedger() {
       {/* Loading / Error banners */}
       {fetching && (
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          <Loader2 className="h-4 w-4 animate-spin" /> Loading ledger & payouts…
+          <Loader2 className="h-4 w-4 animate-spin" /> Loading Show Revenue and Partner Payments…
         </div>
       )}
       {error && <div className="text-sm text-red-600">{error}</div>}
@@ -561,9 +647,26 @@ export default function RevenueLedger() {
       <Card className={cn(fetching ? "opacity-60" : "")}>
         <CardHeader className="flex-row items-start justify-between space-y-0">
           <div>
-            <CardTitle>Show Revenue</CardTitle>
-            <CardDescription>Transactions between Evergreen and Customers (Starting July 1, 2025)</CardDescription>
+            <CardTitle className="text-lg sm:text-xl">Show Revenue</CardTitle>
+            <CardDescription className="text-sm sm:text-base">Transactions between Evergreen and Customers (Starting July 1, 2025)</CardDescription>
           </div>
+          {/* Desktop Pagination */}
+          <div className="hidden md:block">
+            <PaginationControls
+              page={revenuePageSafe}
+              totalPages={revenueTotalPages}
+              totalItems={revenueTotal}
+              pageInput={revenuePageInput}
+              setPage={setRevenuePage}
+              setPageInput={setRevenuePageInput}
+              onGo={tryJumpRevenue}
+              rangeText={rangeLabel(revenuePageSafe, revenueTotal)}
+            />
+          </div>
+        </CardHeader>
+        
+        {/* Mobile Pagination - Next line, centered */}
+        <div className="md:hidden flex justify-center w-full px-6 pb-4">
           <PaginationControls
             page={revenuePageSafe}
             totalPages={revenueTotalPages}
@@ -573,8 +676,9 @@ export default function RevenueLedger() {
             setPageInput={setRevenuePageInput}
             onGo={tryJumpRevenue}
             rangeText={rangeLabel(revenuePageSafe, revenueTotal)}
+            isMobile={true}
           />
-        </CardHeader>
+        </div>
 
         <CardContent>
           <div className="border rounded-lg overflow-hidden">
@@ -706,16 +810,33 @@ export default function RevenueLedger() {
           </div>
 
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mt-3">
-            <span className="text-xs text-muted-foreground">{rangeLabel(revenuePageSafe, revenueTotal)}</span>
-            <PaginationControls
-              page={revenuePageSafe}
-              totalPages={revenueTotalPages}
-              totalItems={revenueTotal}
-              pageInput={revenuePageInput}
-              setPage={setRevenuePage}
-              setPageInput={setRevenuePageInput}
-              onGo={tryJumpRevenue}
-            />
+            {/* Desktop Layout */}
+            <div className="hidden md:flex md:items-center md:justify-between w-full">
+              <span className="text-xs text-muted-foreground">{rangeLabel(revenuePageSafe, revenueTotal)}</span>
+              <PaginationControls
+                page={revenuePageSafe}
+                totalPages={revenueTotalPages}
+                totalItems={revenueTotal}
+                pageInput={revenuePageInput}
+                setPage={setRevenuePage}
+                setPageInput={setRevenuePageInput}
+                onGo={tryJumpRevenue}
+              />
+            </div>
+            {/* Mobile Layout - Centered */}
+            <div className="md:hidden flex flex-col items-center gap-3">
+              <span className="text-xs text-muted-foreground text-center">{rangeLabel(revenuePageSafe, revenueTotal)}</span>
+              <PaginationControls
+                page={revenuePageSafe}
+                totalPages={revenueTotalPages}
+                totalItems={revenueTotal}
+                pageInput={revenuePageInput}
+                setPage={setRevenuePage}
+                setPageInput={setRevenuePageInput}
+                onGo={tryJumpRevenue}
+                isMobile={true}
+              />
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -724,9 +845,26 @@ export default function RevenueLedger() {
       <Card className={cn(fetching ? "opacity-60" : "")}>
         <CardHeader className="flex-row items-start justify-between space-y-0">
           <div>
-            <CardTitle>Partner Payments</CardTitle>
-            <CardDescription>Transactions between Evergreen and Partners</CardDescription>
+            <CardTitle className="text-lg sm:text-xl">Partner Payments</CardTitle>
+            <CardDescription className="text-sm sm:text-base">Transactions between Evergreen and Partners</CardDescription>
           </div>
+          {/* Desktop Pagination */}
+          <div className="hidden md:block">
+            <PaginationControls
+              page={paymentsPageSafe}
+              totalPages={paymentsTotalPages}
+              totalItems={paymentsTotal}
+              pageInput={paymentsPageInput}
+              setPage={setPaymentsPage}
+              setPageInput={setPaymentsPageInput}
+              onGo={tryJumpPayments}
+              rangeText={rangeLabel(paymentsPageSafe, paymentsTotal)}
+            />
+          </div>
+        </CardHeader>
+        
+        {/* Mobile Pagination - Next line, centered */}
+        <div className="md:hidden flex justify-center w-full px-6 pb-4">
           <PaginationControls
             page={paymentsPageSafe}
             totalPages={paymentsTotalPages}
@@ -736,8 +874,9 @@ export default function RevenueLedger() {
             setPageInput={setPaymentsPageInput}
             onGo={tryJumpPayments}
             rangeText={rangeLabel(paymentsPageSafe, paymentsTotal)}
+            isMobile={true}
           />
-        </CardHeader>
+        </div>
 
         <CardContent>
           <div className="border rounded-lg overflow-x-auto">
@@ -832,16 +971,33 @@ export default function RevenueLedger() {
           </div>
 
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mt-3">
-            <span className="text-xs text-muted-foreground">{rangeLabel(paymentsPageSafe, paymentsTotal)}</span>
-            <PaginationControls
-              page={paymentsPageSafe}
-              totalPages={paymentsTotalPages}
-              totalItems={paymentsTotal}
-              pageInput={paymentsPageInput}
-              setPage={setPaymentsPage}
-              setPageInput={setPaymentsPageInput}
-              onGo={tryJumpPayments}
-            />
+            {/* Desktop Layout */}
+            <div className="hidden md:flex md:items-center md:justify-between w-full">
+              <span className="text-xs text-muted-foreground">{rangeLabel(paymentsPageSafe, paymentsTotal)}</span>
+              <PaginationControls
+                page={paymentsPageSafe}
+                totalPages={paymentsTotalPages}
+                totalItems={paymentsTotal}
+                pageInput={paymentsPageInput}
+                setPage={setPaymentsPage}
+                setPageInput={setPaymentsPageInput}
+                onGo={tryJumpPayments}
+              />
+            </div>
+            {/* Mobile Layout - Centered */}
+            <div className="md:hidden flex flex-col items-center gap-3">
+              <span className="text-xs text-muted-foreground text-center">{rangeLabel(paymentsPageSafe, paymentsTotal)}</span>
+              <PaginationControls
+                page={paymentsPageSafe}
+                totalPages={paymentsTotalPages}
+                totalItems={paymentsTotal}
+                pageInput={paymentsPageInput}
+                setPage={setPaymentsPage}
+                setPageInput={setPaymentsPageInput}
+                onGo={tryJumpPayments}
+                isMobile={true}
+              />
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -931,6 +1087,7 @@ function PaginationControls({
   setPageInput,
   onGo,
   rangeText,
+  isMobile = false,
 }: {
   page: number
   totalPages: number
@@ -940,7 +1097,26 @@ function PaginationControls({
   setPageInput: (s: string) => void
   onGo: () => void
   rangeText?: string
+  isMobile?: boolean
 }) {
+  if (isMobile) {
+    return (
+      <div className="flex items-center gap-2">
+        <Button variant="outline" size="sm" onClick={() => setPage(Math.max(1, page - 1))} disabled={page <= 1}>
+          <ChevronLeft className="h-4 w-4" />
+          Prev
+        </Button>
+        <span className="text-xs text-muted-foreground">
+          Page {page} / {totalPages}
+        </span>
+        <Button variant="outline" size="sm" onClick={() => setPage(Math.min(totalPages, page + 1))} disabled={page >= totalPages}>
+          Next
+          <ChevronRight className="h-4 w-4" />
+        </Button>
+      </div>
+    )
+  }
+
   return (
     <div className="flex items-center gap-2">
       {rangeText ? <span className="hidden sm:inline text-xs text-muted-foreground">{rangeText}</span> : null}

@@ -29,6 +29,8 @@ import {
   MessageSquare,
   BarChart3,
   Archive,
+  Sidebar,
+  SidebarClose,
 } from "lucide-react"
 import { useTheme } from "next-themes"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
@@ -252,7 +254,7 @@ export default function DashboardNav({ onSidebarToggle }: DashboardNavProps) {
         <Button
           variant="ghost"
           size="icon"
-          className="absolute -right-3 top-6 h-6 w-6 rounded-full border border-border bg-background shadow-md hover:shadow-lg transition-all duration-200 z-10"
+          className="absolute -right-3 top-1/2 -translate-y-1/2 h-6 w-6 rounded-full border border-border bg-background shadow-md hover:shadow-lg transition-all duration-200 z-10"
           onClick={handleSidebarToggle}
         >
           {isDesktopCollapsed ? <ChevronRight className="h-3 w-3" /> : <ChevronLeft className="h-3 w-3" />}
