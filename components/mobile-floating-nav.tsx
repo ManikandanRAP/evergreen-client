@@ -98,7 +98,7 @@ export default function MobileFloatingNav() {
                 href={item.href}
                 onClick={() => handleNavClick(index)}
                 className={cn(
-                  "relative flex flex-col items-center justify-center px-2 py-2 rounded-full transition-all duration-200 ease-out flex-1",
+                  "relative flex flex-col items-center justify-center px-1.5 py-1.5 rounded-full transition-all duration-200 ease-out flex-1",
                   "hover:scale-105 active:scale-95",
                   isActive 
                     ? "text-white" 
