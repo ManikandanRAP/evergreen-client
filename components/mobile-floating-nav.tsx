@@ -89,7 +89,7 @@ export default function MobileFloatingNav() {
           {/* Animated background indicator */}
           <div
             ref={indicatorRef}
-            className="absolute top-0 bottom-0 bg-emerald-500 rounded-full transition-all duration-300 ease-out opacity-0"
+            className="absolute top-0 bottom-0 bg-emerald-100 dark:bg-emerald-900/50 border border-emerald-300 dark:border-emerald-700 rounded-full transition-all duration-300 ease-out opacity-0"
             style={{
               willChange: 'left, width, opacity'
             }}
@@ -108,9 +108,9 @@ export default function MobileFloatingNav() {
                   className={cn(
                     "relative flex flex-col items-center justify-center px-0 py-2 rounded-full transition-all duration-200 ease-out flex-1 min-w-0",
                     "hover:scale-105 active:scale-95",
-                    isActive 
-                      ? "text-white" 
-                      : "text-gray-600 dark:text-gray-300 hover:text-emerald-600"
+                  isActive 
+                    ? "text-emerald-800 dark:text-emerald-300" 
+                    : "text-gray-600 dark:text-gray-300 hover:text-emerald-600"
                   )}
                 >
                   <Icon className={cn(
@@ -122,7 +122,7 @@ export default function MobileFloatingNav() {
                   <span className={cn(
                     "text-xs font-medium transition-all duration-200",
                     isActive 
-                      ? "text-white font-semibold" 
+                      ? "text-emerald-800 dark:text-emerald-300 font-semibold" 
                       : "text-gray-600 dark:text-gray-300"
                   )}>
                     {item.shortLabel}
