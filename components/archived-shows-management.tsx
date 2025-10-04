@@ -486,23 +486,78 @@ export default function ArchivedShowsManagement() {
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header with Search, Numbers, and View Switcher */}
-      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-emerald-600 to-cyan-600 bg-clip-text text-transparent">
-            Archived Shows
-          </h1>
-          <p className="text-muted-foreground">
-            Manage shows that have been archived
-          </p>
+    <div className="space-y-6 pb-10">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        {/* Mobile: Title/Description and Switcher on same line */}
+        <div className="flex items-center justify-between md:block">
+          <div>
+            <h1 className="text-xl sm:text-3xl font-bold bg-gradient-to-r from-emerald-600 to-cyan-600 bg-clip-text text-transparent tracking-tight">
+              Archived Shows
+            </h1>
+            <p className="text-sm text-muted-foreground md:text-base">
+              Manage shows that have been archived
+            </p>
+          </div>
+
+          {/* View switcher - mobile only, top right */}
+          <div className="flex items-center border rounded-lg p-1 bg-gradient-to-r from-emerald-50 to-cyan-50 dark:from-emerald-950/20 dark:to-cyan-950/20 border-emerald-200 dark:border-emerald-800 md:hidden">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setViewMode("cards")}
+              className={`h-8 px-3 ${
+                viewMode === "cards" 
+                  ? "bg-emerald-100 dark:bg-emerald-900/50 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-200 dark:hover:bg-emerald-800/50" 
+                  : "text-emerald-600 dark:text-emerald-400 hover:bg-emerald-100/50 dark:hover:bg-emerald-900/30"
+              }`}
+            >
+              <Grid3X3 className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setViewMode("list")}
+              className={`h-8 px-3 ${
+                viewMode === "list" 
+                  ? "bg-cyan-100 dark:bg-cyan-900/50 text-cyan-700 dark:text-cyan-300 hover:bg-cyan-200 dark:hover:bg-cyan-800/50" 
+                  : "text-cyan-600 dark:text-cyan-400 hover:bg-cyan-100/50 dark:hover:bg-cyan-900/30"
+              }`}
+            >
+              <List className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
         
-        {/* Numbers, View Switcher, and Search in one line */}
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-          {/* Show Numbers - Moved to left */}
+        {/* Mobile Layout */}
+        <div className="flex flex-col gap-4 md:hidden">
+          {/* Search Bar with Archived Shows Count */}
           <div className="flex items-center gap-2">
-            <Badge className="px-3 py-1 bg-orange-100 text-orange-800 border-orange-200 dark:bg-orange-900/50 dark:text-orange-300 dark:border-orange-700 hover:bg-orange-100 hover:text-orange-800 dark:hover:bg-orange-900/50 dark:hover:text-orange-300">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search archived shows..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+            <div className="inline-flex items-center px-3 py-2 h-10 bg-orange-100 text-orange-800 border border-orange-200 dark:bg-orange-900/50 dark:text-orange-300 dark:border-orange-700 rounded-md whitespace-nowrap text-sm">
+              {filteredShows.length} Archived Shows
+            </div>
+            {searchTerm && (
+              <Badge variant="outline" className="text-sm whitespace-nowrap">
+                {archivedShows.length} total
+              </Badge>
+            )}
+          </div>
+        </div>
+
+        {/* Desktop Layout */}
+        <div className="hidden md:flex items-center gap-3">
+          {/* Show Numbers */}
+          <div className="flex items-center gap-2">
+            <Badge className="px-3 py-1 bg-orange-100 text-orange-800 border-orange-200 dark:bg-orange-900/50 dark:text-orange-300 dark:border-orange-700 hover:bg-orange-100 hover:text-orange-800 dark:hover:bg-orange-900/50 dark:hover:text-orange-300 text-center">
               {filteredShows.length} Archived Shows
             </Badge>
             {searchTerm && (
@@ -562,7 +617,64 @@ export default function ArchivedShowsManagement() {
             {/* TOP TOOLBAR: Selection (left) + Pagination (right) */}
             {filteredShows.length > 0 && (
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between pb-4 rounded-lg mb-2">
-                <div className="flex items-center gap-3">
+                {/* Mobile Layout */}
+                <div className="md:hidden space-y-3">
+                  {/* Pagination - selected count on left, pagination on right */}
+                  <div className="flex items-center justify-between">
+                    {/* Selected count on left - match pagination button height */}
+                    <Button variant="outline" size="sm" className="px-2 flex flex-col items-center justify-center min-w-[60px] gap-0">
+                      <span className="text-sm font-bold leading-none">{selectedShows.size}</span>
+                      <span className="text-xs text-muted-foreground leading-none">Selected</span>
+                    </Button>
+                    
+                    {/* Pagination on right */}
+                    <div className="flex items-center gap-2">
+                      <Button variant="outline" size="sm" onClick={gotoPrev} disabled={page === 1}>
+                        <ChevronLeft className="h-4 w-4" />
+                        Prev
+                      </Button>
+                      <span className="text-xs text-muted-foreground">
+                        Page {page} / {totalPages}
+                      </span>
+                      <Button variant="outline" size="sm" onClick={gotoNext} disabled={page === totalPages}>
+                        Next
+                        <ChevronRight className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+
+                  {/* Archive and delete buttons - same line */}
+                  {selectedShows.size > 0 && (
+                    <div className="flex gap-2">
+                      {user?.role === "admin" && (
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          onClick={handleBulkUnarchive}
+                          disabled={isBulkUnarchiving}
+                          className="text-green-600 hover:text-green-700 hover:bg-green-50 dark:hover:bg-green-900/20 border-green-200 hover:border-green-300 dark:border-green-800 dark:hover:border-green-700 flex-1"
+                        >
+                          <RotateCcw className="h-4 w-4 mr-2" />
+                          {isBulkUnarchiving ? "Unarchiving..." : "Unarchive Selected"}
+                        </Button>
+                      )}
+                      {user?.role === "admin" && (
+                        <Button 
+                          size="sm" 
+                          onClick={handleBulkDelete}
+                          disabled={isBulkDeleting}
+                          className="bg-red-100 dark:bg-red-800 border border-red-300 dark:border-red-600 text-red-700 dark:text-red-200 hover:bg-red-200 dark:hover:bg-red-700 flex-1"
+                        >
+                          <Trash2 className="h-4 w-4 mr-2" />
+                          {isBulkDeleting ? "Deleting..." : "Delete Selected"}
+                        </Button>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                {/* Desktop Layout */}
+                <div className="hidden md:flex items-center gap-3">
                   <Button
                     variant="outline"
                     size="sm"
@@ -584,7 +696,7 @@ export default function ArchivedShowsManagement() {
                           className="text-green-600 hover:text-green-700 hover:bg-green-50 dark:hover:bg-green-900/20 border-green-200 hover:border-green-300 dark:border-green-800 dark:hover:border-green-700"
                         >
                           <RotateCcw className="h-4 w-4 mr-2" />
-                          {isBulkUnarchiving ? "Unarchiving..." : "Unarchive Selected Shows"}
+                          {isBulkUnarchiving ? "Unarchiving..." : "Unarchive Selected"}
                         </Button>
                       )}
                       {user?.role === "admin" && (
@@ -595,14 +707,14 @@ export default function ArchivedShowsManagement() {
                           className="bg-red-100 dark:bg-red-800 border border-red-300 dark:border-red-600 text-red-700 dark:text-red-200 hover:bg-red-200 dark:hover:bg-red-700"
                         >
                           <Trash2 className="h-4 w-4 mr-2" />
-                          {isBulkDeleting ? "Deleting..." : "Delete Selected Shows"}
+                          {isBulkDeleting ? "Deleting..." : "Delete Selected"}
                         </Button>
                       )}
                     </>
                   )}
                 </div>
 
-                <div className="flex items-center gap-3">
+                <div className="hidden md:flex items-center gap-3">
                   <div className="text-xs text-muted-foreground hidden sm:block">
                     <span className="font-medium">{pageRangeStart}</span>–<span className="font-medium">{pageRangeEnd}</span> of{" "}
                     <span className="font-medium">{filteredShows.length}</span>
@@ -619,22 +731,6 @@ export default function ArchivedShowsManagement() {
                       Next
                       <ChevronRight className="h-4 w-4" />
                     </Button>
-                    <div className="flex items-center gap-2 ml-2">
-                      <Label htmlFor="page-input" className="text-xs text-muted-foreground">Go to</Label>
-                      <Input
-                        id="page-input"
-                        type="number"
-                        min={1}
-                        max={totalPages}
-                        value={gotoInput}
-                        onChange={(e) => setGotoInput(e.target.value)}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter") handleGoto()
-                        }}
-                        className="h-8 w-20"
-                      />
-                      <Button variant="outline" size="sm" onClick={handleGoto}>Go</Button>
-                    </div>
                   </div>
                 </div>
               </div>
@@ -675,6 +771,14 @@ export default function ArchivedShowsManagement() {
                     >
                       {`Rate Card - ${show.rate_card ? "Yes" : "No"}`}
                     </Badge>
+                    {(() => {
+                      const rankingInfo = getRankingInfo(show.ranking_category);
+                      return rankingInfo.hasRanking ? (
+                        <Badge variant="secondary" className={`text-xs border pointer-events-none ${rankingInfo.badgeClasses}`}>
+                          {rankingInfo.displayText}
+                        </Badge>
+                      ) : null;
+                    })()}
                   </div>
                 </div>
               </CardHeader>
@@ -743,7 +847,77 @@ export default function ArchivedShowsManagement() {
             {/* BOTTOM TOOLBAR: Selection (left) + Pagination (right) */}
             {filteredShows.length > 0 && (
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between pt-4 rounded-lg mt-2">
-                <div className="flex items-center gap-3">
+                {/* Mobile Layout */}
+                <div className="md:hidden space-y-3">
+                  {/* Select all button */}
+                  <div className="w-full">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleSelectAll}
+                      className="flex items-center gap-2 hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50 border-border hover:border-border w-full"
+                    >
+                      <Check className="h-4 w-4" />
+                      {selectedShows.size === filteredShows.length ? "Deselect All" : "Select All"}
+                    </Button>
+                  </div>
+
+                  {/* Pagination - selected count on left, pagination on right */}
+                  <div className="flex items-center justify-between">
+                    {/* Selected count on left - match pagination button height */}
+                    <Button variant="outline" size="sm" className="px-2 flex flex-col items-center justify-center min-w-[60px] gap-0">
+                      <span className="text-sm font-bold leading-none">{selectedShows.size}</span>
+                      <span className="text-xs text-muted-foreground leading-none">Selected</span>
+                    </Button>
+                    
+                    {/* Pagination on right */}
+                    <div className="flex items-center gap-2">
+                      <Button variant="outline" size="sm" onClick={gotoPrev} disabled={page === 1}>
+                        <ChevronLeft className="h-4 w-4" />
+                        Prev
+                      </Button>
+                      <span className="text-xs text-muted-foreground">
+                        Page {page} / {totalPages}
+                      </span>
+                      <Button variant="outline" size="sm" onClick={gotoNext} disabled={page === totalPages}>
+                        Next
+                        <ChevronRight className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+
+                  {/* Archive and delete buttons - same line */}
+                  {selectedShows.size > 0 && (
+                    <div className="flex gap-2">
+                      {user?.role === "admin" && (
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          onClick={handleBulkUnarchive}
+                          disabled={isBulkUnarchiving}
+                          className="text-green-600 hover:text-green-700 hover:bg-green-50 dark:hover:bg-green-900/20 border-green-200 hover:border-green-300 dark:border-green-800 dark:hover:border-green-700 flex-1"
+                        >
+                          <RotateCcw className="h-4 w-4 mr-2" />
+                          {isBulkUnarchiving ? "Unarchiving..." : "Unarchive Selected"}
+                        </Button>
+                      )}
+                      {user?.role === "admin" && (
+                        <Button 
+                          size="sm" 
+                          onClick={handleBulkDelete}
+                          disabled={isBulkDeleting}
+                          className="bg-red-100 dark:bg-red-800 border border-red-300 dark:border-red-600 text-red-700 dark:text-red-200 hover:bg-red-200 dark:hover:bg-red-700 flex-1"
+                        >
+                          <Trash2 className="h-4 w-4 mr-2" />
+                          {isBulkDeleting ? "Deleting..." : "Delete Selected"}
+                        </Button>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                {/* Desktop Layout */}
+                <div className="hidden md:flex items-center gap-3">
                   <Button
                     variant="outline"
                     size="sm"
@@ -765,7 +939,7 @@ export default function ArchivedShowsManagement() {
                           className="text-green-600 hover:text-green-700 hover:bg-green-50 dark:hover:bg-green-900/20 border-green-200 hover:border-green-300 dark:border-green-800 dark:hover:border-green-700"
                         >
                           <RotateCcw className="h-4 w-4 mr-2" />
-                          {isBulkUnarchiving ? "Unarchiving..." : "Unarchive Selected Shows"}
+                          {isBulkUnarchiving ? "Unarchiving..." : "Unarchive Selected"}
                         </Button>
                       )}
                       {user?.role === "admin" && (
@@ -776,14 +950,14 @@ export default function ArchivedShowsManagement() {
                           className="bg-red-100 dark:bg-red-800 border border-red-300 dark:border-red-600 text-red-700 dark:text-red-200 hover:bg-red-200 dark:hover:bg-red-700"
                         >
                           <Trash2 className="h-4 w-4 mr-2" />
-                          {isBulkDeleting ? "Deleting..." : "Delete Selected Shows"}
+                          {isBulkDeleting ? "Deleting..." : "Delete Selected"}
                         </Button>
                       )}
                     </>
                   )}
                 </div>
 
-                <div className="flex items-center gap-3">
+                <div className="hidden md:flex items-center gap-3">
                   <div className="text-xs text-muted-foreground hidden sm:block">
                     <span className="font-medium">{pageRangeStart}</span>–<span className="font-medium">{pageRangeEnd}</span> of{" "}
                     <span className="font-medium">{filteredShows.length}</span>
@@ -800,22 +974,6 @@ export default function ArchivedShowsManagement() {
                       Next
                       <ChevronRight className="h-4 w-4" />
                     </Button>
-                    <div className="flex items-center gap-2 ml-2">
-                      <Label htmlFor="page-input" className="text-xs text-muted-foreground">Go to</Label>
-                      <Input
-                        id="page-input"
-                        type="number"
-                        min={1}
-                        max={totalPages}
-                        value={gotoInput}
-                        onChange={(e) => setGotoInput(e.target.value)}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter") handleGoto()
-                        }}
-                        className="h-8 w-20"
-                      />
-                      <Button variant="outline" size="sm" onClick={handleGoto}>Go</Button>
-                    </div>
                   </div>
                 </div>
               </div>
@@ -828,7 +986,64 @@ export default function ArchivedShowsManagement() {
             {/* TOP TOOLBAR: Selection (left) + Pagination (right) */}
             {filteredShows.length > 0 && (
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between pb-4 rounded-lg mb-2">
-                <div className="flex items-center gap-3">
+                {/* Mobile Layout */}
+                <div className="md:hidden space-y-3">
+                  {/* Pagination - selected count on left, pagination on right */}
+                  <div className="flex items-center justify-between">
+                    {/* Selected count on left - match pagination button height */}
+                    <Button variant="outline" size="sm" className="px-2 flex flex-col items-center justify-center min-w-[60px] gap-0">
+                      <span className="text-sm font-bold leading-none">{selectedShows.size}</span>
+                      <span className="text-xs text-muted-foreground leading-none">Selected</span>
+                    </Button>
+                    
+                    {/* Pagination on right */}
+                    <div className="flex items-center gap-2">
+                      <Button variant="outline" size="sm" onClick={gotoPrev} disabled={page === 1}>
+                        <ChevronLeft className="h-4 w-4" />
+                        Prev
+                      </Button>
+                      <span className="text-xs text-muted-foreground">
+                        Page {page} / {totalPages}
+                      </span>
+                      <Button variant="outline" size="sm" onClick={gotoNext} disabled={page === totalPages}>
+                        Next
+                        <ChevronRight className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+
+                  {/* Archive and delete buttons - same line */}
+                  {selectedShows.size > 0 && (
+                    <div className="flex gap-2">
+                      {user?.role === "admin" && (
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          onClick={handleBulkUnarchive}
+                          disabled={isBulkUnarchiving}
+                          className="text-green-600 hover:text-green-700 hover:bg-green-50 dark:hover:bg-green-900/20 border-green-200 hover:border-green-300 dark:border-green-800 dark:hover:border-green-700 flex-1"
+                        >
+                          <RotateCcw className="h-4 w-4 mr-2" />
+                          {isBulkUnarchiving ? "Unarchiving..." : "Unarchive Selected"}
+                        </Button>
+                      )}
+                      {user?.role === "admin" && (
+                        <Button 
+                          size="sm" 
+                          onClick={handleBulkDelete}
+                          disabled={isBulkDeleting}
+                          className="bg-red-100 dark:bg-red-800 border border-red-300 dark:border-red-600 text-red-700 dark:text-red-200 hover:bg-red-200 dark:hover:bg-red-700 flex-1"
+                        >
+                          <Trash2 className="h-4 w-4 mr-2" />
+                          {isBulkDeleting ? "Deleting..." : "Delete Selected"}
+                        </Button>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                {/* Desktop Layout */}
+                <div className="hidden md:flex items-center gap-3">
                   <Button
                     variant="outline"
                     size="sm"
@@ -850,7 +1065,7 @@ export default function ArchivedShowsManagement() {
                           className="text-green-600 hover:text-green-700 hover:bg-green-50 dark:hover:bg-green-900/20 border-green-200 hover:border-green-300 dark:border-green-800 dark:hover:border-green-700"
                         >
                           <RotateCcw className="h-4 w-4 mr-2" />
-                          {isBulkUnarchiving ? "Unarchiving..." : "Unarchive Selected Shows"}
+                          {isBulkUnarchiving ? "Unarchiving..." : "Unarchive Selected"}
                         </Button>
                       )}
                       {user?.role === "admin" && (
@@ -861,14 +1076,14 @@ export default function ArchivedShowsManagement() {
                           className="bg-red-100 dark:bg-red-800 border border-red-300 dark:border-red-600 text-red-700 dark:text-red-200 hover:bg-red-200 dark:hover:bg-red-700"
                         >
                           <Trash2 className="h-4 w-4 mr-2" />
-                          {isBulkDeleting ? "Deleting..." : "Delete Selected Shows"}
+                          {isBulkDeleting ? "Deleting..." : "Delete Selected"}
                         </Button>
                       )}
                     </>
                   )}
                 </div>
 
-                <div className="flex items-center gap-3">
+                <div className="hidden md:flex items-center gap-3">
                   <div className="text-xs text-muted-foreground hidden sm:block">
                     <span className="font-medium">{pageRangeStart}</span>–<span className="font-medium">{pageRangeEnd}</span> of{" "}
                     <span className="font-medium">{filteredShows.length}</span>
@@ -885,38 +1100,22 @@ export default function ArchivedShowsManagement() {
                       Next
                       <ChevronRight className="h-4 w-4" />
                     </Button>
-                    <div className="flex items-center gap-2 ml-2">
-                      <Label htmlFor="page-input" className="text-xs text-muted-foreground">Go to</Label>
-                      <Input
-                        id="page-input"
-                        type="number"
-                        min={1}
-                        max={totalPages}
-                        value={gotoInput}
-                        onChange={(e) => setGotoInput(e.target.value)}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter") handleGoto()
-                        }}
-                        className="h-8 w-20"
-                      />
-                      <Button variant="outline" size="sm" onClick={handleGoto}>Go</Button>
-                    </div>
                   </div>
                 </div>
               </div>
             )}
-            <div className="rounded-md border">
-              <table className="w-full text-sm">
+            <div className="rounded-md border overflow-x-auto">
+              <table className="w-full text-sm min-w-[800px]">
                 <thead className="border-b">
                   <tr className="text-left text-sm">
-                    <th className="px-2 py-4 w-8 border-r bg-muted/50 text-center">
+                    <th className="px-2 py-4 w-8 border-r bg-muted/50 text-center whitespace-nowrap">
                       <Checkbox
                         checked={selectedShows.size === filteredShows.length && filteredShows.length > 0}
                         onCheckedChange={handleSelectAll}
                       />
                     </th>
                     <th 
-                      className="pl-6 pr-6 py-4 font-semibold border-r cursor-pointer hover:bg-accent/50 transition-colors bg-muted/50 w-80"
+                      className="pl-6 pr-6 py-4 font-semibold border-r cursor-pointer hover:bg-accent/50 transition-colors bg-muted/50 w-80 whitespace-nowrap"
                       onClick={() => handleSort('name')}
                     >
                       <div className="flex items-center gap-2">
@@ -924,18 +1123,18 @@ export default function ArchivedShowsManagement() {
                         {getSortIcon('name')}
                       </div>
                     </th>
-                    <th className="pl-6 pr-6 py-4 font-semibold border-r bg-muted/50 w-32">
+                    <th className="pl-6 pr-6 py-4 font-semibold border-r bg-muted/50 w-32 whitespace-nowrap">
                       <div className="flex items-center gap-2">
                         Archived By
                       </div>
                     </th>
-                    <th className="pl-6 pr-6 py-4 font-semibold border-r bg-muted/50 w-32">
+                    <th className="pl-6 pr-6 py-4 font-semibold border-r bg-muted/50 w-32 whitespace-nowrap">
                       <div className="flex items-center gap-2">
                         Archived At
                       </div>
                     </th>
                     <th 
-                      className="pl-6 pr-6 py-4 font-semibold border-r cursor-pointer hover:bg-accent/50 transition-colors bg-muted/50 w-32"
+                      className="pl-6 pr-6 py-4 font-semibold border-r cursor-pointer hover:bg-accent/50 transition-colors bg-muted/50 w-32 whitespace-nowrap"
                       onClick={() => handleSort('ranking_category')}
                     >
                       <div className="flex items-center gap-2">
@@ -944,7 +1143,7 @@ export default function ArchivedShowsManagement() {
                       </div>
                     </th>
                     <th 
-                      className="pl-6 pr-6 py-4 font-semibold border-r cursor-pointer hover:bg-accent/50 transition-colors bg-muted/50 w-32"
+                      className="pl-6 pr-6 py-4 font-semibold border-r cursor-pointer hover:bg-accent/50 transition-colors bg-muted/50 w-32 whitespace-nowrap"
                       onClick={() => handleSort('standardSplit')}
                     >
                       <div className="flex items-center gap-2">
@@ -974,24 +1173,24 @@ export default function ArchivedShowsManagement() {
                           : ""
                       }`}
                     >
-                      <td className="px-2 py-2 border-r w-8 text-center">
+                      <td className="px-2 py-2 border-r w-8 text-center whitespace-nowrap">
                         <Checkbox
                           checked={selectedShows.has(show.id)}
                           onCheckedChange={() => handleSelectShow(show.id)}
                         />
                       </td>
-                      <td className="pl-6 pr-6 py-2 font-medium border-r cursor-pointer hover:bg-accent/30 transition-colors" onClick={() => handleViewShow(show)}>
+                      <td className="pl-6 pr-6 py-2 font-medium border-r cursor-pointer hover:bg-accent/30 transition-colors whitespace-nowrap" onClick={() => handleViewShow(show)}>
                         <span className="hover:underline">
                           {show.title}
                         </span>
                       </td>
-                      <td className="pl-6 pr-6 py-2 border-r">
+                      <td className="pl-6 pr-6 py-2 border-r whitespace-nowrap">
                         {getUserName(show.archived_by_id, show.archived_by)}
                       </td>
-                      <td className="pl-6 pr-6 py-2 border-r">
+                      <td className="pl-6 pr-6 py-2 border-r whitespace-nowrap">
                         {show.archived_at ? new Date(show.archived_at).toLocaleDateString() : "Unknown"}
                       </td>
-        <td className="pl-6 pr-6 py-2 border-r">
+        <td className="pl-6 pr-6 py-2 border-r whitespace-nowrap">
           {(() => {
             const rankingInfo = getRankingInfo(show.ranking_category);
             return rankingInfo.hasRanking ? (
@@ -1003,9 +1202,9 @@ export default function ArchivedShowsManagement() {
             );
           })()}
         </td>
-                      <td className="pl-6 pr-6 py-2 border-r">{formatPercentage(getStandardSplit(show))}</td>
-                      <td className="pl-6 pr-6 py-2 border-r">{formatPercentage(getProgrammaticSplit(show))}</td>
-                      <td className="pl-6 pr-6 py-2">
+                      <td className="pl-6 pr-6 py-2 border-r whitespace-nowrap">{formatPercentage(getStandardSplit(show))}</td>
+                      <td className="pl-6 pr-6 py-2 border-r whitespace-nowrap">{formatPercentage(getProgrammaticSplit(show))}</td>
+                      <td className="pl-6 pr-6 py-2 whitespace-nowrap">
                         <div className="flex items-center gap-1">
                           <Button
                             variant="outline"
@@ -1049,7 +1248,77 @@ export default function ArchivedShowsManagement() {
             {/* BOTTOM TOOLBAR: Selection (left) + Pagination (right) */}
             {filteredShows.length > 0 && (
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between pt-4 rounded-lg mt-2">
-                <div className="flex items-center gap-3">
+                {/* Mobile Layout */}
+                <div className="md:hidden space-y-3">
+                  {/* Select all button - full width */}
+                  <div className="w-full">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleSelectAll}
+                      className="flex items-center gap-2 hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50 border-border hover:border-border w-full"
+                    >
+                      <Check className="h-4 w-4" />
+                      {selectedShows.size === filteredShows.length ? "Deselect All" : "Select All"}
+                    </Button>
+                  </div>
+
+                  {/* Pagination - selected count on left, pagination on right */}
+                  <div className="flex items-center justify-between">
+                    {/* Selected count on left - match pagination button height */}
+                    <Button variant="outline" size="sm" className="px-2 flex flex-col items-center justify-center min-w-[60px] gap-0">
+                      <span className="text-sm font-bold leading-none">{selectedShows.size}</span>
+                      <span className="text-xs text-muted-foreground leading-none">Selected</span>
+                    </Button>
+                    
+                    {/* Pagination on right */}
+                    <div className="flex items-center gap-2">
+                      <Button variant="outline" size="sm" onClick={gotoPrev} disabled={page === 1}>
+                        <ChevronLeft className="h-4 w-4" />
+                        Prev
+                      </Button>
+                      <span className="text-xs text-muted-foreground">
+                        Page {page} / {totalPages}
+                      </span>
+                      <Button variant="outline" size="sm" onClick={gotoNext} disabled={page === totalPages}>
+                        Next
+                        <ChevronRight className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+
+                  {/* Archive and delete buttons - same line */}
+                  {selectedShows.size > 0 && (
+                    <div className="flex gap-2">
+                      {user?.role === "admin" && (
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          onClick={handleBulkUnarchive}
+                          disabled={isBulkUnarchiving}
+                          className="text-green-600 hover:text-green-700 hover:bg-green-50 dark:hover:bg-green-900/20 border-green-200 hover:border-green-300 dark:border-green-800 dark:hover:border-green-700 flex-1"
+                        >
+                          <RotateCcw className="h-4 w-4 mr-2" />
+                          {isBulkUnarchiving ? "Unarchiving..." : "Unarchive Selected"}
+                        </Button>
+                      )}
+                      {user?.role === "admin" && (
+                        <Button 
+                          size="sm" 
+                          onClick={handleBulkDelete}
+                          disabled={isBulkDeleting}
+                          className="bg-red-100 dark:bg-red-800 border border-red-300 dark:border-red-600 text-red-700 dark:text-red-200 hover:bg-red-200 dark:hover:bg-red-700 flex-1"
+                        >
+                          <Trash2 className="h-4 w-4 mr-2" />
+                          {isBulkDeleting ? "Deleting..." : "Delete Selected"}
+                        </Button>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                {/* Desktop Layout */}
+                <div className="hidden md:flex items-center gap-3">
                   <Button
                     variant="outline"
                     size="sm"
@@ -1071,7 +1340,7 @@ export default function ArchivedShowsManagement() {
                           className="text-green-600 hover:text-green-700 hover:bg-green-50 dark:hover:bg-green-900/20 border-green-200 hover:border-green-300 dark:border-green-800 dark:hover:border-green-700"
                         >
                           <RotateCcw className="h-4 w-4 mr-2" />
-                          {isBulkUnarchiving ? "Unarchiving..." : "Unarchive Selected Shows"}
+                          {isBulkUnarchiving ? "Unarchiving..." : "Unarchive Selected"}
                         </Button>
                       )}
                       {user?.role === "admin" && (
@@ -1082,14 +1351,14 @@ export default function ArchivedShowsManagement() {
                           className="bg-red-100 dark:bg-red-800 border border-red-300 dark:border-red-600 text-red-700 dark:text-red-200 hover:bg-red-200 dark:hover:bg-red-700"
                         >
                           <Trash2 className="h-4 w-4 mr-2" />
-                          {isBulkDeleting ? "Deleting..." : "Delete Selected Shows"}
+                          {isBulkDeleting ? "Deleting..." : "Delete Selected"}
                         </Button>
                       )}
                     </>
                   )}
                 </div>
 
-                <div className="flex items-center gap-3">
+                <div className="hidden md:flex items-center gap-3">
                   <div className="text-xs text-muted-foreground hidden sm:block">
                     <span className="font-medium">{pageRangeStart}</span>–<span className="font-medium">{pageRangeEnd}</span> of{" "}
                     <span className="font-medium">{filteredShows.length}</span>
@@ -1106,22 +1375,6 @@ export default function ArchivedShowsManagement() {
                       Next
                       <ChevronRight className="h-4 w-4" />
                     </Button>
-                    <div className="flex items-center gap-2 ml-2">
-                      <Label htmlFor="page-input" className="text-xs text-muted-foreground">Go to</Label>
-                      <Input
-                        id="page-input"
-                        type="number"
-                        min={1}
-                        max={totalPages}
-                        value={gotoInput}
-                        onChange={(e) => setGotoInput(e.target.value)}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter") handleGoto()
-                        }}
-                        className="h-8 w-20"
-                      />
-                      <Button variant="outline" size="sm" onClick={handleGoto}>Go</Button>
-                    </div>
                   </div>
                 </div>
               </div>
