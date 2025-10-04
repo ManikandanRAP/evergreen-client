@@ -61,12 +61,17 @@ export default function MobileFloatingNav() {
         const navRect = navRef.current.getBoundingClientRect()
         const itemRect = activeItem.getBoundingClientRect()
         
+        // Calculate position and width to cover the full element including padding
         const left = itemRect.left - navRect.left
         const width = itemRect.width
         
+        // Set the background to cover the full element
         indicatorRef.current.style.left = `${left}px`
         indicatorRef.current.style.width = `${width}px`
         indicatorRef.current.style.opacity = '1'
+        
+        // Force a reflow to ensure the positioning is applied
+        indicatorRef.current.offsetHeight
       }
     }
   }, [activeIndex])
@@ -81,13 +86,13 @@ export default function MobileFloatingNav() {
         {/* Animated background indicator */}
         <div
           ref={indicatorRef}
-          className="absolute top-1.5 bottom-1.5 bg-emerald-500 rounded-full transition-all duration-300 ease-out opacity-0"
+          className="absolute top-0 bottom-0 bg-emerald-500 rounded-full transition-all duration-300 ease-out opacity-0"
           style={{
             willChange: 'left, width, opacity'
           }}
         />
         
-        <div ref={navRef} className="relative flex items-center justify-around py-2 px-2">
+        <div ref={navRef} className="relative flex items-center justify-around py-2 px-0">
           {mainNavItems.map((item, index) => {
             const isActive = activeIndex === index
             const Icon = item.icon
@@ -98,7 +103,7 @@ export default function MobileFloatingNav() {
                 href={item.href}
                 onClick={() => handleNavClick(index)}
                 className={cn(
-                  "relative flex flex-col items-center justify-center px-1.5 py-1.5 rounded-full transition-all duration-200 ease-out flex-1",
+                  "relative flex flex-col items-center justify-center px-0 py-2 rounded-full transition-all duration-200 ease-out flex-1 min-w-0",
                   "hover:scale-105 active:scale-95",
                   isActive 
                     ? "text-white" 
