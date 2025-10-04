@@ -25,6 +25,13 @@ const config = {
     'dark:bg-blue-900/50', 'dark:text-blue-300', 'dark:border-blue-700',
     'dark:bg-purple-900/50', 'dark:text-purple-300', 'dark:border-purple-700',
     'dark:bg-gray-800/50', 'dark:text-gray-300', 'dark:border-gray-700',
+    // Animation classes for mobile navigation
+    'transform-gpu', 'will-change', 'transition-all', 'duration-300', 'ease-out',
+    'cubic-bezier', 'scale-110', 'scale-100', 'scale-105', 'drop-shadow-sm',
+    'opacity-90', 'bg-emerald-500', 'rounded-full', 'shadow-lg',
+    'absolute', 'top-1', 'bottom-1', 'left-0', 'w-full', 'h-full',
+    // CSS custom properties for animations
+    '--progress', '--direction', '--radius'
   ],
   prefix: "",
   theme: {
