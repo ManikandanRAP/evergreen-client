@@ -82,51 +82,55 @@ export default function MobileFloatingNav() {
 
   return (
     <div className="lg:hidden fixed bottom-4 left-4 right-4 z-50">
-      <div className="relative bg-white dark:bg-gray-900 rounded-full border border-gray-300 dark:border-gray-600 overflow-hidden">
-        {/* Animated background indicator */}
-        <div
-          ref={indicatorRef}
-          className="absolute top-0 bottom-0 bg-emerald-500 rounded-full transition-all duration-300 ease-out opacity-0"
-          style={{
-            willChange: 'left, width, opacity'
-          }}
-        />
-        
-        <div ref={navRef} className="relative flex items-center justify-around py-2 px-0">
-          {mainNavItems.map((item, index) => {
-            const isActive = activeIndex === index
-            const Icon = item.icon
-            
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                onClick={() => handleNavClick(index)}
-                className={cn(
-                  "relative flex flex-col items-center justify-center px-0 py-2 rounded-full transition-all duration-200 ease-out flex-1 min-w-0",
-                  "hover:scale-105 active:scale-95",
-                  isActive 
-                    ? "text-white" 
-                    : "text-gray-600 dark:text-gray-300 hover:text-emerald-600"
-                )}
-              >
-                <Icon className={cn(
-                  "h-5 w-5 mb-1 transition-all duration-200",
-                  isActive 
-                    ? "scale-110" 
-                    : "scale-100"
-                )} />
-                <span className={cn(
-                  "text-xs font-medium transition-all duration-200",
-                  isActive 
-                    ? "text-white font-semibold" 
-                    : "text-gray-600 dark:text-gray-300"
-                )}>
-                  {item.shortLabel}
-                </span>
-              </Link>
-            )
-          })}
+      {/* Background navbar layer */}
+        <div className="bg-white dark:bg-gray-900 rounded-full border border-gray-300 dark:border-gray-600 py-1 px-1">
+        {/* Current navbar layer on top */}
+        <div className="relative bg-white dark:bg-gray-900 rounded-full overflow-hidden">
+          {/* Animated background indicator */}
+          <div
+            ref={indicatorRef}
+            className="absolute top-0 bottom-0 bg-emerald-500 rounded-full transition-all duration-300 ease-out opacity-0"
+            style={{
+              willChange: 'left, width, opacity'
+            }}
+          />
+          
+          <div ref={navRef} className="relative flex items-center justify-around py-0 px-0">
+            {mainNavItems.map((item, index) => {
+              const isActive = activeIndex === index
+              const Icon = item.icon
+              
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  onClick={() => handleNavClick(index)}
+                  className={cn(
+                    "relative flex flex-col items-center justify-center px-0 py-2 rounded-full transition-all duration-200 ease-out flex-1 min-w-0",
+                    "hover:scale-105 active:scale-95",
+                    isActive 
+                      ? "text-white" 
+                      : "text-gray-600 dark:text-gray-300 hover:text-emerald-600"
+                  )}
+                >
+                  <Icon className={cn(
+                    "h-5 w-5 mb-1 transition-all duration-200",
+                    isActive 
+                      ? "scale-110" 
+                      : "scale-100"
+                  )} />
+                  <span className={cn(
+                    "text-xs font-medium transition-all duration-200",
+                    isActive 
+                      ? "text-white font-semibold" 
+                      : "text-gray-600 dark:text-gray-300"
+                  )}>
+                    {item.shortLabel}
+                  </span>
+                </Link>
+              )
+            })}
+          </div>
         </div>
       </div>
     </div>
