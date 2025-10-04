@@ -532,13 +532,13 @@ export default function RevenueLedger() {
             <Button 
               variant="outline" 
               onClick={() => setIsSlideOutOpen(true)}
-              className={`flex items-center gap-2 transition-all duration-300 ease-in-out ${(selectedShow !== "all" || dateFrom || dateTo) ? 'w-1/2 mr-2' : 'w-full'}`}
+              className={`flex items-center gap-2 ${(selectedShow !== "all" || dateFrom || dateTo) ? 'w-1/2 mr-2' : 'w-full'}`}
             >
               <Filter className="h-4 w-4" />
               Filters
             </Button>
 
-            {/* Clear Filters Button - Smooth transition with width and opacity */}
+            {/* Clear Filters Button - Only show when filters are applied, 50% width */}
             <div className={`transition-all duration-300 ease-in-out ${(selectedShow !== "all" || dateFrom || dateTo) ? 'w-1/2 opacity-100' : 'w-0 opacity-0 overflow-hidden'}`}>
               <Button 
                 variant="outline" 
