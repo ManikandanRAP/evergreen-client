@@ -645,7 +645,7 @@ export default function VendorSplitManagement({ onBack, refreshSignal = 0 }: Ven
       <Card>
         <CardHeader>
           <CardTitle className="text-lg md:text-xl">View and Update Existing Vendor Split Percentage</CardTitle>
-          <CardDescription className="text-sm md:text-muted-foreground">Select shows and vendors to view and update split configurations.</CardDescription>
+          <CardDescription className="text-sm text-muted-foreground">Select shows and vendors to view and update split configurations.</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid gap-4 md:grid-cols-3">
@@ -949,7 +949,7 @@ export default function VendorSplitManagement({ onBack, refreshSignal = 0 }: Ven
       <Card>
         <CardHeader>
           <CardTitle className="text-lg md:text-xl">Map Show, Vendor and Add New Split Percentage</CardTitle>
-          <CardDescription className="text-sm md:text-muted-foreground">Pick any show and any vendor independently, map it and then create a new split.</CardDescription>
+          <CardDescription className="text-sm text-muted-foreground">Pick any show and any vendor independently, map it and then create a new split.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="grid gap-4 md:grid-cols-3">

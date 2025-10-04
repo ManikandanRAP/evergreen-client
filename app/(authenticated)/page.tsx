@@ -245,7 +245,7 @@ export default function HomePage() {
         <h1 className="text-xl sm:text-3xl font-bold bg-gradient-to-r from-emerald-600 to-cyan-600 bg-clip-text text-transparent">
           Welcome back, {user?.name}!
         </h1>
-        <p className="text-sm text-muted-foreground md:text-base md:text-muted-foreground">
+        <p className="text-sm text-muted-foreground md:text-base">
           {user?.role === "admin"
             ? "Manage your podcast network and track performance"
             : "View your shows and revenue performance"}
@@ -351,7 +351,7 @@ export default function HomePage() {
             <Radio className="h-5 w-5 text-emerald-600" />
             {user?.role === "admin" ? "Recent Shows" : "Recent Shows"}
           </CardTitle>
-          <CardDescription className="text-muted-foreground md:text-muted-foreground">
+          <CardDescription className="text-muted-foreground">
             {user?.role === "admin" ? "Latest shows added to the network" : "Latest shows added to the network"}
           </CardDescription>
         </CardHeader>
@@ -442,7 +442,7 @@ export default function HomePage() {
               <Zap className="h-5 w-5 text-yellow-600" />
               Quick Actions
             </CardTitle>
-            <CardDescription className="text-muted-foreground md:text-muted-foreground">Common tasks and shortcuts</CardDescription>
+            <CardDescription className="text-muted-foreground">Common tasks and shortcuts</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-3">

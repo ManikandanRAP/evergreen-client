@@ -827,18 +827,96 @@ export default function ShowsManagement() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 pb-10">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-emerald-600 to-cyan-600 bg-clip-text text-transparent">
-            Shows Management
-          </h1>
-          <p className="text-muted-foreground">
-            {user?.role === "admin" ? "Manage all shows in the network" : "View your assigned shows"}
-          </p>
+        {/* Mobile: Title/Description and Switcher on same line */}
+        <div className="flex items-center justify-between md:block">
+          <div>
+            <h1 className="text-xl sm:text-3xl font-bold bg-gradient-to-r from-emerald-600 to-cyan-600 bg-clip-text text-transparent tracking-tight">
+              Shows Management
+            </h1>
+            <p className="text-sm text-muted-foreground md:text-base">
+              {user?.role === "admin" ? "Manage all shows in the network" : "View your assigned shows"}
+            </p>
+          </div>
+
+          {/* View switcher - mobile only, top right */}
+          <div className="flex items-center border rounded-lg p-1 bg-gradient-to-r from-emerald-50 to-cyan-50 dark:from-emerald-950/20 dark:to-cyan-950/20 border-emerald-200 dark:border-emerald-800 md:hidden">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setViewMode("cards")}
+              className={`h-8 px-3 ${
+                viewMode === "cards" 
+                  ? "bg-emerald-100 dark:bg-emerald-900/50 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-200 dark:hover:bg-emerald-800/50" 
+                  : "text-emerald-600 dark:text-emerald-400 hover:bg-emerald-100/50 dark:hover:bg-emerald-900/30"
+              }`}
+            >
+              <Grid3X3 className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setViewMode("list")}
+              className={`h-8 px-3 ${
+                viewMode === "list" 
+                  ? "bg-cyan-100 dark:bg-cyan-900/50 text-cyan-700 dark:text-cyan-300 hover:bg-cyan-200 dark:hover:bg-cyan-800/50" 
+                  : "text-cyan-600 dark:text-cyan-400 hover:bg-cyan-100/50 dark:hover:bg-cyan-900/30"
+              }`}
+            >
+              <List className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
+
+        {/* Mobile Layout */}
+        <div className="flex flex-col gap-4 md:hidden">
+          {/* Archived shows and Add Show - same line */}
         <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              onClick={() => window.location.href = "/archived-shows"}
+              className="flex items-center gap-2 text-orange-600 hover:text-orange-700 hover:bg-orange-50 dark:hover:bg-orange-900/20 border-orange-200 hover:border-orange-300 dark:border-orange-800 dark:hover:border-orange-700 flex-1"
+            >
+              <Archive className="h-4 w-4" />
+              Archived Shows
+            </Button>
+
+            {user?.role === "admin" && (
+              <Button className="evergreen-button flex-1" onClick={handleCreateNew}>
+                <Plus className="mr-2 h-4 w-4" />
+                Add Show
+              </Button>
+            )}
+          </div>
+
+          {/* Import CSV, Export CSV - same line */}
+          <div className="flex items-center gap-2">
+            {user?.role === "admin" && (
+              <Button
+                variant="outline"
+                onClick={() => setIsImportDialogOpen(true)}
+                className="flex items-center gap-2 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 border-emerald-200 hover:border-emerald-300 dark:border-emerald-800 dark:hover:border-emerald-700 flex-1"
+              >
+                <Upload className="h-4 w-4" />
+                Import CSV
+              </Button>
+            )}
+
+            <Button
+              variant="outline"
+              onClick={handleExportCSV}
+              className="flex items-center gap-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50 dark:hover:bg-blue-900/20 border-blue-200 hover:border-blue-300 dark:border-blue-800 dark:hover:border-blue-700 flex-1"
+            >
+              <Download className="h-4 w-4" />
+              Export CSV
+            </Button>
+          </div>
+        </div>
+
+        {/* Desktop Layout */}
+        <div className="hidden md:flex items-center gap-2">
           <div className="flex items-center border rounded-lg p-1 bg-gradient-to-r from-emerald-50 to-cyan-50 dark:from-emerald-950/20 dark:to-cyan-950/20 border-emerald-200 dark:border-emerald-800">
             <Button
               variant="ghost"
@@ -1507,7 +1585,64 @@ export default function ShowsManagement() {
             {/* TOP TOOLBAR: Selection (left) + Pagination (right) */}
             {filteredShows.length > 0 && (
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between pb-4 rounded-lg mb-2">
-                <div className="flex items-center gap-3">
+                {/* Mobile Layout */}
+                <div className="md:hidden space-y-3">
+                  {/* Pagination - selected count on left, pagination on right */}
+                  <div className="flex items-center justify-between">
+                    {/* Selected count on left - match pagination button height */}
+                    <Button variant="outline" size="sm" className="px-2 flex flex-col items-center justify-center min-w-[60px] gap-0">
+                      <span className="text-sm font-bold leading-none">{selectedShows.size}</span>
+                      <span className="text-xs text-muted-foreground leading-none">Selected</span>
+                    </Button>
+                    
+                    {/* Pagination on right */}
+                    <div className="flex items-center gap-2">
+                      <Button variant="outline" size="sm" onClick={gotoPrev} disabled={page === 1}>
+                        <ChevronLeft className="h-4 w-4" />
+                        Prev
+                      </Button>
+                      <span className="text-xs text-muted-foreground">
+                        Page {page} / {totalPages}
+                      </span>
+                      <Button variant="outline" size="sm" onClick={gotoNext} disabled={page === totalPages}>
+                        Next
+                        <ChevronRight className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+
+                  {/* Archive and delete buttons - same line */}
+                  {selectedShows.size > 0 && (
+                    <div className="flex gap-2">
+                      {user?.role === "admin" && (
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          onClick={handleBulkArchive}
+                          disabled={isBulkArchiving}
+                          className="text-orange-600 hover:text-orange-700 hover:bg-orange-50 dark:hover:bg-orange-900/20 border-orange-200 hover:border-orange-300 dark:border-orange-800 dark:hover:border-orange-700 flex-1"
+                        >
+                          <Archive className="h-4 w-4 mr-2" />
+                          {isBulkArchiving ? "Archiving..." : "Archive Selected"}
+                        </Button>
+                      )}
+                      {user?.role === "admin" && (
+                        <Button 
+                          size="sm" 
+                          onClick={handleBulkDelete}
+                          disabled={isBulkDeleting}
+                          className="bg-red-100 dark:bg-red-800 border border-red-300 dark:border-red-600 text-red-700 dark:text-red-200 hover:bg-red-200 dark:hover:bg-red-700 flex-1"
+                        >
+                          <Trash2 className="h-4 w-4 mr-2" />
+                          {isBulkDeleting ? "Deleting..." : "Delete Selected"}
+                        </Button>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                {/* Desktop Layout */}
+                <div className="hidden md:flex items-center gap-3">
                   <Button
                     variant="outline"
                     size="sm"
@@ -1529,7 +1664,7 @@ export default function ShowsManagement() {
                           className="text-orange-600 hover:text-orange-700 hover:bg-orange-50 dark:hover:bg-orange-900/20 border-orange-200 hover:border-orange-300 dark:border-orange-800 dark:hover:border-orange-700"
                         >
                           <Archive className="h-4 w-4 mr-2" />
-                          {isBulkArchiving ? "Archiving..." : "Archive Selected Shows"}
+                          {isBulkArchiving ? "Archiving..." : "Archive Selected"}
                         </Button>
                       )}
                       {user?.role === "admin" && (
@@ -1540,15 +1675,15 @@ export default function ShowsManagement() {
                           className="bg-red-100 dark:bg-red-800 border border-red-300 dark:border-red-600 text-red-700 dark:text-red-200 hover:bg-red-200 dark:hover:bg-red-700"
                         >
                           <Trash2 className="h-4 w-4 mr-2" />
-                          {isBulkDeleting ? "Deleting..." : "Delete Selected Shows"}
+                          {isBulkDeleting ? "Deleting..." : "Delete Selected"}
                         </Button>
                       )}
                     </>
                   )}
                 </div>
 
-                <div className="flex items-center gap-3">
-                  <div className="text-xs text-muted-foreground hidden sm:block">
+                <div className="hidden md:flex items-center gap-3">
+                  <div className="text-xs text-muted-foreground">
                     <span className="font-medium">{pageRangeStart}</span>–<span className="font-medium">{pageRangeEnd}</span> of{" "}
                     <span className="font-medium">{filteredShows.length}</span>
                   </div>
@@ -1620,6 +1755,14 @@ export default function ShowsManagement() {
                     >
                       {`Rate Card - ${show.rate_card ? "Yes" : "No"}`}
                     </Badge>
+                    {(() => {
+                      const rankingInfo = getRankingInfo(show.ranking_category);
+                      return rankingInfo.hasRanking ? (
+                        <Badge variant="secondary" className={`text-xs border pointer-events-none ${rankingInfo.badgeClasses}`}>
+                          {rankingInfo.displayText}
+                        </Badge>
+                      ) : null;
+                    })()}
                   </div>
                 </div>
               </CardHeader>
@@ -1694,7 +1837,77 @@ export default function ShowsManagement() {
             {/* BOTTOM TOOLBAR: Selection (left) + Pagination (right) */}
             {filteredShows.length > 0 && (
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between pt-4 rounded-lg mt-2">
-                <div className="flex items-center gap-3">
+                {/* Mobile Layout */}
+                <div className="md:hidden space-y-3">
+                  {/* Select all button */}
+                  <div className="w-full">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleSelectAll}
+                      className="flex items-center gap-2 hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50 border-border hover:border-border w-full"
+                    >
+                      <Check className="h-4 w-4" />
+                      {selectedShows.size === filteredShows.length ? "Deselect All" : "Select All"}
+                    </Button>
+                  </div>
+
+                  {/* Pagination - selected count on left, pagination on right */}
+                  <div className="flex items-center justify-between">
+                    {/* Selected count on left - match pagination button height */}
+                    <Button variant="outline" size="sm" className="px-2 flex flex-col items-center justify-center min-w-[60px] gap-0">
+                      <span className="text-sm font-bold leading-none">{selectedShows.size}</span>
+                      <span className="text-xs text-muted-foreground leading-none">Selected</span>
+                    </Button>
+                    
+                    {/* Pagination on right */}
+                    <div className="flex items-center gap-2">
+                      <Button variant="outline" size="sm" onClick={gotoPrev} disabled={page === 1}>
+                        <ChevronLeft className="h-4 w-4" />
+                        Prev
+                      </Button>
+                      <span className="text-xs text-muted-foreground">
+                        Page {page} / {totalPages}
+                      </span>
+                      <Button variant="outline" size="sm" onClick={gotoNext} disabled={page === totalPages}>
+                        Next
+                        <ChevronRight className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+
+                  {/* Archive and delete buttons - same line */}
+                  {selectedShows.size > 0 && (
+                    <div className="flex gap-2">
+                      {user?.role === "admin" && (
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          onClick={handleBulkArchive}
+                          disabled={isBulkArchiving}
+                          className="text-orange-600 hover:text-orange-700 hover:bg-orange-50 dark:hover:bg-orange-900/20 border-orange-200 hover:border-orange-300 dark:border-orange-800 dark:hover:border-orange-700 flex-1"
+                        >
+                          <Archive className="h-4 w-4 mr-2" />
+                          {isBulkArchiving ? "Archiving..." : "Archive Selected"}
+                        </Button>
+                      )}
+                      {user?.role === "admin" && (
+                        <Button 
+                          size="sm" 
+                          onClick={handleBulkDelete}
+                          disabled={isBulkDeleting}
+                          className="bg-red-100 dark:bg-red-800 border border-red-300 dark:border-red-600 text-red-700 dark:text-red-200 hover:bg-red-200 dark:hover:bg-red-700 flex-1"
+                        >
+                          <Trash2 className="h-4 w-4 mr-2" />
+                          {isBulkDeleting ? "Deleting..." : "Delete Selected"}
+                        </Button>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                {/* Desktop Layout */}
+                <div className="hidden md:flex items-center gap-3">
                   <Button
                     variant="outline"
                     size="sm"
@@ -1716,7 +1929,7 @@ export default function ShowsManagement() {
                           className="text-orange-600 hover:text-orange-700 hover:bg-orange-50 dark:hover:bg-orange-900/20 border-orange-200 hover:border-orange-300 dark:border-orange-800 dark:hover:border-orange-700"
                         >
                           <Archive className="h-4 w-4 mr-2" />
-                          {isBulkArchiving ? "Archiving..." : "Archive Selected Shows"}
+                          {isBulkArchiving ? "Archiving..." : "Archive Selected"}
                         </Button>
                       )}
                       {user?.role === "admin" && (
@@ -1727,49 +1940,14 @@ export default function ShowsManagement() {
                           className="bg-red-100 dark:bg-red-800 border border-red-300 dark:border-red-600 text-red-700 dark:text-red-200 hover:bg-red-200 dark:hover:bg-red-700"
                         >
                           <Trash2 className="h-4 w-4 mr-2" />
-                          {isBulkDeleting ? "Deleting..." : "Delete Selected Shows"}
+                          {isBulkDeleting ? "Deleting..." : "Delete Selected"}
                         </Button>
                       )}
                     </>
                   )}
                 </div>
 
-                <div className="flex items-center gap-3">
-                  <div className="text-xs text-muted-foreground hidden sm:block">
-                    <span className="font-medium">{pageRangeStart}</span>–<span className="font-medium">{pageRangeEnd}</span> of{" "}
-                    <span className="font-medium">{filteredShows.length}</span>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <Button variant="outline" size="sm" onClick={gotoPrev} disabled={page === 1}>
-                      <ChevronLeft className="h-4 w-4" />
-                      Prev
-                    </Button>
-                    <span className="text-xs text-muted-foreground">
-                      Page {page} / {totalPages}
-                    </span>
-                    <Button variant="outline" size="sm" onClick={gotoNext} disabled={page === totalPages}>
-                      Next
-                      <ChevronRight className="h-4 w-4" />
-                    </Button>
-                    <div className="flex items-center gap-2 ml-2">
-                      <Label htmlFor="page-input" className="text-xs text-muted-foreground">Go to</Label>
-                      <Input
-                        id="page-input"
-                        type="number"
-                        min={1}
-                        max={totalPages}
-                        value={gotoInput}
-                        onChange={(e) => setGotoInput(e.target.value)}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter") handleGoto()
-                        }}
-                        className="h-8 w-20"
-                      />
-                      <Button variant="outline" size="sm" onClick={handleGoto}>Go</Button>
-                    </div>
-                  </div>
-                </div>
-              </div>
             )}
           </CardContent>
         </Card>
@@ -1779,7 +1957,64 @@ export default function ShowsManagement() {
             {/* TOP TOOLBAR: Selection (left) + Pagination (right) */}
             {filteredShows.length > 0 && (
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between pb-4 rounded-lg mb-2">
-                <div className="flex items-center gap-3">
+                {/* Mobile Layout */}
+                <div className="md:hidden space-y-3">
+                  {/* Archive and delete buttons - same line */}
+                  {selectedShows.size > 0 && (
+                    <div className="flex gap-2">
+                      {user?.role === "admin" && (
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          onClick={handleBulkArchive}
+                          disabled={isBulkArchiving}
+                          className="text-orange-600 hover:text-orange-700 hover:bg-orange-50 dark:hover:bg-orange-900/20 border-orange-200 hover:border-orange-300 dark:border-orange-800 dark:hover:border-orange-700 flex-1"
+                        >
+                          <Archive className="h-4 w-4 mr-2" />
+                          {isBulkArchiving ? "Archiving..." : "Archive Selected"}
+                        </Button>
+                      )}
+                      {user?.role === "admin" && (
+                        <Button 
+                          size="sm" 
+                          onClick={handleBulkDelete}
+                          disabled={isBulkDeleting}
+                          className="bg-red-100 dark:bg-red-800 border border-red-300 dark:border-red-600 text-red-700 dark:text-red-200 hover:bg-red-200 dark:hover:bg-red-700 flex-1"
+                        >
+                          <Trash2 className="h-4 w-4 mr-2" />
+                          {isBulkDeleting ? "Deleting..." : "Delete Selected"}
+                        </Button>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Mobile pagination - selected count on left, pagination on right */}
+                  <div className="flex items-center justify-between">
+                    {/* Selected count on left - match pagination button height */}
+                    <Button variant="outline" size="sm" className="px-2 flex flex-col items-center justify-center min-w-[60px] gap-0">
+                      <span className="text-sm font-bold leading-none">{selectedShows.size}</span>
+                      <span className="text-xs text-muted-foreground leading-none">Selected</span>
+                    </Button>
+                    
+                    {/* Pagination on right */}
+                  <div className="flex items-center gap-2">
+                    <Button variant="outline" size="sm" onClick={gotoPrev} disabled={page === 1}>
+                      <ChevronLeft className="h-4 w-4" />
+                      Prev
+                    </Button>
+                    <span className="text-xs text-muted-foreground">
+                      Page {page} / {totalPages}
+                    </span>
+                    <Button variant="outline" size="sm" onClick={gotoNext} disabled={page === totalPages}>
+                      Next
+                      <ChevronRight className="h-4 w-4" />
+                    </Button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Desktop Layout */}
+                <div className="hidden md:flex items-center gap-3">
                   <Button
                     variant="outline"
                     size="sm"
@@ -1801,7 +2036,7 @@ export default function ShowsManagement() {
                           className="text-orange-600 hover:text-orange-700 hover:bg-orange-50 dark:hover:bg-orange-900/20 border-orange-200 hover:border-orange-300 dark:border-orange-800 dark:hover:border-orange-700"
                         >
                           <Archive className="h-4 w-4 mr-2" />
-                          {isBulkArchiving ? "Archiving..." : "Archive Selected Shows"}
+                          {isBulkArchiving ? "Archiving..." : "Archive Selected"}
                         </Button>
                       )}
                       {user?.role === "admin" && (
@@ -1812,15 +2047,15 @@ export default function ShowsManagement() {
                           className="bg-red-100 dark:bg-red-800 border border-red-300 dark:border-red-600 text-red-700 dark:text-red-200 hover:bg-red-200 dark:hover:bg-red-700"
                         >
                           <Trash2 className="h-4 w-4 mr-2" />
-                          {isBulkDeleting ? "Deleting..." : "Delete Selected Shows"}
+                          {isBulkDeleting ? "Deleting..." : "Delete Selected"}
                         </Button>
                       )}
                     </>
                   )}
                 </div>
 
-                <div className="flex items-center gap-3">
-                  <div className="text-xs text-muted-foreground hidden sm:block">
+                <div className="hidden md:flex items-center gap-3">
+                  <div className="text-xs text-muted-foreground">
                     <span className="font-medium">{pageRangeStart}</span>–<span className="font-medium">{pageRangeEnd}</span> of{" "}
                     <span className="font-medium">{filteredShows.length}</span>
                   </div>
@@ -1856,18 +2091,18 @@ export default function ShowsManagement() {
                 </div>
               </div>
             )}
-            <div className="rounded-md border">
-              <table className="w-full text-sm">
+            <div className="rounded-md border overflow-x-auto">
+              <table className="w-full text-sm min-w-[800px]">
                 <thead className="border-b">
                   <tr className="text-left text-sm">
-                    <th className="px-2 py-4 w-8 border-r bg-muted/50 text-center">
+                    <th className="px-2 py-4 w-8 border-r bg-muted/50 text-center whitespace-nowrap">
                       <Checkbox
                         checked={selectedShows.size === filteredShows.length && filteredShows.length > 0}
                         onCheckedChange={handleSelectAll}
                       />
                     </th>
                     <th 
-                      className="pl-6 pr-6 py-4 font-semibold border-r cursor-pointer hover:bg-accent/50 transition-colors bg-muted/50 w-80"
+                      className="pl-6 pr-6 py-4 font-semibold border-r cursor-pointer hover:bg-accent/50 transition-colors bg-muted/50 w-80 whitespace-nowrap"
                       onClick={() => handleSort('name')}
                     >
                       <div className="flex items-center gap-2">
@@ -1876,7 +2111,7 @@ export default function ShowsManagement() {
                       </div>
                     </th>
                     <th 
-                      className="pl-6 pr-6 py-4 font-semibold border-r cursor-pointer hover:bg-accent/50 transition-colors bg-muted/50 w-24"
+                      className="pl-6 pr-6 py-4 font-semibold border-r cursor-pointer hover:bg-accent/50 transition-colors bg-muted/50 w-24 whitespace-nowrap"
                       onClick={() => handleSort('show_type')}
                     >
                       <div className="flex items-center gap-2">
@@ -1885,7 +2120,7 @@ export default function ShowsManagement() {
                       </div>
                     </th>
                     <th 
-                      className="pl-6 pr-6 py-4 font-semibold border-r cursor-pointer hover:bg-accent/50 transition-colors bg-muted/50 w-32"
+                      className="pl-6 pr-6 py-4 font-semibold border-r cursor-pointer hover:bg-accent/50 transition-colors bg-muted/50 w-32 whitespace-nowrap"
                       onClick={() => handleSort('ranking_category')}
                     >
                       <div className="flex items-center gap-2">
@@ -1894,7 +2129,7 @@ export default function ShowsManagement() {
                       </div>
                     </th>
                     <th 
-                      className="pl-6 pr-6 py-4 font-semibold border-r cursor-pointer hover:bg-accent/50 transition-colors bg-muted/50 w-20"
+                      className="pl-6 pr-6 py-4 font-semibold border-r cursor-pointer hover:bg-accent/50 transition-colors bg-muted/50 w-20 whitespace-nowrap"
                       onClick={() => handleSort('isRateCard')}
                     >
                       <div className="flex items-center gap-2">
@@ -1903,7 +2138,7 @@ export default function ShowsManagement() {
                       </div>
                     </th>
                     <th 
-                      className="pl-6 pr-6 py-4 font-semibold border-r cursor-pointer hover:bg-accent/50 transition-colors bg-muted/50 w-32"
+                      className="pl-6 pr-6 py-4 font-semibold border-r cursor-pointer hover:bg-accent/50 transition-colors bg-muted/50 w-32 whitespace-nowrap"
                       onClick={() => handleSort('standardSplit')}
                     >
                       <div className="flex items-center gap-2">
@@ -1912,7 +2147,7 @@ export default function ShowsManagement() {
                       </div>
                     </th>
                     <th 
-                      className="pl-6 pr-6 py-4 font-semibold border-r cursor-pointer hover:bg-accent/50 transition-colors bg-muted/50 w-36"
+                      className="pl-6 pr-6 py-4 font-semibold border-r cursor-pointer hover:bg-accent/50 transition-colors bg-muted/50 w-36 whitespace-nowrap"
                       onClick={() => handleSort('programmaticSplit')}
                     >
                       <div className="flex items-center gap-2">
@@ -1920,7 +2155,7 @@ export default function ShowsManagement() {
                         {getSortIcon('programmaticSplit')}
                       </div>
                     </th>
-                    <th className="pl-6 pr-6 py-4 font-semibold bg-muted/50 w-24">Actions</th>
+                    <th className="pl-6 pr-6 py-4 font-semibold bg-muted/50 w-24 whitespace-nowrap">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -1933,19 +2168,19 @@ export default function ShowsManagement() {
                           : ""
                       }`}
                     >
-                      <td className="px-2 py-2 border-r w-8 text-center">
+                      <td className="px-2 py-2 border-r w-8 text-center whitespace-nowrap">
                         <Checkbox
                           checked={selectedShows.has(show.id)}
                           onCheckedChange={() => handleSelectShow(show.id)}
                         />
                       </td>
-                      <td className="pl-6 pr-6 py-2 font-medium border-r cursor-pointer hover:bg-accent/30 transition-colors" onClick={() => handleViewShow(show)}>
+                      <td className="pl-6 pr-6 py-2 font-medium border-r cursor-pointer hover:bg-accent/30 transition-colors whitespace-nowrap" onClick={() => handleViewShow(show)}>
                         <span className="hover:underline">
                           {show.title}
                         </span>
                       </td>
-                      <td className="pl-6 pr-6 py-2 capitalize border-r">{show.show_type || "N/A"}</td>
-        <td className="pl-6 pr-6 py-2 border-r">
+                      <td className="pl-6 pr-6 py-2 capitalize border-r whitespace-nowrap">{show.show_type || "N/A"}</td>
+        <td className="pl-6 pr-6 py-2 border-r whitespace-nowrap">
           {(() => {
             const rankingInfo = getRankingInfo(show.ranking_category);
             return rankingInfo.hasRanking ? (
@@ -1957,10 +2192,10 @@ export default function ShowsManagement() {
             );
           })()}
         </td>
-                      <td className="pl-6 pr-6 py-2 border-r">{getYesNoBadge(!!show.rate_card)}</td>
-                      <td className="pl-6 pr-6 py-2 border-r">{formatPercentage(getStandardSplit(show))}</td>
-                      <td className="pl-6 pr-6 py-2 border-r">{formatPercentage(getProgrammaticSplit(show))}</td>
-                      <td className="pl-6 pr-6 py-2">
+                      <td className="pl-6 pr-6 py-2 border-r whitespace-nowrap">{getYesNoBadge(!!show.rate_card)}</td>
+                      <td className="pl-6 pr-6 py-2 border-r whitespace-nowrap">{formatPercentage(getStandardSplit(show))}</td>
+                      <td className="pl-6 pr-6 py-2 border-r whitespace-nowrap">{formatPercentage(getProgrammaticSplit(show))}</td>
+                      <td className="pl-6 pr-6 py-2 whitespace-nowrap">
                         <div className="flex items-center gap-1">
                           <Button
                             variant="outline"
@@ -2008,7 +2243,77 @@ export default function ShowsManagement() {
             {/* BOTTOM TOOLBAR: Selection (left) + Pagination (right) */}
             {filteredShows.length > 0 && (
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between pt-4 rounded-lg mt-2">
-                <div className="flex items-center gap-3">
+                {/* Mobile Layout */}
+                <div className="md:hidden space-y-3">
+                  {/* Select all button */}
+                  <div className="w-full">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleSelectAll}
+                      className="flex items-center gap-2 hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50 border-border hover:border-border w-full"
+                    >
+                      <Check className="h-4 w-4" />
+                      {selectedShows.size === filteredShows.length ? "Deselect All" : "Select All"}
+                    </Button>
+                  </div>
+
+                  {/* Pagination - selected count on left, pagination on right */}
+                  <div className="flex items-center justify-between">
+                    {/* Selected count on left - match pagination button height */}
+                    <Button variant="outline" size="sm" className="px-2 flex flex-col items-center justify-center min-w-[60px] gap-0">
+                      <span className="text-sm font-bold leading-none">{selectedShows.size}</span>
+                      <span className="text-xs text-muted-foreground leading-none">Selected</span>
+                    </Button>
+                    
+                    {/* Pagination on right */}
+                    <div className="flex items-center gap-2">
+                      <Button variant="outline" size="sm" onClick={gotoPrev} disabled={page === 1}>
+                        <ChevronLeft className="h-4 w-4" />
+                        Prev
+                      </Button>
+                      <span className="text-xs text-muted-foreground">
+                        Page {page} / {totalPages}
+                      </span>
+                      <Button variant="outline" size="sm" onClick={gotoNext} disabled={page === totalPages}>
+                        Next
+                        <ChevronRight className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+
+                  {/* Archive and delete buttons - same line */}
+                  {selectedShows.size > 0 && (
+                    <div className="flex gap-2">
+                      {user?.role === "admin" && (
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          onClick={handleBulkArchive}
+                          disabled={isBulkArchiving}
+                          className="text-orange-600 hover:text-orange-700 hover:bg-orange-50 dark:hover:bg-orange-900/20 border-orange-200 hover:border-orange-300 dark:border-orange-800 dark:hover:border-orange-700 flex-1"
+                        >
+                          <Archive className="h-4 w-4 mr-2" />
+                          {isBulkArchiving ? "Archiving..." : "Archive Selected"}
+                        </Button>
+                      )}
+                      {user?.role === "admin" && (
+                        <Button 
+                          size="sm" 
+                          onClick={handleBulkDelete}
+                          disabled={isBulkDeleting}
+                          className="bg-red-100 dark:bg-red-800 border border-red-300 dark:border-red-600 text-red-700 dark:text-red-200 hover:bg-red-200 dark:hover:bg-red-700 flex-1"
+                        >
+                          <Trash2 className="h-4 w-4 mr-2" />
+                          {isBulkDeleting ? "Deleting..." : "Delete Selected"}
+                        </Button>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                {/* Desktop Layout */}
+                <div className="hidden md:flex items-center gap-3">
                   <Button
                     variant="outline"
                     size="sm"
@@ -2030,7 +2335,7 @@ export default function ShowsManagement() {
                           className="text-orange-600 hover:text-orange-700 hover:bg-orange-50 dark:hover:bg-orange-900/20 border-orange-200 hover:border-orange-300 dark:border-orange-800 dark:hover:border-orange-700"
                         >
                           <Archive className="h-4 w-4 mr-2" />
-                          {isBulkArchiving ? "Archiving..." : "Archive Selected Shows"}
+                          {isBulkArchiving ? "Archiving..." : "Archive Selected"}
                         </Button>
                       )}
                       {user?.role === "admin" && (
@@ -2041,15 +2346,15 @@ export default function ShowsManagement() {
                           className="bg-red-100 dark:bg-red-800 border border-red-300 dark:border-red-600 text-red-700 dark:text-red-200 hover:bg-red-200 dark:hover:bg-red-700"
                         >
                           <Trash2 className="h-4 w-4 mr-2" />
-                          {isBulkDeleting ? "Deleting..." : "Delete Selected Shows"}
+                          {isBulkDeleting ? "Deleting..." : "Delete Selected"}
                         </Button>
                       )}
                     </>
                   )}
                 </div>
 
-                <div className="flex items-center gap-3">
-                  <div className="text-xs text-muted-foreground hidden sm:block">
+                <div className="hidden md:flex items-center gap-3">
+                  <div className="text-xs text-muted-foreground">
                     <span className="font-medium">{pageRangeStart}</span>–<span className="font-medium">{pageRangeEnd}</span> of{" "}
                     <span className="font-medium">{filteredShows.length}</span>
                   </div>

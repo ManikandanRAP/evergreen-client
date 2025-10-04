@@ -463,7 +463,7 @@ export default function RevenueLedger() {
           <h1 className="text-xl sm:text-3xl font-bold bg-gradient-to-r from-emerald-600 to-cyan-600 bg-clip-text text-transparent tracking-tight">
             Revenue Ledger
           </h1>
-          <p className="text-sm text-muted-foreground md:text-base md:text-muted-foreground">Track revenue transactions and partner payments</p>
+          <p className="text-sm text-muted-foreground md:text-base">Track revenue transactions and partner payments</p>
         </div>
 
         {/* Mobile Layout */}

@@ -43,7 +43,7 @@ export default function AdministratorPage() {
           <h1 className="text-xl md:text-3xl font-bold bg-gradient-to-r from-emerald-600 to-cyan-600 bg-clip-text text-transparent tracking-tight">
             Administrator
           </h1>
-          <p className="text-sm text-muted-foreground md:text-base md:text-muted-foreground">Manage users and vendor split configurations.</p>
+          <p className="text-sm text-muted-foreground md:text-base">Manage users and vendor split configurations.</p>
         </div>
 
         {/* User Management Section */}
@@ -54,7 +54,7 @@ export default function AdministratorPage() {
                 <Users className="h-5 w-5" />
                 User Management
               </CardTitle>
-              <CardDescription className="text-sm md:text-muted-foreground">
+              <CardDescription className="text-sm text-muted-foreground">
                 Manage users on the platform: create Admin, Internal, or Partner accounts, and view, edit, or delete
                 existing users.
               </CardDescription>
@@ -106,7 +106,7 @@ export default function AdministratorPage() {
                 <Settings className="h-5 w-5" />
                 Vendor Split Management
               </CardTitle>
-              <CardDescription className="text-sm md:text-muted-foreground">
+              <CardDescription className="text-sm text-muted-foreground">
                 Manage vendor split configurations: view and update split percentages for shows and vendors, map show-vendor relationships.
               </CardDescription>
             </CardHeader>
