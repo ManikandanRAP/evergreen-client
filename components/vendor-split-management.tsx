@@ -100,6 +100,8 @@ export default function VendorSplitManagement({ onBack, refreshSignal = 0 }: Ven
   const [isCatalogShowsPopoverOpen, setIsCatalogShowsPopoverOpen] = useState(false)
   const [isCatalogVendorsPopoverOpen, setIsCatalogVendorsPopoverOpen] = useState(false)
   const [isMappingOpen, setIsMappingOpen] = useState(false)
+  const [showNewSplitForm, setShowNewSplitForm] = useState(false)
+  const [isClosingNewSplitForm, setIsClosingNewSplitForm] = useState(false)
 
   const [newMappedSplit, setNewMappedSplit] = useState({ adPercent: "", programmaticPercent: "", effectiveDate: "" })
   const [mapErrors, setMapErrors] = useState<Record<string, string>>({})
@@ -427,6 +429,14 @@ export default function VendorSplitManagement({ onBack, refreshSignal = 0 }: Ven
     return Object.keys(newErrors).length === 0
   }
 
+  const handleCloseNewSplitForm = () => {
+    setIsClosingNewSplitForm(true)
+    setTimeout(() => {
+      setShowNewSplitForm(false)
+      setIsClosingNewSplitForm(false)
+    }, 300)
+  }
+
   const handleSaveMappedSplit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!validateNewMappedSplit() || !selectedCatalogShow || !selectedCatalogVendor || !token) return
@@ -453,7 +463,7 @@ export default function VendorSplitManagement({ onBack, refreshSignal = 0 }: Ven
       toast({ title: "Success", description: "New split mapped & saved." })
       // Reset only the form, keep selections
       setNewMappedSplit({ adPercent: "", programmaticPercent: "", effectiveDate: "" })
-      setIsMappingOpen(false)
+      setShowNewSplitForm(false)
     } catch (err: any) {
       toast({ title: "Error", description: err.message || "Failed to save split", variant: "destructive" })
     } finally {
@@ -1033,7 +1043,7 @@ export default function VendorSplitManagement({ onBack, refreshSignal = 0 }: Ven
 
             <div className="flex items-end">
               <Button
-                onClick={() => setIsMappingOpen(true)}
+                onClick={() => setShowNewSplitForm(true)}
                 disabled={!selectedCatalogShow || !selectedCatalogVendor}
                 className="evergreen-button w-full md:h-10"
               >
@@ -1043,65 +1053,86 @@ export default function VendorSplitManagement({ onBack, refreshSignal = 0 }: Ven
             </div>
           </div>
 
-          {isMappingOpen && (
-            <div className="pt-6">
-              <h3 className="text-lg font-semibold mb-4">Add New Split</h3>
-              <form onSubmit={handleSaveMappedSplit} className="space-y-4">
-                <div className="grid gap-4 md:grid-cols-3">
-                  <div className="space-y-2">
-                    <Label htmlFor="map-ad-percent" className="text-sm md:text-base">AD %</Label>
-                    <Input
-                      id="map-ad-percent"
-                      type="number"
-                      min="0"
-                      max="100"
-                      step="0.01"
-                      placeholder="e.g., 70"
-                      value={newMappedSplit.adPercent}
-                      onChange={(e) => handleMappedInputChange("adPercent", e.target.value)}
-                      className="md:h-10"
-                    />
-                    {mapErrors.adPercent && <p className="text-sm text-red-600">{mapErrors.adPercent}</p>}
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="map-programmatic-percent" className="text-sm md:text-base">Programmatic %</Label>
-                    <Input
-                      id="map-programmatic-percent"
-                      type="number"
-                      min="0"
-                      max="100"
-                      step="0.01"
-                      placeholder="e.g., 30"
-                      value={newMappedSplit.programmaticPercent}
-                      onChange={(e) => handleMappedInputChange("programmaticPercent", e.target.value)}
-                      className="md:h-10"
-                    />
-                    {mapErrors.programmaticPercent && <p className="text-sm text-red-600">{mapErrors.programmaticPercent}</p>}
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="map-effective-date" className="text-sm md:text-base">Effective Date</Label>
-                    <Input
-                      id="map-effective-date"
-                      type="date"
-                      value={newMappedSplit.effectiveDate}
-                      onChange={(e) => handleMappedInputChange("effectiveDate", e.target.value)}
-                      className="md:h-10"
-                    />
-                    {mapErrors.effectiveDate && <p className="text-sm text-red-600">{mapErrors.effectiveDate}</p>}
-                  </div>
-                </div>
-                {/* Mobile: Stack buttons vertically, Desktop: Right-aligned */}
-                <div className="flex flex-col md:flex-row md:justify-end gap-3">
-                  <Button type="submit" disabled={isLoadingCatalog.save} className="md:h-10 w-full md:w-auto">
-                    {isLoadingCatalog.save && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    Save New Split
-                  </Button>
-                  <Button type="button" variant="outline" onClick={() => setIsMappingOpen(false)} className="md:h-10 w-full md:w-auto">
-                    Cancel
+          {showNewSplitForm && (
+            <Card className={`transition-all duration-300 ease-in-out ${
+              isClosingNewSplitForm 
+                ? 'opacity-0 transform -translate-y-4 scale-95' 
+                : 'opacity-100 transform translate-y-0 scale-100 animate-in slide-in-from-top-4'
+            }`}>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-lg font-semibold">
+                    <span className="hidden md:inline">Add New Split for {selectedCatalogShow?.show_name} and {selectedCatalogVendor?.vendor_name}</span>
+                    <span className="md:hidden">Add New Split</span>
+                  </CardTitle>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleCloseNewSplitForm}
+                    className="h-8 w-8 p-0 border md:ml-2 ml-1 min-w-8 min-h-8"
+                  >
+                    <X className="h-4 w-4" />
                   </Button>
                 </div>
-              </form>
-            </div>
+              </CardHeader>
+              <CardContent>
+                <form onSubmit={handleSaveMappedSplit} className="space-y-4">
+                  <div className="grid gap-4 md:grid-cols-3">
+                    <div className="space-y-2">
+                      <Label htmlFor="map-ad-percent" className="text-sm md:text-base">AD %</Label>
+                      <Input
+                        id="map-ad-percent"
+                        type="number"
+                        min="0"
+                        max="100"
+                        step="0.01"
+                        placeholder="e.g., 70"
+                        value={newMappedSplit.adPercent}
+                        onChange={(e) => handleMappedInputChange("adPercent", e.target.value)}
+                        className="md:h-10"
+                      />
+                      {mapErrors.adPercent && <p className="text-sm text-red-600">{mapErrors.adPercent}</p>}
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="map-programmatic-percent" className="text-sm md:text-base">Programmatic %</Label>
+                      <Input
+                        id="map-programmatic-percent"
+                        type="number"
+                        min="0"
+                        max="100"
+                        step="0.01"
+                        placeholder="e.g., 30"
+                        value={newMappedSplit.programmaticPercent}
+                        onChange={(e) => handleMappedInputChange("programmaticPercent", e.target.value)}
+                        className="md:h-10"
+                      />
+                      {mapErrors.programmaticPercent && <p className="text-sm text-red-600">{mapErrors.programmaticPercent}</p>}
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="map-effective-date" className="text-sm md:text-base">Effective Date</Label>
+                      <Input
+                        id="map-effective-date"
+                        type="date"
+                        value={newMappedSplit.effectiveDate}
+                        onChange={(e) => handleMappedInputChange("effectiveDate", e.target.value)}
+                        className="md:h-10"
+                      />
+                      {mapErrors.effectiveDate && <p className="text-sm text-red-600">{mapErrors.effectiveDate}</p>}
+                    </div>
+                  </div>
+                  {/* Mobile: Stack buttons vertically, Desktop: Right-aligned */}
+                  <div className="flex flex-col md:flex-row md:justify-end gap-3">
+                    <Button type="submit" disabled={isLoadingCatalog.save} className="md:h-10 w-full md:w-auto">
+                      {isLoadingCatalog.save && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                      Save New Split
+                    </Button>
+                    <Button type="button" variant="outline" onClick={handleCloseNewSplitForm} className="md:h-10 w-full md:w-auto">
+                      Cancel
+                    </Button>
+                  </div>
+                </form>
+              </CardContent>
+            </Card>
           )}
         </CardContent>
       </Card>
