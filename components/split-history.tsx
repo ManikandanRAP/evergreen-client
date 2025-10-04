@@ -217,11 +217,20 @@ export default function SplitHistory({ onBack }: SplitHistoryProps) {
 
   return (
     <div className="space-y-6">
-      {/* Header with back button - Desktop: top right, Mobile: below title */}
+      {/* Header with back button - Desktop: back button before title, Mobile: below title */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-        <h1 className="text-xl sm:text-3xl font-bold bg-gradient-to-r from-emerald-600 to-cyan-600 bg-clip-text text-transparent tracking-tight">Split History</h1>
+        {/* Desktop: back button before title, Mobile: title first */}
+        <div className="flex flex-col md:flex-row md:items-center gap-4">
+          {/* Back button - Desktop: show before title, Mobile: hide here */}
+          <Button variant="outline" onClick={onBack} className="gap-2 w-fit hidden md:flex">
+            <ArrowLeft className="h-4 w-4" />
+            Back
+          </Button>
+          <h1 className="text-xl sm:text-3xl font-bold bg-gradient-to-r from-emerald-600 to-cyan-600 bg-clip-text text-transparent tracking-tight">Split History</h1>
+        </div>
         <div className="flex items-center justify-between md:justify-end gap-2">
-          <Button variant="outline" onClick={onBack} className="gap-2 w-fit">
+          {/* Back button - Mobile: show here, Desktop: hide */}
+          <Button variant="outline" onClick={onBack} className="gap-2 w-fit md:hidden">
             <ArrowLeft className="h-4 w-4" />
             Back
           </Button>
