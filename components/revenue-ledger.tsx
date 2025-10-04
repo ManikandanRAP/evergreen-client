@@ -527,18 +527,18 @@ export default function RevenueLedger() {
           </div>
 
           {/* Filters and Clear Filters - Same line on mobile, 50/50 when both visible */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center">
             {/* Filter Button - 50% when clear filters is visible, 100% when not */}
             <Button 
               variant="outline" 
               onClick={() => setIsSlideOutOpen(true)}
-              className={`flex items-center gap-2 ${(selectedShow !== "all" || dateFrom || dateTo) ? 'w-1/2' : 'w-full'}`}
+              className={`flex items-center gap-2 transition-all duration-300 ease-in-out ${(selectedShow !== "all" || dateFrom || dateTo) ? 'w-1/2 mr-2' : 'w-full'}`}
             >
               <Filter className="h-4 w-4" />
               Filters
             </Button>
 
-            {/* Clear Filters Button - Only show when filters are applied, 50% width */}
+            {/* Clear Filters Button - Smooth transition with width and opacity */}
             <div className={`transition-all duration-300 ease-in-out ${(selectedShow !== "all" || dateFrom || dateTo) ? 'w-1/2 opacity-100' : 'w-0 opacity-0 overflow-hidden'}`}>
               <Button 
                 variant="outline" 
