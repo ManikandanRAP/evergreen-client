@@ -147,12 +147,16 @@ export default function DashboardNav({ onSidebarToggle }: DashboardNavProps) {
         )}
       >
         {(!isDesktopCollapsed || isMobile) && (
-          <Image src="/myco-beta-logo.png" alt="Myco" width={200} height={50} className="h-12 w-auto" priority />
+          <Link href="/" className="block">
+            <Image src="/myco-beta-logo.png" alt="Myco" width={200} height={50} className="h-12 w-auto" priority />
+          </Link>
         )}
         {isDesktopCollapsed && !isMobile && (
-          <div className="w-8 h-8 bg-gradient-to-r from-emerald-500 to-cyan-500 rounded-lg flex items-center justify-center">
-            <span className="text-white font-bold text-sm">M</span>
-          </div>
+          <Link href="/" className="block">
+            <div className="w-8 h-8 bg-gradient-to-r from-emerald-500 to-cyan-500 rounded-lg flex items-center justify-center hover:opacity-80 transition-opacity">
+              <span className="text-white font-bold text-sm">M</span>
+            </div>
+          </Link>
         )}
       </div>
 
@@ -257,16 +261,18 @@ export default function DashboardNav({ onSidebarToggle }: DashboardNavProps) {
 
       {/* Mobile Header */}
       <div className="lg:hidden flex items-center justify-between p-4 bg-card border-b border-border/50 sticky top-0 z-40">
-        <Image src="/myco-beta-logo.png" alt="Myco" width={180} height={50} className="h-10 w-auto" priority />
+        <Link href="/" className="block">
+          <Image src="/myco-beta-logo.png" alt="Myco" width={180} height={50} className="h-10 w-auto" priority />
+        </Link>
         <div className="flex items-center gap-2">
           <ThemeToggle />
           <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
             <SheetTrigger asChild>
-              <Button variant="ghost" size="icon">
+              <Button variant="outline" size="icon">
                 <Menu className="h-6 w-6" />
               </Button>
             </SheetTrigger>
-            <SheetContent side="left" className="p-0 w-64">
+            <SheetContent side="right" className="p-0 w-64">
               <SheetHeader className="sr-only">
                 <SheetTitle>Navigation Menu</SheetTitle>
                 <SheetDescription>

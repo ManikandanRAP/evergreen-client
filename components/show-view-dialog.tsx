@@ -346,10 +346,9 @@ export default function ShowViewDialog({
             )}
             {onDelete && show && (
               <Button
-                variant="destructive"
                 size="sm"
                 onClick={() => onDelete(show)}
-                className="h-8 px-3"
+                className="h-8 px-3 bg-red-100 dark:bg-red-800 border border-red-300 dark:border-red-600 text-red-700 dark:text-red-200 hover:bg-red-200 dark:hover:bg-red-700"
               >
                 Delete
               </Button>

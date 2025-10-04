@@ -114,7 +114,11 @@ export default function DeleteShowDialog({
             <Button variant="outline" onClick={handleCancel}>
               Cancel
             </Button>
-            <Button variant="destructive" onClick={handleConfirmDelete} disabled={isDeleting}>
+            <Button 
+              onClick={handleConfirmDelete} 
+              disabled={isDeleting}
+              className="bg-red-100 dark:bg-red-800 border border-red-300 dark:border-red-600 text-red-700 dark:text-red-200 hover:bg-red-200 dark:hover:bg-red-700"
+            >
               <Trash2 className="h-4 w-4 mr-2" />
               {isDeleting ? "Deleting..." : "Delete Show"}
             </Button>

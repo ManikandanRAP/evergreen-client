@@ -1534,10 +1534,10 @@ export default function ShowsManagement() {
                       )}
                       {user?.role === "admin" && (
                         <Button 
-                          variant="destructive" 
                           size="sm" 
                           onClick={handleBulkDelete}
                           disabled={isBulkDeleting}
+                          className="bg-red-100 dark:bg-red-800 border border-red-300 dark:border-red-600 text-red-700 dark:text-red-200 hover:bg-red-200 dark:hover:bg-red-700"
                         >
                           <Trash2 className="h-4 w-4 mr-2" />
                           {isBulkDeleting ? "Deleting..." : "Delete Selected Shows"}
@@ -1721,10 +1721,10 @@ export default function ShowsManagement() {
                       )}
                       {user?.role === "admin" && (
                         <Button 
-                          variant="destructive" 
                           size="sm" 
                           onClick={handleBulkDelete}
                           disabled={isBulkDeleting}
+                          className="bg-red-100 dark:bg-red-800 border border-red-300 dark:border-red-600 text-red-700 dark:text-red-200 hover:bg-red-200 dark:hover:bg-red-700"
                         >
                           <Trash2 className="h-4 w-4 mr-2" />
                           {isBulkDeleting ? "Deleting..." : "Delete Selected Shows"}
@@ -1806,10 +1806,10 @@ export default function ShowsManagement() {
                       )}
                       {user?.role === "admin" && (
                         <Button 
-                          variant="destructive" 
                           size="sm" 
                           onClick={handleBulkDelete}
                           disabled={isBulkDeleting}
+                          className="bg-red-100 dark:bg-red-800 border border-red-300 dark:border-red-600 text-red-700 dark:text-red-200 hover:bg-red-200 dark:hover:bg-red-700"
                         >
                           <Trash2 className="h-4 w-4 mr-2" />
                           {isBulkDeleting ? "Deleting..." : "Delete Selected Shows"}
@@ -2035,10 +2035,10 @@ export default function ShowsManagement() {
                       )}
                       {user?.role === "admin" && (
                         <Button 
-                          variant="destructive" 
                           size="sm" 
                           onClick={handleBulkDelete}
                           disabled={isBulkDeleting}
+                          className="bg-red-100 dark:bg-red-800 border border-red-300 dark:border-red-600 text-red-700 dark:text-red-200 hover:bg-red-200 dark:hover:bg-red-700"
                         >
                           <Trash2 className="h-4 w-4 mr-2" />
                           {isBulkDeleting ? "Deleting..." : "Delete Selected Shows"}

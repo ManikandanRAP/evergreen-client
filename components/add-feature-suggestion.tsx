@@ -48,13 +48,13 @@ export default function AddFeatureSuggestion() {
     return (
       <div className="space-y-8">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Feature Suggestions</h1>
-          <p className="text-muted-foreground">Submit feature requests and feedback.</p>
+          <h1 className="text-xl sm:text-3xl font-bold tracking-tight">Feature Suggestions</h1>
+          <p className="text-sm sm:text-base text-muted-foreground">Submit feature requests and feedback.</p>
         </div>
         <Card>
           <CardHeader>
-            <CardTitle>Access Denied</CardTitle>
-            <CardDescription>This feature is only accessible to internal and admin users.</CardDescription>
+            <CardTitle className="text-lg sm:text-xl">Access Denied</CardTitle>
+            <CardDescription className="text-sm sm:text-base">This feature is only accessible to internal and admin users.</CardDescription>
           </CardHeader>
           <CardContent>
             <p className="text-muted-foreground">
@@ -108,23 +108,23 @@ export default function AddFeatureSuggestion() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-3xl font-bold bg-gradient-to-r from-emerald-600 to-cyan-600 bg-clip-text text-transparent tracking-tight">
+        <h1 className="text-xl sm:text-3xl font-bold bg-gradient-to-r from-emerald-600 to-cyan-600 bg-clip-text text-transparent tracking-tight">
           Feature Suggestions
         </h1>
-        <p className="text-muted-foreground">Submit feature requests and feedback to help improve our platform.</p>
+        <p className="text-sm sm:text-base text-muted-foreground">Submit feature requests and feedback to help improve our platform.</p>
       </div>
 
       <Card className="max-w-2xl">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Lightbulb className="h-5 w-5" />
+        <CardHeader className="px-6">
+          <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
+            <Lightbulb className="h-4 w-4 sm:h-5 sm:w-5" />
             Submit Feedback
           </CardTitle>
           <CardDescription>Share your ideas and suggestions with our development team.</CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="px-6">
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 sm:space-y-6">
               <FormField
                 control={form.control}
                 name="title"
@@ -170,7 +170,7 @@ export default function AddFeatureSuggestion() {
                     <FormControl>
                       <Textarea
                         placeholder="Provide detailed information about your suggestion or feedback..."
-                        className="min-h-[120px]"
+                        className="min-h-[100px] sm:min-h-[120px] resize-none"
                         {...field}
                       />
                     </FormControl>
@@ -179,8 +179,8 @@ export default function AddFeatureSuggestion() {
                 )}
               />
 
-              <div className="flex gap-4 pt-4">
-                <Button type="submit" disabled={isSubmitting} className="evergreen-button">
+              <div className="flex flex-col sm:flex-row gap-4 pt-4">
+                <Button type="submit" disabled={isSubmitting} className="evergreen-button w-full sm:w-auto">
                   {isSubmitting ? (
                     <>
                       <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
@@ -193,9 +193,9 @@ export default function AddFeatureSuggestion() {
                     </>
                   )}
                 </Button>
-                <Button type="button" variant="outline" onClick={handleCancel} disabled={isSubmitting}>
+                <Button type="button" variant="outline" onClick={handleCancel} disabled={isSubmitting} className="w-full sm:w-auto">
                   <X className="mr-2 h-4 w-4" />
-                  Cancel
+                  Clear
                 </Button>
               </div>
             </form>

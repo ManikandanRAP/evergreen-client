@@ -797,10 +797,9 @@ export default function VendorSplitManagement({ onBack, refreshSignal = 0 }: Ven
                           <TableCell className={`border-r px-4 py-2 ${index === splits.length - 1 ? '' : 'border-b'}`}>{new Date(split.effective_date).toLocaleDateString()}</TableCell>
                           <TableCell className={`px-4 py-2 ${index === splits.length - 1 ? '' : 'border-b'}`}>
                             <Button
-                              variant="destructive"
                               size="sm"
                               onClick={() => confirmDelete(split)}
-                              className="h-7 px-2"
+                              className="h-7 px-2 bg-red-100 dark:bg-red-800 border border-red-300 dark:border-red-600 text-red-700 dark:text-red-200 hover:bg-red-200 dark:hover:bg-red-700"
                             >
                               <Trash2 className="mr-2 h-3 w-3" />
                               Delete
@@ -847,10 +846,9 @@ export default function VendorSplitManagement({ onBack, refreshSignal = 0 }: Ven
                         </div>
                         <div className="pt-2">
                           <Button
-                            variant="destructive"
                             size="sm"
                             onClick={() => confirmDelete(split)}
-                            className="w-full h-10"
+                            className="w-full h-10 bg-red-100 dark:bg-red-800 border border-red-300 dark:border-red-600 text-red-700 dark:text-red-200 hover:bg-red-200 dark:hover:bg-red-700"
                           >
                             <Trash2 className="mr-2 h-4 w-4" />
                             Delete

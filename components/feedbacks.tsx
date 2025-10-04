@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import {
@@ -49,6 +50,7 @@ export default function Feedbacks() {
   const { user, token } = useAuth()
   const [feedbacks, setFeedbacks] = useState<Feedback[]>([])
   const [searchTerm, setSearchTerm] = useState("")
+  const [typeFilter, setTypeFilter] = useState<string>("all")
   const [sortField, setSortField] = useState<SortField>(null)
   const [sortDirection, setSortDirection] = useState<SortDirection>("original")
   const [originalOrder, setOriginalOrder] = useState<Feedback[]>([])
@@ -58,6 +60,8 @@ export default function Feedbacks() {
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [feedbackToDelete, setFeedbackToDelete] = useState<Feedback | null>(null)
+  const [currentPage, setCurrentPage] = useState(1)
+  const itemsPerPage = 10
 
   // Load feedbacks from API
   useEffect(() => {
@@ -118,7 +122,9 @@ export default function Feedbacks() {
         feedback.type.toLowerCase().includes(searchTerm.toLowerCase()) ||
         feedback.description.toLowerCase().includes(searchTerm.toLowerCase())
 
-      return matchesSearch
+      const matchesType = typeFilter === "all" || feedback.type === typeFilter
+
+      return matchesSearch && matchesType
     })
 
     if (sortDirection === "original") {
@@ -144,7 +150,18 @@ export default function Feedbacks() {
     }
 
     return filtered
-  }, [feedbacks, originalOrder, searchTerm, sortField, sortDirection])
+  }, [feedbacks, originalOrder, searchTerm, typeFilter, sortField, sortDirection])
+
+  // Pagination logic
+  const totalPages = Math.ceil(filteredAndSortedFeedbacks.length / itemsPerPage)
+  const startIndex = (currentPage - 1) * itemsPerPage
+  const endIndex = startIndex + itemsPerPage
+  const currentPageFeedbacks = filteredAndSortedFeedbacks.slice(startIndex, endIndex)
+
+  // Reset to first page when filters change
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [searchTerm, typeFilter, sortField, sortDirection])
 
   // Handle keyboard navigation when dialog is open
   useEffect(() => {
@@ -193,18 +210,18 @@ export default function Feedbacks() {
   }
 
   const handleViewFeedback = (feedback: Feedback) => {
-    const index = filteredAndSortedFeedbacks.findIndex(f => f.id === feedback.id)
+    const index = currentPageFeedbacks.findIndex(f => f.id === feedback.id)
     setCurrentFeedbackIndex(index >= 0 ? index : 0)
     setSelectedFeedback(feedback)
     setIsViewDialogOpen(true)
   }
 
   const handlePreviousFeedback = () => {
-    if (currentFeedbackIndex > 0 && filteredAndSortedFeedbacks.length > 0) {
+    if (currentFeedbackIndex > 0 && currentPageFeedbacks.length > 0) {
       setAnimationDirection("previous")
       const newIndex = currentFeedbackIndex - 1
       setCurrentFeedbackIndex(newIndex)
-      setSelectedFeedback(filteredAndSortedFeedbacks[newIndex])
+      setSelectedFeedback(currentPageFeedbacks[newIndex])
       
       // Reset animation direction after animation completes
       setTimeout(() => {
@@ -214,11 +231,11 @@ export default function Feedbacks() {
   }
 
   const handleNextFeedback = () => {
-    if (currentFeedbackIndex < filteredAndSortedFeedbacks.length - 1 && filteredAndSortedFeedbacks.length > 0) {
+    if (currentFeedbackIndex < currentPageFeedbacks.length - 1 && currentPageFeedbacks.length > 0) {
       setAnimationDirection("next")
       const newIndex = currentFeedbackIndex + 1
       setCurrentFeedbackIndex(newIndex)
-      setSelectedFeedback(filteredAndSortedFeedbacks[newIndex])
+      setSelectedFeedback(currentPageFeedbacks[newIndex])
       
       // Reset animation direction after animation completes
       setTimeout(() => {
@@ -338,8 +355,8 @@ export default function Feedbacks() {
     }
   }
 
-  const SortableHeader = ({ field, children }: { field: SortField; children: React.ReactNode }) => (
-    <TableHead className="px-4 py-2 font-semibold border-r bg-muted/50 cursor-pointer hover:bg-muted/50 select-none" onClick={() => handleSort(field)}>
+  const SortableHeader = ({ field, children, className }: { field: SortField; children: React.ReactNode; className?: string }) => (
+    <TableHead className={`px-4 py-2 font-semibold border-r bg-muted/50 cursor-pointer hover:bg-muted/50 select-none ${className || ''}`} onClick={() => handleSort(field)}>
       <div className="flex items-center space-x-1">
         <span>{children}</span>
         {getSortIcon(field)}
@@ -351,18 +368,55 @@ export default function Feedbacks() {
     <div className="space-y-8">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-emerald-600 to-cyan-600 bg-clip-text text-transparent tracking-tight">Feedbacks</h1>
-          <p className="text-muted-foreground">View and manage user feedback and feature suggestions.</p>
+          <h1 className="text-xl sm:text-3xl font-bold bg-gradient-to-r from-emerald-600 to-cyan-600 bg-clip-text text-transparent tracking-tight">Feedbacks</h1>
+          <p className="text-sm sm:text-base text-muted-foreground">View and manage user feedback and feature suggestions.</p>
         </div>
-        <Button className="evergreen-button" onClick={handleExport} disabled={filteredAndSortedFeedbacks.length === 0}>
-          <Download className="mr-2 h-4 w-4" />
-          Export CSV
-        </Button>
       </div>
 
       <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
+        <CardHeader className="md:px-6 px-4">
+          {/* Mobile Layout */}
+          <div className="md:hidden space-y-4">
+            <div className="flex items-center space-x-4">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                <Input
+                  placeholder="Search feedbacks..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+              
+              {/* Mobile Feedbacks Count - styled like split history page */}
+              <Button variant="outline" className="h-10 px-2 flex flex-col items-center justify-center min-w-[60px] gap-0">
+                <span className="text-sm font-bold leading-none">{filteredAndSortedFeedbacks.length}</span>
+                <span className="text-xs text-muted-foreground leading-none">Feedbacks</span>
+              </Button>
+            </div>
+            
+            {/* Type Filter and Export Button for Mobile */}
+            <div className="flex items-center space-x-4">
+              <Select value={typeFilter} onValueChange={setTypeFilter}>
+                <SelectTrigger className="w-48">
+                  <SelectValue placeholder="Filter by type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Types</SelectItem>
+                  <SelectItem value="New Feature">New Feature</SelectItem>
+                  <SelectItem value="General Feedback">General Feedback</SelectItem>
+                </SelectContent>
+              </Select>
+              
+              <Button className="evergreen-button" onClick={handleExport} disabled={filteredAndSortedFeedbacks.length === 0}>
+                <Download className="mr-2 h-4 w-4" />
+                Export CSV
+              </Button>
+            </div>
+          </div>
+
+          {/* Desktop Layout */}
+          <div className="hidden md:flex items-center justify-between">
             <div className="flex items-center space-x-4">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
@@ -373,44 +427,66 @@ export default function Feedbacks() {
                   className="pl-10 w-64"
                 />
               </div>
+              
+              {/* Type Filter for Desktop */}
+              <Select value={typeFilter} onValueChange={setTypeFilter}>
+                <SelectTrigger className="w-48">
+                  <SelectValue placeholder="Filter by type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Types</SelectItem>
+                  <SelectItem value="New Feature">New Feature</SelectItem>
+                  <SelectItem value="General Feedback">General Feedback</SelectItem>
+                </SelectContent>
+              </Select>
+              
+              {/* Feedbacks Count for Desktop */}
+              <div className="text-sm text-muted-foreground">
+                {filteredAndSortedFeedbacks.length} feedback{filteredAndSortedFeedbacks.length !== 1 ? "s" : ""}
+              </div>
             </div>
-            <div className="text-sm text-muted-foreground">
-              {filteredAndSortedFeedbacks.length} feedback{filteredAndSortedFeedbacks.length !== 1 ? "s" : ""}
+            
+            <div className="flex items-center space-x-4">
+              {/* Desktop Export Button inside list box */}
+              <Button className="evergreen-button" onClick={handleExport} disabled={filteredAndSortedFeedbacks.length === 0}>
+                <Download className="mr-2 h-4 w-4" />
+                Export CSV
+              </Button>
             </div>
           </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="md:px-6 px-4">
           <div className="rounded-md border">
             <Table>
               <TableHeader>
                 <TableRow>
                   <SortableHeader field="title">Title</SortableHeader>
                   <SortableHeader field="type">Type</SortableHeader>
-                  <SortableHeader field="createdByName">Created By</SortableHeader>
-                  <SortableHeader field="created_at">Created At</SortableHeader>
+                  <SortableHeader field="createdByName" className="whitespace-nowrap">Created By</SortableHeader>
+                  <SortableHeader field="created_at" className="whitespace-nowrap">Created At</SortableHeader>
                   <TableHead className="px-4 py-2 font-semibold bg-muted/50">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredAndSortedFeedbacks.map((feedback) => (
+                {currentPageFeedbacks.map((feedback) => (
                   <TableRow key={feedback.id}>
                     <TableCell 
-                      className="font-medium border-r px-4 py-2 cursor-pointer hover:bg-accent/30 transition-colors"
+                      className="font-medium border-r px-4 py-2 cursor-pointer hover:bg-accent/30 transition-colors whitespace-nowrap"
                       onClick={() => handleViewFeedback(feedback)}
                     >
                       <span className="hover:underline hover:text-emerald-600 transition-colors">
                         {feedback.title}
                       </span>
                     </TableCell>
-                    <TableCell className="border-r px-4 py-2">
+                    <TableCell className="border-r px-4 py-2 whitespace-nowrap">
                       <Badge {...getTypeBadgeVariant(feedback.type)}>{feedback.type}</Badge>
                     </TableCell>
-                    <TableCell className="border-r px-4 py-2">{feedback.createdByName}</TableCell>
-                    <TableCell className="border-r px-4 py-2">
+                    <TableCell className="border-r px-4 py-2 whitespace-nowrap">{feedback.createdByName}</TableCell>
+                    <TableCell className="border-r px-4 py-2 whitespace-nowrap">
                       {new Date(feedback.created_at).toLocaleDateString()}{" "}
                       {new Date(feedback.created_at).toLocaleTimeString()}
                     </TableCell>
-                    <TableCell className="px-4 py-2">
+                    <TableCell className="px-4 py-2 whitespace-nowrap">
                       <div className="flex items-center gap-1">
                         <Button
                           variant="outline"
@@ -422,9 +498,8 @@ export default function Feedbacks() {
                           View
                         </Button>
                         <Button
-                          variant="destructive"
                           size="sm"
-                          className="h-7 px-2"
+                          className="h-7 px-2 bg-red-100 dark:bg-red-800 border border-red-300 dark:border-red-600 text-red-700 dark:text-red-200 hover:bg-red-200 dark:hover:bg-red-700"
                           onClick={() => handleDeleteClick(feedback)}
                         >
                           <Trash2 className="h-3 w-3 mr-1" />
@@ -438,7 +513,7 @@ export default function Feedbacks() {
             </Table>
           </div>
 
-          {filteredAndSortedFeedbacks.length === 0 && (
+          {currentPageFeedbacks.length === 0 && (
             <div className="text-center py-12">
               <MessageSquare className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
               <p className="text-muted-foreground">
@@ -446,15 +521,46 @@ export default function Feedbacks() {
               </p>
             </div>
           )}
+
+          {/* Pagination */}
+          {filteredAndSortedFeedbacks.length > 0 && (
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mt-4">
+              <span className="text-xs text-muted-foreground text-center sm:text-left">
+                Showing {Math.min((currentPage - 1) * itemsPerPage + 1, filteredAndSortedFeedbacks.length)} to {Math.min(currentPage * itemsPerPage, filteredAndSortedFeedbacks.length)} of {filteredAndSortedFeedbacks.length} feedbacks
+              </span>
+              <div className="flex items-center justify-center gap-2">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => setCurrentPage(Math.max(1, currentPage - 1))} 
+                  disabled={currentPage <= 1}
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                  Prev
+                </Button>
+                <span className="text-xs text-muted-foreground">
+                  Page {currentPage} / {totalPages}
+                </span>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))} 
+                  disabled={currentPage >= totalPages}
+                >
+                  Next
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
 
       {/* View Feedback Dialog */}
       <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto overflow-x-hidden">
-          <div className="min-h-0 flex flex-col">
+        <DialogContent className="max-w-4xl sm:max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="text-2xl">Feedback Details</DialogTitle>
+            <DialogTitle className="text-2xl font-bold">Feedback Details</DialogTitle>
             <DialogDescription>Complete information about this feedback submission</DialogDescription>
           </DialogHeader>
 
@@ -463,49 +569,42 @@ export default function Feedbacks() {
               key={selectedFeedback.id} 
               className={`space-y-6 transition-all duration-300 overflow-hidden ${animationClass}`}
             >
-              {/* Header Section */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <MessageSquare className="h-5 w-5" />
-                    {selectedFeedback.title}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-2">
-                        <Tag className="h-4 w-4 text-muted-foreground" />
-                        <span className="font-medium">Type:</span>
-                      </div>
-                      <Badge {...getTypeBadgeVariant(selectedFeedback.type)}>{selectedFeedback.type}</Badge>
-                    </div>
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-2">
-                        <User className="h-4 w-4 text-muted-foreground" />
-                        <span className="font-medium">Submitted By:</span>
-                      </div>
-                      <p className="text-muted-foreground">{selectedFeedback.createdByName}</p>
-                    </div>
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-2">
-                        <Calendar className="h-4 w-4 text-muted-foreground" />
-                        <span className="font-medium">Submission Date:</span>
-                      </div>
-                      <p className="text-muted-foreground">
-                        {new Date(selectedFeedback.created_at).toLocaleDateString()} at{" "}
-                        {new Date(selectedFeedback.created_at).toLocaleTimeString()}
-                      </p>
-                    </div>
+              {/* Feedback Header with Details */}
+              <div className={`p-4 sm:p-6 rounded-lg border ${
+                selectedFeedback.type === 'New Feature'
+                  ? "bg-gradient-to-r from-emerald-50 to-emerald-100 dark:from-emerald-950/20 dark:to-emerald-900/20 border-emerald-200 dark:border-emerald-800"
+                  : "bg-gradient-to-r from-purple-50 to-purple-100 dark:from-purple-950/20 dark:to-purple-900/20 border-purple-200 dark:border-purple-800"
+              }`}>
+                <h2 className="text-lg sm:text-2xl font-bold text-foreground mb-3 sm:mb-4">
+                  {selectedFeedback.title}
+                </h2>
+                
+                {/* Feedback Details */}
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <span className="font-medium text-muted-foreground text-sm">Type:</span>
+                    <Badge {...getTypeBadgeVariant(selectedFeedback.type)}>
+                      {selectedFeedback.type}
+                    </Badge>
                   </div>
-                </CardContent>
-              </Card>
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
+                    <span className="font-medium text-muted-foreground text-sm">Submitted By:</span>
+                    <span className="text-sm">{selectedFeedback.createdByName}</span>
+                  </div>
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
+                    <span className="font-medium text-muted-foreground text-sm">Submission Date:</span>
+                    <span className="text-sm">
+                      {new Date(selectedFeedback.created_at).toLocaleString()}
+                    </span>
+                  </div>
+                </div>
+              </div>
 
-              {/* Description Section */}
+              {/* Description */}
               <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <FileText className="h-5 w-5" />
+                <CardHeader className="pb-3">
+                  <CardTitle className="flex items-center gap-2 text-lg">
+                    <MessageSquare className="h-5 w-5 text-emerald-600" />
                     Description
                   </CardTitle>
                 </CardHeader>
@@ -516,58 +615,113 @@ export default function Feedbacks() {
                 </CardContent>
               </Card>
 
+
               {/* Actions */}
-              <div className="flex justify-between items-center">
-                {/* Navigation buttons */}
-                <div className="flex items-center gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handlePreviousFeedback}
-                    disabled={currentFeedbackIndex === 0}
-                    className="flex items-center gap-1"
-                  >
-                    <ChevronLeft className="h-4 w-4" />
-                    Previous
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handleNextFeedback}
-                    disabled={currentFeedbackIndex === filteredAndSortedFeedbacks.length - 1}
-                    className="flex items-center gap-1"
-                  >
-                    Next
-                    <ChevronRight className="h-4 w-4" />
-                  </Button>
-                  <span className="text-sm text-muted-foreground ml-2">
-                    {currentFeedbackIndex + 1} of {filteredAndSortedFeedbacks.length}
-                  </span>
+              <div className="pt-4 border-t">
+                {/* Mobile Layout */}
+                <div className="sm:hidden">
+                  {/* Navigation buttons - centered on mobile */}
+                  <div className="flex justify-center items-center gap-2 mb-4">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handlePreviousFeedback}
+                      disabled={currentFeedbackIndex === 0}
+                      className="flex items-center gap-1"
+                    >
+                      <ChevronLeft className="h-4 w-4" />
+                      Previous
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleNextFeedback}
+                      disabled={currentFeedbackIndex === currentPageFeedbacks.length - 1}
+                      className="flex items-center gap-1"
+                    >
+                      Next
+                      <ChevronRight className="h-4 w-4" />
+                    </Button>
+                    <span className="text-sm text-muted-foreground ml-2">
+                      {currentFeedbackIndex + 1} of {currentPageFeedbacks.length}
+                    </span>
+                  </div>
+
+                  {/* Action buttons - full width on mobile */}
+                  <div className="flex flex-col gap-3">
+                    <Button 
+                      onClick={() => {
+                        setIsViewDialogOpen(false)
+                        handleDeleteClick(selectedFeedback)
+                      }}
+                      className="w-full bg-red-100 dark:bg-red-800 border border-red-300 dark:border-red-600 text-red-700 dark:text-red-200 hover:bg-red-200 dark:hover:bg-red-700"
+                    >
+                      <Trash2 className="h-4 w-4 mr-2" />
+                      Delete Feedback
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      onClick={() => setIsViewDialogOpen(false)}
+                      className="w-full bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-950/20 dark:to-slate-900/20 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:from-slate-100 hover:to-slate-200 dark:hover:from-slate-900/30 dark:hover:to-slate-800/30"
+                    >
+                      Close
+                    </Button>
+                  </div>
                 </div>
 
-                {/* Action buttons */}
-                <div className="flex gap-3">
-                  <Button
-                    variant="outline"
-                    onClick={() => setIsViewDialogOpen(false)}
-                  >
-                    Cancel
-                  </Button>
-                  <Button
-                    variant="destructive"
-                    onClick={() => {
-                      setIsViewDialogOpen(false)
-                      handleDeleteClick(selectedFeedback)
-                    }}
-                  >
-                    <Trash2 className="h-4 w-4 mr-2" />
-                    Delete Feedback
-                  </Button>
+                {/* Desktop Layout */}
+                <div className="hidden sm:flex justify-between items-center">
+                  {/* Navigation buttons */}
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handlePreviousFeedback}
+                      disabled={currentFeedbackIndex === 0}
+                      className="flex items-center gap-1"
+                    >
+                      <ChevronLeft className="h-4 w-4" />
+                      Previous
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleNextFeedback}
+                      disabled={currentFeedbackIndex === currentPageFeedbacks.length - 1}
+                      className="flex items-center gap-1"
+                    >
+                      Next
+                      <ChevronRight className="h-4 w-4" />
+                    </Button>
+                    <span className="text-sm text-muted-foreground ml-2">
+                      {currentFeedbackIndex + 1} of {currentPageFeedbacks.length}
+                    </span>
+                  </div>
+
+                  {/* Action buttons */}
+                  <div className="flex gap-3">
+                    <Button 
+                      onClick={() => {
+                        setIsViewDialogOpen(false)
+                        handleDeleteClick(selectedFeedback)
+                      }}
+                      className="bg-red-100 dark:bg-red-800 border border-red-300 dark:border-red-600 text-red-700 dark:text-red-200 hover:bg-red-200 dark:hover:bg-red-700"
+                    >
+                      <Trash2 className="h-4 w-4 mr-2" />
+                      Delete Feedback
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      onClick={() => setIsViewDialogOpen(false)}
+                      className="bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-950/20 dark:to-slate-900/20 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:from-slate-100 hover:to-slate-200 dark:hover:from-slate-900/30 dark:hover:to-slate-800/30"
+                    >
+                      Close
+                    </Button>
+                  </div>
                 </div>
               </div>
             </div>
           )}
-          </div>
         </DialogContent>
       </Dialog>
 
