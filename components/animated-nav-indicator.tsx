@@ -102,7 +102,7 @@ export default function AnimatedNavIndicator({
       className={cn(
         "absolute top-1 bottom-1",
         "bg-emerald-500",
-        "rounded-full shadow-lg",
+        "rounded-full",
         "transform-gpu",
         "opacity-0", // Start hidden
         className
