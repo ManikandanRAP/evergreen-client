@@ -12,7 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { ArrowLeft, ArrowRight, Save, X, AlertCircle, Loader2, Edit, RotateCcw, FileText, DollarSign, Radio, Users, Check, BarChart3, Handshake } from "lucide-react"
+import { ArrowLeft, ArrowRight, Save, X, AlertCircle, Loader2, Edit, RotateCcw, FileText, DollarSign, Radio, Users, Check, BarChart3, Handshake, ChevronLeft, ChevronRight } from "lucide-react"
 import { cn } from "@/lib/utils"
 import type { Show } from "@/lib/api-client"
 import { ShowCreate, ShowUpdate, fetchAllclass, apiClient } from "@/lib/api-client" // Import both types
@@ -675,7 +675,7 @@ export default function CreateShowDialog({
   }
 
   const hasTabErrors = (tabId: string) => {
-    if (tabId === 'basic' && attemptedSubmit) {
+    if (tabId === 'basic') {
         return !!errors['title'];
     }
     return false;
@@ -685,21 +685,21 @@ export default function CreateShowDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-6xl h-[90vh] flex flex-col">
-        <DialogHeader>
-          <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-emerald-600 to-cyan-600 bg-clip-text text-transparent">
+      <DialogContent className="max-w-6xl w-full sm:w-[90%] h-screen sm:h-[90vh] flex flex-col p-0 overflow-hidden dark:bg-black border-0 [&>button:not(.navigation-button)]:hidden sm:translate-x-[-50%] sm:translate-y-[-50%] sm:left-[50%] sm:top-[50%]">
+        <DialogHeader className="flex flex-row items-center justify-between px-6 py-4 bg-background dark:bg-[#262626] border-b dark:border-slate-800">
+          <DialogTitle className="text-lg sm:text-2xl font-bold bg-gradient-to-r from-emerald-600 to-cyan-600 bg-clip-text text-transparent">
             {isEditMode ? "Edit Show" : "Create New Show"}
           </DialogTitle>
         </DialogHeader>
 
-        <Tabs value={currentTab} onValueChange={setCurrentTab} className="flex-1 flex flex-col overflow-hidden">
+        <Tabs value={currentTab} onValueChange={setCurrentTab} className="flex-1 flex flex-col overflow-hidden px-6">
           <TabsList className="grid w-full grid-cols-4 mb-6">
             {tabs.map((tab) => (
               <TabsTrigger
                 key={tab.id}
                 value={tab.id}
                 className={cn(
-                  "flex items-center gap-2 text-sm relative data-[state=active]:bg-primary data-[state=active]:text-primary-foreground",
+                  "flex items-center gap-2 text-xs sm:text-sm relative data-[state=active]:bg-primary data-[state=active]:text-primary-foreground",
                   isTabComplete(tab.id) &&
                     currentTab !== tab.id &&
                     "bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300",
@@ -712,12 +712,12 @@ export default function CreateShowDialog({
                 <span>{tab.icon}</span>
                 <span className="hidden sm:inline">{tab.label}</span>
                 {isTabComplete(tab.id) && !hasTabErrors(tab.id) && (
-                  <Badge variant="secondary" className="ml-1 h-4 w-4 p-0 text-xs bg-emerald-100 text-emerald-700">
+                  <Badge variant="secondary" className="ml-1 h-4 w-4 p-0 text-xs bg-emerald-100 text-emerald-700 flex items-center justify-center">
                     <Check className="h-3 w-3" />
                   </Badge>
                 )}
-                {hasTabErrors(tab.id) && attemptedSubmit && (
-                  <Badge variant="destructive" className="ml-1 h-4 w-4 p-0 text-xs">
+                {hasTabErrors(tab.id) && (
+                  <Badge variant="destructive" className="ml-1 h-4 w-4 p-0 text-xs flex items-center justify-center">
                     !
                   </Badge>
                 )}
@@ -730,8 +730,8 @@ export default function CreateShowDialog({
             <TabsContent value="basic" className="mt-0">
               <Card>
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2"><FileText className="h-4 w-4" /> Basic Information</CardTitle>
-                  <CardDescription>Enter the fundamental details about your show</CardDescription>
+                  <CardTitle className="flex items-center gap-2 text-lg sm:text-xl"><FileText className="h-4 w-4" /> Basic Information</CardTitle>
+                  <CardDescription className="text-xs sm:text-sm">Enter the fundamental details about your show</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -747,7 +747,7 @@ export default function CreateShowDialog({
                         className={cn("h-10", getFieldError("title") && "border-red-500")}
                       />
                       {getFieldError("title") && !duplicateCheckResult?.isDuplicate && !getFieldError("title")?.includes("already exists") && (
-                        <div className="text-sm text-red-500">
+                        <div className="text-xs sm:text-sm text-red-500">
                           <div className="flex items-center gap-1 mb-2">
                             <AlertCircle className="h-3 w-3" />
                             {getFieldError("title")}
@@ -970,7 +970,7 @@ export default function CreateShowDialog({
                     <div></div>
                   </div>
 
-                  <div className="flex gap-6">
+                  <div className="flex flex-col sm:flex-row gap-4 sm:gap-6">
                     <div className="flex items-center space-x-2">
                       <Checkbox
                         id="isRateCard"
@@ -1012,8 +1012,8 @@ export default function CreateShowDialog({
             <TabsContent value="financial" className="mt-0 space-y-8">
               <Card>
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2"><DollarSign className="h-4 w-4" /> Financial Information</CardTitle>
-                  <CardDescription>Configure revenue and financial details</CardDescription>
+                  <CardTitle className="flex items-center gap-2 text-lg sm:text-xl"><DollarSign className="h-4 w-4" /> Financial Information</CardTitle>
+                  <CardDescription className="text-xs sm:text-sm">Configure revenue and financial details</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -1091,7 +1091,7 @@ export default function CreateShowDialog({
                     </div>
                   </div>
 
-                  <div className="flex flex-wrap gap-x-6 gap-y-2">
+                  <div className="flex flex-col sm:flex-row sm:flex-wrap gap-4 sm:gap-x-6 sm:gap-y-2">
                     <div className="flex items-center space-x-2">
                       <Checkbox
                         id="minimumGuarantee"
@@ -1154,8 +1154,8 @@ export default function CreateShowDialog({
 
               <Card>
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2"><BarChart3 className="h-4 w-4" /> Contract Splits</CardTitle>
-                  <CardDescription>Define how revenue is split for various contract types.</CardDescription>
+                  <CardTitle className="flex items-center gap-2 text-lg sm:text-xl"><BarChart3 className="h-4 w-4" /> Contract Splits</CardTitle>
+                  <CardDescription className="text-xs sm:text-sm">Define how revenue is split for various contract types.</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -1308,8 +1308,8 @@ export default function CreateShowDialog({
 
               <Card>
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2"><Handshake className="h-4 w-4" /> Hands Off Splits</CardTitle>
-                  <CardDescription>Define revenue splits for hands-off scenarios.</CardDescription>
+                  <CardTitle className="flex items-center gap-2 text-lg sm:text-xl"><Handshake className="h-4 w-4" /> Hands Off Splits</CardTitle>
+                  <CardDescription className="text-xs sm:text-sm">Define revenue splits for hands-off scenarios.</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -1361,8 +1361,8 @@ export default function CreateShowDialog({
             <TabsContent value="content" className="mt-0">
               <Card>
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2"><Radio className="h-4 w-4" /> Content Details</CardTitle>
-                  <CardDescription>Specify content format and production details</CardDescription>
+                  <CardTitle className="flex items-center gap-2 text-lg sm:text-xl"><Radio className="h-4 w-4" /> Content Details</CardTitle>
+                  <CardDescription className="text-xs sm:text-sm">Specify content format and production details</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -1461,8 +1461,8 @@ export default function CreateShowDialog({
             <TabsContent value="demographics" className="mt-0">
               <Card>
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2"><Users className="h-4 w-4" /> Demographics</CardTitle>
-                  <CardDescription>Define your target audience and show status</CardDescription>
+                  <CardTitle className="flex items-center gap-2 text-lg sm:text-xl"><Users className="h-4 w-4" /> Demographics</CardTitle>
+                  <CardDescription className="text-xs sm:text-sm">Define your target audience and show status</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -1496,7 +1496,7 @@ export default function CreateShowDialog({
                         className={cn(getFieldError("gender") && "border-red-500")}
                       />
                       {getFieldError("gender") && (
-                        <p className="text-sm text-red-500 flex items-center gap-1">
+                        <p className="text-xs sm:text-sm text-red-500 flex items-center gap-1">
                           <AlertCircle className="h-3 w-3" />
                           {getFieldError("gender")}
                         </p>
@@ -1578,26 +1578,37 @@ export default function CreateShowDialog({
             </Alert>
           )}
 
-          <div className="flex items-center justify-between p-6 border-t bg-background">
-            <div className="flex gap-2">
-              <Button variant="outline" onClick={handlePrevious} disabled={currentTabIndex === 0}>
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                Previous
+          <div className="flex items-center justify-between border-t bg-background">
+            {/* Desktop Navigation - with text */}
+            <div className="hidden sm:flex gap-2 py-6">
+              <Button variant="outline" size="sm" onClick={handlePrevious} disabled={currentTabIndex === 0}>
+                <ChevronLeft className="h-4 w-4" />
+                Prev
               </Button>
-              <Button variant="outline" onClick={handleNext} disabled={currentTabIndex === tabs.length - 1}>
+              <Button variant="outline" size="sm" onClick={handleNext} disabled={currentTabIndex === tabs.length - 1}>
                 Next
-                <ArrowRight className="h-4 w-4 ml-2" />
+                <ChevronRight className="h-4 w-4" />
               </Button>
             </div>
-
-            <div className="flex gap-2">
-              <Button variant="outline" onClick={handleCancel}>
+            
+            {/* Mobile Navigation - icon only */}
+            <div className="flex sm:hidden gap-2 py-6">
+              <Button variant="outline" size="sm" onClick={handlePrevious} disabled={currentTabIndex === 0}>
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              <Button variant="outline" size="sm" onClick={handleNext} disabled={currentTabIndex === tabs.length - 1}>
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
+            
+            <div className="flex gap-2 py-6">
+              <Button variant="outline" size="sm" onClick={handleCancel}>
                 <X className="h-4 w-4 mr-2" />
                 Cancel
               </Button>
-              <Button className="evergreen-button" onClick={handleSave} disabled={isSubmitting}>
+              <Button className="evergreen-button" size="sm" onClick={handleSave} disabled={isSubmitting}>
                 <Save className="h-4 w-4 mr-2" />
-                {isSubmitting ? (isEditMode ? "Updating..." : "Saving...") : isEditMode ? "Update Show" : "Save Show"}
+                {isSubmitting ? (isEditMode ? "Updating..." : "Saving...") : "Save"}
               </Button>
             </div>
           </div>
@@ -1611,7 +1622,7 @@ export default function CreateShowDialog({
             <DialogTitle>Unarchive Show</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
-            <p className="text-sm text-muted-foreground">
+            <p className="text-xs sm:text-sm text-muted-foreground">
               Are you sure you want to unarchive "{duplicateCheckResult?.existingShow?.title}"? 
               This will restore the show and allow you to edit it.
             </p>

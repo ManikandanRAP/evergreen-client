@@ -296,13 +296,13 @@ export default function ShowViewDialog({
 
   const buttonStyles =
     "navigation-button rounded-sm opacity-70 transition-opacity hover:opacity-100 disabled:pointer-events-none border-2 border-slate-300 dark:border-slate-700 p-1.5"
-  
+
   const paginationButtonStyles = "variant-outline size-sm"
 
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-none w-full sm:w-[90%] h-screen sm:h-[95vh] flex flex-col p-0 overflow-hidden dark:bg-black border-0 [&>button:not(.navigation-button)]:hidden">
+      <DialogContent className="max-w-none w-full sm:w-[90%] h-screen sm:h-[95vh] flex flex-col p-0 overflow-hidden dark:bg-black border-0 [&>button:not(.navigation-button)]:hidden" hideClose>
         <DialogHeader className="flex flex-row items-center justify-between px-6 py-4 bg-background dark:bg-[#262626] border-b dark:border-slate-800">
           {/* Mobile: Title left, Close right */}
           <div className="flex sm:hidden w-full items-center justify-between">
@@ -317,12 +317,13 @@ export default function ShowViewDialog({
 
           {/* Desktop: Navigation, Title, Actions in one row */}
           <div className="hidden sm:flex flex-row items-center justify-between w-full">
-            <div className="flex flex-none items-center gap-2 w-32">
+          <div className="flex flex-none items-center gap-2 w-32">
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => handleNavigationClick("previous")}
                 disabled={!hasPrevious}
+                className="h-8"
               >
                 <ChevronLeft className="h-4 w-4" />
                 Prev
@@ -332,63 +333,64 @@ export default function ShowViewDialog({
                 size="sm"
                 onClick={() => handleNavigationClick("next")}
                 disabled={!hasNext}
+                className="h-8"
               >
                 Next
                 <ChevronRight className="h-4 w-4" />
               </Button>
-            </div>
+          </div>
 
-            <DialogTitle className="flex-1 text-2xl font-semibold text-center truncate px-4">
-              {show.title}
-            </DialogTitle>
+          <DialogTitle className="flex-1 text-2xl font-semibold text-center truncate px-4">
+            {show.title}
+          </DialogTitle>
 
-            <div className="flex flex-none justify-end gap-2 w-32">
-              {onEdit && show && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => onEdit(show)}
-                  className="h-8 px-3 text-blue-600 hover:text-blue-700 hover:bg-blue-50 dark:hover:bg-blue-900/20 border-blue-200 hover:border-blue-300 dark:border-blue-800 dark:hover:border-blue-700"
-                >
-                  Edit
-                </Button>
-              )}
-              {onDelete && show && (
-                <Button
-                  size="sm"
-                  onClick={() => onDelete(show)}
-                  className="h-8 px-3 bg-red-100 dark:bg-red-800 border border-red-300 dark:border-red-600 text-red-700 dark:text-red-200 hover:bg-red-200 dark:hover:bg-red-700"
-                >
-                  Delete
-                </Button>
-              )}
-              {onArchive && show && !isArchived && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => onArchive(show)}
-                  className="h-8 px-3 text-orange-600 hover:text-orange-700 hover:bg-orange-50 dark:hover:bg-orange-900/20 border-orange-200 hover:border-orange-300 dark:border-orange-800 dark:hover:border-orange-700"
-                >
-                  <Archive className="h-4 w-4 mr-1" />
-                  Archive
-                </Button>
-              )}
-              {onUnarchive && show && isArchived && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => onUnarchive(show)}
-                  className="h-8 px-3 text-green-600 hover:text-green-700 hover:bg-green-50 dark:hover:bg-green-900/20 border-green-200 hover:border-green-300 dark:border-green-800 dark:hover:border-green-700"
-                >
-                  <RotateCcw className="h-4 w-4 mr-1" />
-                  Unarchive
-                </Button>
-              )}
-              <div className="ml-4">
-                <DialogClose className={buttonStyles}>
-                  <X className="h-4 w-4" />
-                  <span className="sr-only">Close</span>
-                </DialogClose>
+          <div className="flex flex-none justify-end gap-2 w-32">
+            {onEdit && show && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => onEdit(show)}
+                className="h-8 text-blue-600 hover:text-blue-700 hover:bg-blue-50 dark:hover:bg-blue-900/20 border-blue-200 hover:border-blue-300 dark:border-blue-800 dark:hover:border-blue-700"
+              >
+                Edit
+              </Button>
+            )}
+            {onDelete && show && (
+              <Button
+                size="sm"
+                onClick={() => onDelete(show)}
+                className="h-8 bg-red-100 dark:bg-red-800 border border-red-300 dark:border-red-600 text-red-700 dark:text-red-200 hover:bg-red-200 dark:hover:bg-red-700"
+              >
+                Delete
+              </Button>
+            )}
+            {onArchive && show && !isArchived && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => onArchive(show)}
+                className="h-8 text-orange-600 hover:text-orange-700 hover:bg-orange-50 dark:hover:bg-orange-900/20 border-orange-200 hover:border-orange-300 dark:border-orange-800 dark:hover:border-orange-700"
+              >
+                <Archive className="h-4 w-4 mr-1" />
+                Archive
+              </Button>
+            )}
+            {onUnarchive && show && isArchived && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => onUnarchive(show)}
+                className="h-8 text-green-600 hover:text-green-700 hover:bg-green-50 dark:hover:bg-green-900/20 border-green-200 hover:border-green-300 dark:border-green-800 dark:hover:border-green-700"
+              >
+                <RotateCcw className="h-4 w-4 mr-1" />
+                Unarchive
+              </Button>
+            )}
+            <div className="ml-4">
+              <DialogClose className={buttonStyles}>
+                <X className="h-4 w-4" />
+                <span className="sr-only">Close</span>
+              </DialogClose>
               </div>
             </div>
           </div>
@@ -722,17 +724,17 @@ export default function ShowViewDialog({
                 size="sm"
                 onClick={() => handleNavigationClick("previous")}
                 disabled={!hasPrevious}
+                className="h-8"
               >
                 <ChevronLeft className="h-4 w-4" />
-                Prev
               </Button>
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => handleNavigationClick("next")}
                 disabled={!hasNext}
+                className="h-8"
               >
-                Next
                 <ChevronRight className="h-4 w-4" />
               </Button>
             </div>
@@ -787,7 +789,7 @@ export default function ShowViewDialog({
           <div className="border-t border-muted-foreground/20 my-3"></div>
 
           {/* Second line: Created by and Archived by info */}
-          {show && (
+        {show && (
             <div className="flex flex-col gap-2 text-sm text-muted-foreground items-center">
               <div className="flex items-center gap-2">
                 <User className="h-4 w-4" />

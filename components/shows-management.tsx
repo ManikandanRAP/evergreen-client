@@ -19,6 +19,7 @@ import {
 import { Badge } from "@/components/ui/badge"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { getRankingInfo } from "@/lib/ranking-utils"
+import AnimatedSwitcher from "@/components/animated-switcher"
 import {
   Plus,
   Filter,
@@ -842,32 +843,15 @@ export default function ShowsManagement() {
           </div>
 
           {/* View switcher - mobile only, top right */}
-          <div className="flex items-center border rounded-lg p-1 bg-gradient-to-r from-emerald-50 to-cyan-50 dark:from-emerald-950/20 dark:to-cyan-950/20 border-emerald-200 dark:border-emerald-800 md:hidden">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setViewMode("cards")}
-              className={`h-8 px-3 ${
-                viewMode === "cards" 
-                  ? "bg-emerald-100 dark:bg-emerald-900/50 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-200 dark:hover:bg-emerald-800/50" 
-                  : "text-emerald-600 dark:text-emerald-400 hover:bg-emerald-100/50 dark:hover:bg-emerald-900/30"
-              }`}
-            >
-              <Grid3X3 className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setViewMode("list")}
-              className={`h-8 px-3 ${
-                viewMode === "list" 
-                  ? "bg-cyan-100 dark:bg-cyan-900/50 text-cyan-700 dark:text-cyan-300 hover:bg-cyan-200 dark:hover:bg-cyan-800/50" 
-                  : "text-cyan-600 dark:text-cyan-400 hover:bg-cyan-100/50 dark:hover:bg-cyan-900/30"
-              }`}
-            >
-              <List className="h-4 w-4" />
-            </Button>
-          </div>
+          <AnimatedSwitcher
+            activeIndex={viewMode === "cards" ? 0 : 1}
+            onIndexChange={(index) => setViewMode(index === 0 ? "cards" : "list")}
+            options={[
+              { value: "cards", label: "Cards", icon: Grid3X3 },
+              { value: "list", label: "List", icon: List }
+            ]}
+            className="md:hidden"
+          />
         </div>
 
         {/* Mobile Layout */}
@@ -917,32 +901,14 @@ export default function ShowsManagement() {
 
         {/* Desktop Layout */}
         <div className="hidden md:flex items-center gap-2">
-          <div className="flex items-center border rounded-lg p-1 bg-gradient-to-r from-emerald-50 to-cyan-50 dark:from-emerald-950/20 dark:to-cyan-950/20 border-emerald-200 dark:border-emerald-800">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setViewMode("cards")}
-              className={`h-8 px-3 ${
-                viewMode === "cards" 
-                  ? "bg-emerald-100 dark:bg-emerald-900/50 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-200 dark:hover:bg-emerald-800/50" 
-                  : "text-emerald-600 dark:text-emerald-400 hover:bg-emerald-100/50 dark:hover:bg-emerald-900/30"
-              }`}
-            >
-              <Grid3X3 className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setViewMode("list")}
-              className={`h-8 px-3 ${
-                viewMode === "list" 
-                  ? "bg-cyan-100 dark:bg-cyan-900/50 text-cyan-700 dark:text-cyan-300 hover:bg-cyan-200 dark:hover:bg-cyan-800/50" 
-                  : "text-cyan-600 dark:text-cyan-400 hover:bg-cyan-100/50 dark:hover:bg-cyan-900/30"
-              }`}
-            >
-              <List className="h-4 w-4" />
-            </Button>
-          </div>
+          <AnimatedSwitcher
+            activeIndex={viewMode === "cards" ? 0 : 1}
+            onIndexChange={(index) => setViewMode(index === 0 ? "cards" : "list")}
+            options={[
+              { value: "cards", label: "Cards", icon: Grid3X3 },
+              { value: "list", label: "List", icon: List }
+            ]}
+          />
 
           <Button
             variant="outline"
