@@ -302,84 +302,98 @@ export default function ShowViewDialog({
       <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-none w-full sm:w-[90%] h-screen sm:h-[95vh] flex flex-col p-0 overflow-hidden dark:bg-black border-0 [&>button:not(.navigation-button)]:hidden">
         <DialogHeader className="flex flex-row items-center justify-between px-6 py-4 bg-background dark:bg-[#262626] border-b dark:border-slate-800">
-          <div className="flex flex-none items-center gap-2 w-32">
-            {hasPrevious ? (
-              <Button
-                variant="ghost"
-                onClick={() => handleNavigationClick("previous")}
-                className={buttonStyles}
-              >
-                <ChevronLeft className="h-4 w-4" />
-              </Button>
-            ) : (
-              // Placeholder to maintain spacing
-              <div className="w-8" />
-            )}
-            {hasNext ? (
-              <Button
-                variant="ghost"
-                onClick={() => handleNavigationClick("next")}
-                className={buttonStyles}
-              >
-                <ChevronRight className="h-4 w-4" />
-              </Button>
-            ) : (
-              // Placeholder to maintain spacing
-              <div className="w-8" />
-            )}
+          {/* Mobile: Title left, Close right */}
+          <div className="flex sm:hidden w-full items-center justify-between">
+            <DialogTitle className="text-lg font-semibold text-left truncate flex-1 pr-4">
+              {show.title}
+            </DialogTitle>
+            <DialogClose className={buttonStyles}>
+              <X className="h-4 w-4" />
+              <span className="sr-only">Close</span>
+            </DialogClose>
           </div>
 
-          <DialogTitle className="flex-1 text-2xl font-semibold text-center truncate px-4">
-            {show.title}
-          </DialogTitle>
+          {/* Desktop: Navigation, Title, Actions in one row */}
+          <div className="hidden sm:flex flex-row items-center justify-between w-full">
+            <div className="flex flex-none items-center gap-2 w-32">
+              {hasPrevious ? (
+                <Button
+                  variant="ghost"
+                  onClick={() => handleNavigationClick("previous")}
+                  className={buttonStyles}
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+              ) : (
+                // Placeholder to maintain spacing
+                <div className="w-8" />
+              )}
+              {hasNext ? (
+                <Button
+                  variant="ghost"
+                  onClick={() => handleNavigationClick("next")}
+                  className={buttonStyles}
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              ) : (
+                // Placeholder to maintain spacing
+                <div className="w-8" />
+              )}
+            </div>
 
-          <div className="flex flex-none justify-end gap-2 w-32">
-            {onEdit && show && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => onEdit(show)}
-                className="h-8 px-3 text-blue-600 hover:text-blue-700 hover:bg-blue-50 dark:hover:bg-blue-900/20 border-blue-200 hover:border-blue-300 dark:border-blue-800 dark:hover:border-blue-700"
-              >
-                Edit
-              </Button>
-            )}
-            {onDelete && show && (
-              <Button
-                size="sm"
-                onClick={() => onDelete(show)}
-                className="h-8 px-3 bg-red-100 dark:bg-red-800 border border-red-300 dark:border-red-600 text-red-700 dark:text-red-200 hover:bg-red-200 dark:hover:bg-red-700"
-              >
-                Delete
-              </Button>
-            )}
-            {onArchive && show && !isArchived && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => onArchive(show)}
-                className="h-8 px-3 text-orange-600 hover:text-orange-700 hover:bg-orange-50 dark:hover:bg-orange-900/20 border-orange-200 hover:border-orange-300 dark:border-orange-800 dark:hover:border-orange-700"
-              >
-                <Archive className="h-4 w-4 mr-1" />
-                Archive
-              </Button>
-            )}
-            {onUnarchive && show && isArchived && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => onUnarchive(show)}
-                className="h-8 px-3 text-green-600 hover:text-green-700 hover:bg-green-50 dark:hover:bg-green-900/20 border-green-200 hover:border-green-300 dark:border-green-800 dark:hover:border-green-700"
-              >
-                <RotateCcw className="h-4 w-4 mr-1" />
-                Unarchive
-              </Button>
-            )}
-            <div className="ml-4">
-              <DialogClose className={buttonStyles}>
-                <X className="h-4 w-4" />
-                <span className="sr-only">Close</span>
-              </DialogClose>
+            <DialogTitle className="flex-1 text-2xl font-semibold text-center truncate px-4">
+              {show.title}
+            </DialogTitle>
+
+            <div className="flex flex-none justify-end gap-2 w-32">
+              {onEdit && show && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => onEdit(show)}
+                  className="h-8 px-3 text-blue-600 hover:text-blue-700 hover:bg-blue-50 dark:hover:bg-blue-900/20 border-blue-200 hover:border-blue-300 dark:border-blue-800 dark:hover:border-blue-700"
+                >
+                  Edit
+                </Button>
+              )}
+              {onDelete && show && (
+                <Button
+                  size="sm"
+                  onClick={() => onDelete(show)}
+                  className="h-8 px-3 bg-red-100 dark:bg-red-800 border border-red-300 dark:border-red-600 text-red-700 dark:text-red-200 hover:bg-red-200 dark:hover:bg-red-700"
+                >
+                  Delete
+                </Button>
+              )}
+              {onArchive && show && !isArchived && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => onArchive(show)}
+                  className="h-8 px-3 text-orange-600 hover:text-orange-700 hover:bg-orange-50 dark:hover:bg-orange-900/20 border-orange-200 hover:border-orange-300 dark:border-orange-800 dark:hover:border-orange-700"
+                >
+                  <Archive className="h-4 w-4 mr-1" />
+                  Archive
+                </Button>
+              )}
+              {onUnarchive && show && isArchived && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => onUnarchive(show)}
+                  className="h-8 px-3 text-green-600 hover:text-green-700 hover:bg-green-50 dark:hover:bg-green-900/20 border-green-200 hover:border-green-300 dark:border-green-800 dark:hover:border-green-700"
+                >
+                  <RotateCcw className="h-4 w-4 mr-1" />
+                  Unarchive
+                </Button>
+              )}
+              <div className="ml-4">
+                <DialogClose className={buttonStyles}>
+                  <X className="h-4 w-4" />
+                  <span className="sr-only">Close</span>
+                </DialogClose>
+              </div>
             </div>
           </div>
         </DialogHeader>
@@ -436,8 +450,8 @@ export default function ShowViewDialog({
                   </div>
                 </CardContent>
               </Card>
-              {/* Contact Information — collapsible with smooth slide */}
-              <Card className="dark:bg-[#262626]">
+              {/* Contact Information — collapsible with smooth slide - Desktop only */}
+              <Card className="dark:bg-[#262626] hidden lg:block">
                 <Collapsible open={isContactOpen} onOpenChange={setIsContactOpen}>
                   {/* Clickable header (keeps your exact title style) */}
                   <CollapsibleTrigger asChild>
@@ -497,7 +511,7 @@ export default function ShowViewDialog({
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                  <div className="grid grid-cols-3 gap-6 mb-6">
                     <DetailItem label="EVG Ownership %" value={show.evergreen_ownership_pct ? `${show.evergreen_ownership_pct}%` : "N/A"} />
                     <DetailItem label="Span CPM" value={show.span_cpm_usd ? `$${show.span_cpm_usd}` : "N/A"} />
                     <DetailItem label="Latest CPM" value={show.latest_cpm_usd ? `$${show.latest_cpm_usd}` : "N/A"} />
@@ -646,13 +660,143 @@ export default function ShowViewDialog({
                 </CardContent>
               </Card>
             </div>
+
+            {/* Contact Information - moved to bottom for mobile only */}
+            <div className="lg:col-span-3 lg:hidden">
+              <Card className="dark:bg-[#262626]">
+                <Collapsible open={isContactOpen} onOpenChange={setIsContactOpen}>
+                  {/* Clickable header (keeps your exact title style) */}
+                  <CollapsibleTrigger asChild>
+                    <CardHeader className="cursor-pointer">
+                      <div className="flex items-center justify-between">
+                        <CardTitle className="flex items-center gap-2 text-lg">
+                          <Users className="h-5 w-5 text-emerald-500" />
+                          Contact Information
+                        </CardTitle>
+                        <ChevronDown
+                          className={`h-4 w-4 transition-transform duration-300 ${isContactOpen ? "rotate-180" : ""}`}
+                          aria-hidden="true"
+                        />
+                      </div>
+                    </CardHeader>
+                  </CollapsibleTrigger>
+
+                  {/* Slide down/up with grid-rows trick (no height:auto jank) */}
+                  <CollapsibleContent asChild forceMount>
+                    <div
+                      className={`grid transition-all duration-300 ease-out ${
+                        isContactOpen ? "grid-rows-[1fr]" : "grid-rows-[0fr]"
+                      }`}
+                    >
+                      <div
+                        className={`overflow-hidden min-h-0 transition-all duration-300 ease-out ${
+                          isContactOpen ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-1"
+                        }`}
+                      >
+                        <CardContent className="space-y-4">
+                          <ContactCard title="Host Contact" contactString={show.show_host_contact} />
+                          <Separator className="dark:bg-slate-700" />
+                          <ContactCard title="Show Primary Contact" contactString={show.show_primary_contact} />
+                          <Separator className="dark:bg-slate-700" />
+                          <div>
+                            <h5 className="font-semibold text-sm text-muted-foreground">Evergreen Production Staff</h5>
+                            <div className="flex items-center gap-2 mt-1 text-sm">
+                              <Users className="h-4 w-4 flex-shrink-0 text-gray-400" />
+                              <span>{show.evergreen_production_staff_name || "None"}</span>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </div>
+                    </div>
+                  </CollapsibleContent>
+                </Collapsible>
+              </Card>
+            </div>
           </div>
         </ScrollArea>
         
-        {/* Combined Footer - Show creation and archive info */}
-        {show && (
-          <div className="border-t bg-muted/30 px-6 py-3 flex items-center justify-center">
-            <div className="flex items-center gap-4 text-sm text-muted-foreground">
+        {/* Mobile Footer - Navigation and Actions */}
+        <div className="sm:hidden border-t bg-muted/30 px-6 py-3">
+          {/* First line: Navigation and Action buttons */}
+          <div className="flex items-center justify-between mb-3">
+            {/* Left: Arrow buttons */}
+            <div className="flex items-center gap-2">
+              {hasPrevious ? (
+                <Button
+                  variant="ghost"
+                  onClick={() => handleNavigationClick("previous")}
+                  className={buttonStyles}
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+              ) : (
+                <div className="w-8" />
+              )}
+              {hasNext ? (
+                <Button
+                  variant="ghost"
+                  onClick={() => handleNavigationClick("next")}
+                  className={buttonStyles}
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              ) : (
+                <div className="w-8" />
+              )}
+            </div>
+
+            {/* Right: Action buttons */}
+            <div className="flex items-center gap-2">
+              {onEdit && show && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => onEdit(show)}
+                  className="h-8 px-3 text-blue-600 hover:text-blue-700 hover:bg-blue-50 dark:hover:bg-blue-900/20 border-blue-200 hover:border-blue-300 dark:border-blue-800 dark:hover:border-blue-700"
+                >
+                  Edit
+                </Button>
+              )}
+              {onDelete && show && (
+                <Button
+                  size="sm"
+                  onClick={() => onDelete(show)}
+                  className="h-8 px-3 bg-red-100 dark:bg-red-800 border border-red-300 dark:border-red-600 text-red-700 dark:text-red-200 hover:bg-red-200 dark:hover:bg-red-700"
+                >
+                  Delete
+                </Button>
+              )}
+              {onArchive && show && !isArchived && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => onArchive(show)}
+                  className="h-8 px-3 text-orange-600 hover:text-orange-700 hover:bg-orange-50 dark:hover:bg-orange-900/20 border-orange-200 hover:border-orange-300 dark:border-orange-800 dark:hover:border-orange-700"
+                >
+                  <Archive className="h-4 w-4 mr-1" />
+                  Archive
+                </Button>
+              )}
+              {onUnarchive && show && isArchived && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => onUnarchive(show)}
+                  className="h-8 px-3 text-green-600 hover:text-green-700 hover:bg-green-50 dark:hover:bg-green-900/20 border-green-200 hover:border-green-300 dark:border-green-800 dark:hover:border-green-700"
+                >
+                  <RotateCcw className="h-4 w-4 mr-1" />
+                  Unarchive
+                </Button>
+              )}
+            </div>
+          </div>
+
+          {/* Separator line */}
+          <div className="border-t border-muted-foreground/20 my-3"></div>
+
+          {/* Second line: Created by and Archived by info */}
+          {show && (
+            <div className="flex flex-col gap-2 text-sm text-muted-foreground items-center">
               <div className="flex items-center gap-2">
                 <User className="h-4 w-4" />
                 <span>
@@ -664,7 +808,7 @@ export default function ShowViewDialog({
               </div>
               {isArchived && (
                 <>
-                  <span className="text-muted-foreground/50">|</span>
+                  <div className="border-t border-muted-foreground/20 w-full my-1"></div>
                   <div className="flex items-center gap-2">
                     <Archive className="h-4 w-4" />
                     <span>
@@ -676,6 +820,39 @@ export default function ShowViewDialog({
                   </div>
                 </>
               )}
+            </div>
+          )}
+        </div>
+
+        {/* Desktop Footer - Show creation and archive info */}
+        {show && (
+          <div className="hidden sm:block border-t bg-muted/30 px-6 py-3">
+            <div className="flex items-center justify-center">
+              <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                <div className="flex items-center gap-2">
+                  <User className="h-4 w-4" />
+                  <span>
+                    Created by <span className="font-medium">{getUserName(show.created_by_id, show.created_by)}</span> on{' '}
+                    <span className="font-medium">
+                      {show.created_at ? new Date(show.created_at).toLocaleString() : 'Unknown date'}
+                    </span>
+                  </span>
+                </div>
+                {isArchived && (
+                  <>
+                    <span className="text-muted-foreground/50">|</span>
+                    <div className="flex items-center gap-2">
+                      <Archive className="h-4 w-4" />
+                      <span>
+                        Archived by <span className="font-medium">{getUserName(show.archived_by_id, show.archived_by)}</span> on{' '}
+                        <span className="font-medium">
+                          {show.archived_at ? new Date(show.archived_at).toLocaleString() : 'Unknown date'}
+                        </span>
+                      </span>
+                    </div>
+                  </>
+                )}
+              </div>
             </div>
           </div>
         )}
