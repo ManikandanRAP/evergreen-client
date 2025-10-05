@@ -296,6 +296,8 @@ export default function ShowViewDialog({
 
   const buttonStyles =
     "navigation-button rounded-sm opacity-70 transition-opacity hover:opacity-100 disabled:pointer-events-none border-2 border-slate-300 dark:border-slate-700 p-1.5"
+  
+  const paginationButtonStyles = "variant-outline size-sm"
 
   return (
     <>
@@ -316,30 +318,24 @@ export default function ShowViewDialog({
           {/* Desktop: Navigation, Title, Actions in one row */}
           <div className="hidden sm:flex flex-row items-center justify-between w-full">
             <div className="flex flex-none items-center gap-2 w-32">
-              {hasPrevious ? (
-                <Button
-                  variant="ghost"
-                  onClick={() => handleNavigationClick("previous")}
-                  className={buttonStyles}
-                >
-                  <ChevronLeft className="h-4 w-4" />
-                </Button>
-              ) : (
-                // Placeholder to maintain spacing
-                <div className="w-8" />
-              )}
-              {hasNext ? (
-                <Button
-                  variant="ghost"
-                  onClick={() => handleNavigationClick("next")}
-                  className={buttonStyles}
-                >
-                  <ChevronRight className="h-4 w-4" />
-                </Button>
-              ) : (
-                // Placeholder to maintain spacing
-                <div className="w-8" />
-              )}
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handleNavigationClick("previous")}
+                disabled={!hasPrevious}
+              >
+                <ChevronLeft className="h-4 w-4" />
+                Prev
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handleNavigationClick("next")}
+                disabled={!hasNext}
+              >
+                Next
+                <ChevronRight className="h-4 w-4" />
+              </Button>
             </div>
 
             <DialogTitle className="flex-1 text-2xl font-semibold text-center truncate px-4">
@@ -721,28 +717,24 @@ export default function ShowViewDialog({
           <div className="flex items-center justify-between mb-3">
             {/* Left: Arrow buttons */}
             <div className="flex items-center gap-2">
-              {hasPrevious ? (
-                <Button
-                  variant="ghost"
-                  onClick={() => handleNavigationClick("previous")}
-                  className={buttonStyles}
-                >
-                  <ChevronLeft className="h-4 w-4" />
-                </Button>
-              ) : (
-                <div className="w-8" />
-              )}
-              {hasNext ? (
-                <Button
-                  variant="ghost"
-                  onClick={() => handleNavigationClick("next")}
-                  className={buttonStyles}
-                >
-                  <ChevronRight className="h-4 w-4" />
-                </Button>
-              ) : (
-                <div className="w-8" />
-              )}
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handleNavigationClick("previous")}
+                disabled={!hasPrevious}
+              >
+                <ChevronLeft className="h-4 w-4" />
+                Prev
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handleNavigationClick("next")}
+                disabled={!hasNext}
+              >
+                Next
+                <ChevronRight className="h-4 w-4" />
+              </Button>
             </div>
 
             {/* Right: Action buttons */}
