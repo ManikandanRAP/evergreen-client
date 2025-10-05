@@ -182,6 +182,11 @@ export default function ShowViewDialog({
   const { getUserName, fetchUser } = useUserMapping()
   const [animationDirection, setAnimationDirection] = useState<"next" | "previous" | null>(null)
   const [isContactOpen, setIsContactOpen] = useState(false)
+  
+  // Touch navigation state
+  const [touchStart, setTouchStart] = useState<{ x: number; y: number } | null>(null)
+  const [touchEnd, setTouchEnd] = useState<{ x: number; y: number } | null>(null)
+  const [isSwipeActive, setIsSwipeActive] = useState(false)
 
   useEffect(() => {
     if (!open) {
@@ -205,6 +210,60 @@ export default function ShowViewDialog({
       document.removeEventListener("keydown", handleKeyDown)
     }
   }, [open, hasNext, hasPrevious, onNavigate])
+
+  // Touch navigation handlers
+  const handleTouchStart = (e: React.TouchEvent) => {
+    const touch = e.touches[0]
+    setTouchStart({ x: touch.clientX, y: touch.clientY })
+    setTouchEnd(null)
+    setIsSwipeActive(false)
+  }
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    const touch = e.touches[0]
+    setTouchEnd({ x: touch.clientX, y: touch.clientY })
+    
+    // Provide visual feedback during swipe
+    if (touchStart) {
+      const deltaX = touchStart.x - touch.clientX
+      const deltaY = touchStart.y - touch.clientY
+      const minSwipeDistance = 30 // Start showing feedback earlier
+      const maxVerticalDistance = 100
+      
+      if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaY) < maxVerticalDistance && Math.abs(deltaX) > minSwipeDistance) {
+        setIsSwipeActive(true)
+      }
+    }
+  }
+
+  const handleTouchEnd = () => {
+    if (!touchStart || !touchEnd) return
+
+    const deltaX = touchStart.x - touchEnd.x
+    const deltaY = touchStart.y - touchEnd.y
+    const minSwipeDistance = 50 // Minimum distance for a swipe
+    const maxVerticalDistance = 100 // Maximum vertical movement to still count as horizontal swipe
+
+    // Check if it's a horizontal swipe (not vertical scroll)
+    if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaY) < maxVerticalDistance) {
+      if (Math.abs(deltaX) > minSwipeDistance) {
+        if (deltaX > 0 && hasNext) {
+          // Swipe left - go to next
+          setAnimationDirection("next")
+          onNavigate("next")
+        } else if (deltaX < 0 && hasPrevious) {
+          // Swipe right - go to previous
+          setAnimationDirection("previous")
+          onNavigate("previous")
+        }
+      }
+    }
+
+    // Reset touch state
+    setTouchStart(null)
+    setTouchEnd(null)
+    setIsSwipeActive(false)
+  }
 
   // Fetch user data when dialog opens
   useEffect(() => {
@@ -396,8 +455,16 @@ export default function ShowViewDialog({
           </div>
         </DialogHeader>
 
-        <ScrollArea className="flex-1">
-          <div key={show.id} className={`grid grid-cols-1 lg:grid-cols-3 gap-6 p-6 ${animationClass}`}>
+        <ScrollArea 
+          className="flex-1"
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+        >
+          <div 
+            key={show.id} 
+            className={`grid grid-cols-1 lg:grid-cols-3 gap-6 p-6 transition-opacity duration-200 ${animationClass} ${isSwipeActive ? 'opacity-90' : 'opacity-100'}`}
+          >
             {/* Column 1 */}
             <div className="space-y-6">
               <Card className="dark:bg-[#262626]">
