@@ -827,7 +827,7 @@ export default function ShowsManagement() {
   }
 
   return (
-    <div className="space-y-6 pb-10">
+    <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         {/* Mobile: Title/Description and Switcher on same line */}
