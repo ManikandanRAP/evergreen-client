@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -290,6 +290,7 @@ export default function CreateShowDialog({
     return () => clearTimeout(timeoutId)
   }, [formData.title, isEditMode, editingShow?.title])
 
+
   useEffect(() => {
     if (editingShow) {
       const show_type = editingShow.show_type || ""
@@ -522,7 +523,7 @@ export default function CreateShowDialog({
       })
       
       // Close the create dialog
-      onOpenChange(false)
+      handleOpenChange(false)
       setShowUnarchiveConfirm(false)
       
       // Refresh the shows list in the parent component
@@ -642,7 +643,7 @@ export default function CreateShowDialog({
         await createShow(showData as Partial<ShowCreate>)
       }
       onShowUpdated?.()
-      onOpenChange(false)
+      handleOpenChange(false)
     } catch (error) {
       console.error("Failed to save show:", error)
     } finally {
@@ -655,7 +656,27 @@ export default function CreateShowDialog({
     setCurrentTab("basic")
     setErrors({})
     setAttemptedSubmit(false)
-    onOpenChange(false)
+    handleOpenChange(false)
+  }
+
+  // Reset dialog state when closed
+  const handleOpenChange = (newOpen: boolean) => {
+    if (!newOpen) {
+      // Reset all state when dialog is closed
+      setFormData(initialFormData)
+      setCurrentTab("basic")
+      setErrors({})
+      setAttemptedSubmit(false)
+      setIsSubmitting(false)
+      setQboOptions([])
+      setIsQboOpen(false)
+      setGenreName(null)
+      setIsCheckingDuplicate(false)
+      setDuplicateCheckResult(null)
+      setIsUnarchiving(false)
+      setShowUnarchiveConfirm(false)
+    }
+    onOpenChange(newOpen)
   }
 
   const handleEditExistingShow = () => {
@@ -674,9 +695,14 @@ export default function CreateShowDialog({
     return true;
   }
 
+  // Use useMemo to ensure proper re-calculation when dependencies change
+  const basicTabHasErrors = useMemo(() => {
+    return !!errors['title'] || duplicateCheckResult?.isDuplicate;
+  }, [errors['title'], duplicateCheckResult?.isDuplicate]);
+
   const hasTabErrors = (tabId: string) => {
     if (tabId === 'basic') {
-        return !!errors['title'];
+        return basicTabHasErrors;
     }
     return false;
   }
@@ -684,7 +710,7 @@ export default function CreateShowDialog({
   const getFieldError = (field: string) => errors[field]
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent 
         className="max-w-6xl w-full sm:w-[90%] h-screen sm:h-[90vh] mobile-fullscreen flex flex-col p-0 overflow-hidden dark:bg-black border-0 [&>button:not(.navigation-button)]:hidden sm:translate-x-[-50%] sm:translate-y-[-50%] sm:left-[50%] sm:top-[50%]"
         onPointerDownOutside={(e) => {
@@ -713,41 +739,77 @@ export default function CreateShowDialog({
         </DialogHeader>
 
         <Tabs value={currentTab} onValueChange={setCurrentTab} className="flex-1 flex flex-col overflow-hidden px-6">
-          <TabsList className="grid w-full grid-cols-4 mb-6">
-            {tabs.map((tab) => (
-              <TabsTrigger
-                key={tab.id}
-                value={tab.id}
-                className={cn(
-                  "flex items-center gap-2 text-xs sm:text-sm relative data-[state=active]:bg-primary data-[state=active]:text-primary-foreground",
-                  isTabComplete(tab.id) &&
-                    currentTab !== tab.id &&
-                    "bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300",
-                  hasTabErrors(tab.id) &&
-                    attemptedSubmit &&
-                    currentTab !== tab.id &&
-                    "bg-red-50 text-red-700 dark:bg-red-950 dark:text-red-300",
-                )}
-              >
-                <span>{tab.icon}</span>
-                <span className="hidden sm:inline">{tab.label}</span>
-                {isTabComplete(tab.id) && !hasTabErrors(tab.id) && (
-                  <Badge variant="secondary" className="ml-1 h-4 w-4 p-0 text-xs bg-emerald-100 text-emerald-700 flex items-center justify-center">
-                    <Check className="h-3 w-3" />
-                  </Badge>
-                )}
-                {hasTabErrors(tab.id) && (
-                  <Badge variant="destructive" className="ml-1 h-4 w-4 p-0 text-xs flex items-center justify-center">
-                    !
-                  </Badge>
-                )}
-              </TabsTrigger>
-            ))}
-          </TabsList>
+          <div className="mb-6">
+            <div className="relative bg-gradient-to-r from-emerald-50 to-cyan-50 dark:from-emerald-950/20 dark:to-cyan-950/20 border border-emerald-200 dark:border-emerald-800 rounded-lg p-1">
+              {/* Animated background indicator */}
+              <div
+                className="absolute top-1 bottom-1 rounded-md transition-all duration-300 ease-out bg-gradient-to-r from-emerald-500 to-cyan-500 shadow-sm"
+                style={{
+                  left: `calc(${(currentTabIndex * 100) / tabs.length}% + 4px)`,
+                  width: `calc(${100 / tabs.length}% - 8px)`,
+                  willChange: 'left, width'
+                }}
+              />
+              
+              <div className="relative grid grid-cols-4 gap-1">
+                {tabs.map((tab) => (
+                  <button
+                    key={tab.id}
+                    onClick={() => setCurrentTab(tab.id)}
+                    className={cn(
+                      "relative flex items-center justify-center gap-2 px-3 py-2 rounded-md text-xs sm:text-sm font-medium transition-all duration-200",
+                      currentTab === tab.id
+                        ? "text-white font-semibold"
+                        : "text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300",
+                      isTabComplete(tab.id) &&
+                        currentTab !== tab.id &&
+                        "text-emerald-700 dark:text-emerald-300",
+                      hasTabErrors(tab.id) &&
+                        attemptedSubmit &&
+                        currentTab !== tab.id &&
+                        "text-red-700 dark:text-red-300"
+                    )}
+                  >
+                    <span className="flex items-center gap-2">
+                      <span>{tab.icon}</span>
+                      <span className="hidden sm:inline">{tab.label}</span>
+                      {isTabComplete(tab.id) && !hasTabErrors(tab.id) && (
+                        <Badge 
+                          variant="secondary" 
+                          className={cn(
+                            "ml-1 h-4 w-4 p-0 text-xs flex items-center justify-center",
+                            currentTab === tab.id
+                              ? "bg-white text-emerald-600"
+                              : "bg-emerald-600 text-white"
+                          )}
+                        >
+                          <Check className="h-3 w-3" />
+                        </Badge>
+                      )}
+                      {hasTabErrors(tab.id) && (
+                        <Badge variant="destructive" className="ml-1 h-4 w-4 p-0 text-xs flex items-center justify-center bg-red-500 text-white border-2 border-red-600">
+                          !
+                        </Badge>
+                      )}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
 
-          <div className="flex-1 overflow-y-auto pr-2 space-y-6">
-            {/* Basic Info Tab */}
-            <TabsContent value="basic" className="mt-0">
+          <div className="flex-1 overflow-hidden">
+            {/* Animated Content Container */}
+            <div 
+              className="flex transition-transform duration-300 ease-out h-full"
+              style={{
+                transform: `translateX(-${currentTabIndex * 100}%)`,
+                willChange: 'transform'
+              }}
+            >
+              {/* Basic Info Tab */}
+              <div className="w-full flex-shrink-0 overflow-y-auto pr-2 space-y-6">
+                <TabsContent value="basic" className="mt-0">
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2 text-lg sm:text-xl"><FileText className="h-4 w-4" /> Basic Information</CardTitle>
@@ -1026,10 +1088,12 @@ export default function CreateShowDialog({
                   </div>
                 </CardContent>
               </Card>
-            </TabsContent>
+                </TabsContent>
+              </div>
 
-            {/* Financial Tab */}
-            <TabsContent value="financial" className="mt-0 space-y-8">
+              {/* Financial Tab */}
+              <div className="w-full flex-shrink-0 overflow-y-auto pr-2 space-y-6">
+                <TabsContent value="financial" className="mt-0 space-y-8">
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2 text-lg sm:text-xl"><DollarSign className="h-4 w-4" /> Financial Information</CardTitle>
@@ -1375,10 +1439,12 @@ export default function CreateShowDialog({
                   </div>
                 </CardContent>
               </Card>
-            </TabsContent>
+                </TabsContent>
+              </div>
 
-            {/* Content Details Tab */}
-            <TabsContent value="content" className="mt-0">
+              {/* Content Details Tab */}
+              <div className="w-full flex-shrink-0 overflow-y-auto pr-2 space-y-6">
+                <TabsContent value="content" className="mt-0">
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2 text-lg sm:text-xl"><Radio className="h-4 w-4" /> Content Details</CardTitle>
@@ -1475,10 +1541,12 @@ export default function CreateShowDialog({
                   </div>
                 </CardContent>
               </Card>
-            </TabsContent>
+                </TabsContent>
+              </div>
 
-            {/* Demographics Tab */}
-            <TabsContent value="demographics" className="mt-0">
+              {/* Demographics Tab */}
+              <div className="w-full flex-shrink-0 overflow-y-auto pr-2 space-y-6">
+                <TabsContent value="demographics" className="mt-0">
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2 text-lg sm:text-xl"><Users className="h-4 w-4" /> Demographics</CardTitle>
@@ -1585,7 +1653,9 @@ export default function CreateShowDialog({
                   </div>
                 </CardContent>
               </Card>
-            </TabsContent>
+                </TabsContent>
+              </div>
+            </div>
           </div>
 
           {attemptedSubmit && Object.keys(errors).length > 0 && (
