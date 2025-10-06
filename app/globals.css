@@ -2,6 +2,21 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Mobile dialog fix - prevent overlay touch events when popover is open */
+@layer utilities {
+  .mobile-dialog-overlay {
+    touch-action: none;
+  }
+  
+  /* When any popover is open, disable overlay interactions */
+  body:has([data-radix-popover-content][data-state="open"]) [data-radix-dialog-overlay],
+  body:has([data-radix-select-content][data-state="open"]) [data-radix-dialog-overlay],
+  body:has([data-radix-command][data-state="open"]) [data-radix-dialog-overlay] {
+    pointer-events: none;
+    touch-action: none;
+  }
+}
+
 @layer base {
   :root {
     --background: 0 0% 100%;

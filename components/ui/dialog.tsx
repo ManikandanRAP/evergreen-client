@@ -21,7 +21,7 @@ const DialogOverlay = React.forwardRef<
   <DialogPrimitive.Overlay
     ref={ref}
     className={cn(
-      "fixed inset-0 z-50 bg-black/80  data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
+      "fixed inset-0 z-50 bg-black/80 mobile-dialog-overlay data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
       className
     )}
     onTouchStart={(e) => {
@@ -30,9 +30,12 @@ const DialogOverlay = React.forwardRef<
       if (target.closest('[data-radix-dialog-content]') || 
           target.closest('[data-radix-popover-content]') || 
           target.closest('[data-radix-select-content]') ||
-          target.closest('[data-radix-command]')) {
+          target.closest('[data-radix-command]') ||
+          target.closest('[data-radix-popover-trigger]') ||
+          target.closest('[data-radix-select-trigger]')) {
         e.preventDefault();
         e.stopPropagation();
+        return false;
       }
     }}
     onTouchEnd={(e) => {
@@ -41,9 +44,12 @@ const DialogOverlay = React.forwardRef<
       if (target.closest('[data-radix-dialog-content]') || 
           target.closest('[data-radix-popover-content]') || 
           target.closest('[data-radix-select-content]') ||
-          target.closest('[data-radix-command]')) {
+          target.closest('[data-radix-command]') ||
+          target.closest('[data-radix-popover-trigger]') ||
+          target.closest('[data-radix-select-trigger]')) {
         e.preventDefault();
         e.stopPropagation();
+        return false;
       }
     }}
     onPointerDown={(e) => {
@@ -52,9 +58,26 @@ const DialogOverlay = React.forwardRef<
       if (target.closest('[data-radix-dialog-content]') || 
           target.closest('[data-radix-popover-content]') || 
           target.closest('[data-radix-select-content]') ||
-          target.closest('[data-radix-command]')) {
+          target.closest('[data-radix-command]') ||
+          target.closest('[data-radix-popover-trigger]') ||
+          target.closest('[data-radix-select-trigger]')) {
         e.preventDefault();
         e.stopPropagation();
+        return false;
+      }
+    }}
+    onMouseDown={(e) => {
+      // Prevent overlay from closing dialog when clicking inside dialog content
+      const target = e.target as Element;
+      if (target.closest('[data-radix-dialog-content]') || 
+          target.closest('[data-radix-popover-content]') || 
+          target.closest('[data-radix-select-content]') ||
+          target.closest('[data-radix-command]') ||
+          target.closest('[data-radix-popover-trigger]') ||
+          target.closest('[data-radix-select-trigger]')) {
+        e.preventDefault();
+        e.stopPropagation();
+        return false;
       }
     }}
     {...props}
