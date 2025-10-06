@@ -685,7 +685,35 @@ export default function CreateShowDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-6xl w-full sm:w-[90%] h-screen sm:h-[90vh] flex flex-col p-0 overflow-hidden dark:bg-black border-0 [&>button:not(.navigation-button)]:hidden sm:translate-x-[-50%] sm:translate-y-[-50%] sm:left-[50%] sm:top-[50%]">
+      <DialogContent 
+        className="max-w-6xl w-full sm:w-[90%] h-screen sm:h-[90vh] flex flex-col p-0 overflow-hidden dark:bg-black border-0 [&>button:not(.navigation-button)]:hidden sm:translate-x-[-50%] sm:translate-y-[-50%] sm:left-[50%] sm:top-[50%]"
+        onPointerDownOutside={(e) => {
+          // Prevent dialog from closing when clicking on popover content
+          const target = e.target as Element;
+          if (target.closest('[data-radix-popover-content]') || 
+              target.closest('[data-radix-select-content]') ||
+              target.closest('[data-radix-command]')) {
+            e.preventDefault();
+          }
+        }}
+        onInteractOutside={(e) => {
+          // Prevent dialog from closing when interacting with popover content
+          const target = e.target as Element;
+          if (target.closest('[data-radix-popover-content]') || 
+              target.closest('[data-radix-select-content]') ||
+              target.closest('[data-radix-command]')) {
+            e.preventDefault();
+          }
+        }}
+        onTouchStart={(e) => {
+          // Prevent touch events from bubbling up on mobile
+          e.stopPropagation();
+        }}
+        onTouchEnd={(e) => {
+          // Prevent touch events from bubbling up on mobile
+          e.stopPropagation();
+        }}
+      >
         <DialogHeader className="flex flex-row items-center justify-between px-6 py-4 bg-background dark:bg-[#262626] border-b dark:border-slate-800">
           <DialogTitle className="text-lg sm:text-2xl font-bold bg-gradient-to-r from-emerald-600 to-cyan-600 bg-clip-text text-transparent">
             {isEditMode ? "Edit Show" : "Create New Show"}
