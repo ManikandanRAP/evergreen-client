@@ -779,15 +779,15 @@ export default function CreateShowDialog({
                           className={cn(
                             "ml-1 h-4 w-4 p-0 text-xs flex items-center justify-center",
                             currentTab === tab.id
-                              ? "bg-white text-emerald-600"
-                              : "bg-emerald-600 text-white"
+                              ? "bg-white text-emerald-600 hover:bg-white hover:text-emerald-600"
+                              : "bg-emerald-600 text-white hover:bg-emerald-600 hover:text-white"
                           )}
                         >
                           <Check className="h-3 w-3" />
                         </Badge>
                       )}
                       {hasTabErrors(tab.id) && (
-                        <Badge variant="destructive" className="ml-1 h-4 w-4 p-0 text-xs flex items-center justify-center bg-red-500 text-white border-2 border-red-600">
+                        <Badge variant="destructive" className="ml-1 h-4 w-4 p-0 text-xs flex items-center justify-center bg-red-500 text-white border-2 border-red-600 hover:bg-red-500 hover:text-white">
                           !
                         </Badge>
                       )}
