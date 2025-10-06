@@ -309,12 +309,12 @@ export default function SplitHistory({ onBack }: SplitHistoryProps) {
                   className="pl-10 w-full"
                 />
               </div>
-              {/* Mobile: Button-style split count on same line, Desktop: Regular text */}
+              {/* Mobile: Non-clickable split count on same line, Desktop: Regular text */}
               <div className="md:hidden flex-shrink-0">
-                <Button variant="outline" className="h-10 px-2 flex flex-col items-center justify-center min-w-[60px] gap-0">
+                <div className="h-10 px-2 flex flex-col items-center justify-center min-w-[60px] gap-0 border border-border rounded-md bg-background">
                   <span className="text-sm font-bold leading-none">{filteredAndSortedSplits.length}</span>
                   <span className="text-xs text-muted-foreground leading-none">Splits</span>
-                </Button>
+                </div>
               </div>
               <div className="hidden md:block">
                 <Badge variant="outline" className="text-xs font-normal">

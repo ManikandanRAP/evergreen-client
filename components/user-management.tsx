@@ -453,7 +453,7 @@ export default function UserManagement({ onBack }: UserManagementProps) {
     }
   }
 
-  const canDelete = (u: UserRow) => currentUser?.id && currentUser.id !== u.id
+  const canDelete = (u: UserRow) => currentUser?.id && u?.id && currentUser.id !== u.id
 
   // Export users function
   const handleExportUsers = () => {
@@ -632,12 +632,12 @@ export default function UserManagement({ onBack }: UserManagementProps) {
                     className="pl-10 w-full"
                   />
                 </div>
-                {/* Mobile: Button-style user count on same line, Desktop: Regular text */}
+                {/* Mobile: Non-clickable user count on same line, Desktop: Regular text */}
                 <div className="md:hidden flex-shrink-0">
-                  <Button variant="outline" className="h-10 px-2 flex flex-col items-center justify-center min-w-[60px] gap-0">
+                  <div className="h-10 px-2 flex flex-col items-center justify-center min-w-[60px] gap-0 border border-border rounded-md bg-background">
                     <span className="text-sm font-bold leading-none">{filteredAndSortedUsers.length}</span>
                     <span className="text-xs text-muted-foreground leading-none">Users</span>
-                  </Button>
+                  </div>
                 </div>
               </div>
               <Select value={roleFilter} onValueChange={setRoleFilter}>
@@ -1264,7 +1264,8 @@ export default function UserManagement({ onBack }: UserManagementProps) {
                   setIsProfileDialogOpen(false)
                   requestDelete(viewingUser)
                 }}
-                className="w-full bg-red-100 dark:bg-red-800 border border-red-300 dark:border-red-600 text-red-700 dark:text-red-200 hover:bg-red-200 dark:hover:bg-red-700"
+                disabled={!canDelete(viewingUser)}
+                className="w-full bg-red-100 dark:bg-red-800 border border-red-300 dark:border-red-600 text-red-700 dark:text-red-200 hover:bg-red-200 dark:hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <Trash2 className="h-4 w-4 mr-2" />
                 Delete User
@@ -1302,7 +1303,8 @@ export default function UserManagement({ onBack }: UserManagementProps) {
                   setIsProfileDialogOpen(false)
                   requestDelete(viewingUser)
                 }}
-                className="bg-red-100 dark:bg-red-800 border border-red-300 dark:border-red-600 text-red-700 dark:text-red-200 hover:bg-red-200 dark:hover:bg-red-700"
+                disabled={!canDelete(viewingUser)}
+                className="bg-red-100 dark:bg-red-800 border border-red-300 dark:border-red-600 text-red-700 dark:text-red-200 hover:bg-red-200 dark:hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <Trash2 className="h-4 w-4 mr-2" />
                 Delete User

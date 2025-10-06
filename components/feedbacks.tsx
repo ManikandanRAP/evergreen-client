@@ -467,10 +467,10 @@ export default function Feedbacks() {
               </div>
               
               {/* Mobile Feedbacks Count - styled like split history page */}
-              <Button variant="outline" className="h-10 px-2 flex flex-col items-center justify-center min-w-[60px] gap-0">
+              <div className="h-10 px-2 flex flex-col items-center justify-center min-w-[60px] gap-0 border border-border rounded-md bg-background">
                 <span className="text-sm font-bold leading-none">{filteredAndSortedFeedbacks.length}</span>
                 <span className="text-xs text-muted-foreground leading-none">Feedbacks</span>
-              </Button>
+              </div>
             </div>
             
             {/* Type Filter for Mobile */}

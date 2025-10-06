@@ -12,6 +12,13 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet"
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
+import {
   Menu,
   Home,
   Radio,
@@ -31,9 +38,15 @@ import {
   Archive,
   Sidebar,
   SidebarClose,
+  X,
+  Building,
+  User as UserIcon,
+  Pencil,
 } from "lucide-react"
 import { useTheme } from "next-themes"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { Badge } from "@/components/ui/badge"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import Image from "next/image"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
@@ -50,6 +63,7 @@ export default function DashboardNav({ onSidebarToggle }: DashboardNavProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [isDesktopCollapsed, setIsDesktopCollapsed] = useState(false)
   const [mounted, setMounted] = useState(false)
+  const [isUserProfileOpen, setIsUserProfileOpen] = useState(false)
 
   // Helper function to format role names for display
   const formatRoleName = (role: string | null) => {
@@ -205,20 +219,52 @@ export default function DashboardNav({ onSidebarToggle }: DashboardNavProps) {
 
       <div className="p-4 border-t border-border/50 space-y-2">
         {(!isDesktopCollapsed || isMobile) && (
-          <div className="flex items-center justify-between mb-2">
-            <div className="text-sm min-w-0 flex-1">
-              <p className="font-medium truncate">{user?.name}</p>
-              <p className="text-muted-foreground text-xs">{formatRoleName(user?.role)}</p>
-            </div>
+          <div className="flex items-center justify-between mb-2 gap-2">
+            <Button
+              variant="outline"
+              size="icon"
+              className={`flex-1 text-left justify-start p-2 transition-colors h-10 ${
+                user?.role === 'admin' 
+                  ? "bg-gradient-to-r from-emerald-50 to-emerald-100 dark:from-emerald-950/20 dark:to-emerald-900/20 border-emerald-200 dark:border-emerald-800 hover:from-emerald-100 hover:to-emerald-200 dark:hover:from-emerald-900/30 dark:hover:to-emerald-800/30"
+                  : user?.role === 'internal_full_access'
+                  ? "bg-gradient-to-r from-orange-50 to-orange-100 dark:from-orange-950/20 dark:to-orange-900/20 border-orange-200 dark:border-orange-800 hover:from-orange-100 hover:to-orange-200 dark:hover:from-orange-900/30 dark:hover:to-orange-800/30"
+                  : user?.role === 'internal_show_access'
+                  ? "bg-gradient-to-r from-blue-50 to-blue-100 dark:from-blue-950/20 dark:to-blue-900/20 border-blue-200 dark:border-blue-800 hover:from-blue-100 hover:to-blue-200 dark:hover:from-blue-900/30 dark:hover:to-blue-800/30"
+                  : user?.role === 'partner'
+                  ? "bg-gradient-to-r from-purple-50 to-purple-100 dark:from-purple-950/20 dark:to-purple-900/20 border-purple-200 dark:border-purple-800 hover:from-purple-100 hover:to-purple-200 dark:hover:from-purple-900/30 dark:hover:to-purple-800/30"
+                  : "bg-gradient-to-r from-slate-50 to-slate-100 dark:from-slate-950/20 dark:to-slate-900/20 border-slate-200 dark:border-slate-800 hover:from-slate-100 hover:to-slate-200 dark:hover:from-slate-900/30 dark:hover:to-slate-800/30"
+              }`}
+              onClick={() => setIsUserProfileOpen(true)}
+            >
+              <div className="text-sm min-w-0 flex-1">
+                <p className="font-medium truncate">{user?.name}</p>
+                <p className="text-muted-foreground text-xs">{formatRoleName(user?.role)}</p>
+              </div>
+            </Button>
             <ThemeToggle />
           </div>
         )}
 
         {isDesktopCollapsed && !isMobile && (
           <div className="flex flex-col items-center space-y-2">
-            <div className="w-8 h-8 bg-gradient-to-r from-emerald-500 to-cyan-500 rounded-full flex items-center justify-center">
+            <Button
+              variant="outline"
+              className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors p-0 ${
+                user?.role === 'admin' 
+                  ? "bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700"
+                  : user?.role === 'internal_full_access'
+                  ? "bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700"
+                  : user?.role === 'internal_show_access'
+                  ? "bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700"
+                  : user?.role === 'partner'
+                  ? "bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700"
+                  : "bg-gradient-to-r from-slate-500 to-slate-600 hover:from-slate-600 hover:to-slate-700"
+              }`}
+              onClick={() => setIsUserProfileOpen(true)}
+              title={`${user?.name} - ${formatRoleName(user?.role)}`}
+            >
               <span className="text-white font-bold text-xs">{user?.name?.charAt(0)}</span>
-            </div>
+            </Button>
             <ThemeToggle />
           </div>
         )}
@@ -286,6 +332,214 @@ export default function DashboardNav({ onSidebarToggle }: DashboardNavProps) {
           </Sheet>
         </div>
       </div>
+
+      {/* User Profile Dialog */}
+      <Dialog open={isUserProfileOpen} onOpenChange={setIsUserProfileOpen}>
+        <DialogContent className="max-w-none w-full sm:w-[600px] h-screen sm:h-[80vh] mobile-fullscreen flex flex-col p-0 overflow-hidden dark:bg-black border-0 [&>button:not(.navigation-button)]:hidden" hideClose>
+          <DialogHeader className="flex flex-row items-center justify-between px-6 py-4 bg-background dark:bg-[#262626] border-b dark:border-slate-800">
+            {/* Mobile: Title left, Close right */}
+            <div className="flex sm:hidden w-full items-center justify-between">
+              <DialogTitle className="text-lg font-semibold text-left truncate flex-1 pr-4">
+                User Profile
+              </DialogTitle>
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => setIsUserProfileOpen(false)}
+                className="p-2"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+
+            {/* Desktop: Navigation, Title, Actions in one row */}
+            <div className="hidden sm:flex flex-row items-center justify-between w-full">
+              <DialogTitle className="text-2xl font-bold">User Profile</DialogTitle>
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => setIsUserProfileOpen(false)}
+                className="p-2"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          </DialogHeader>
+
+          <div className="flex-1 overflow-y-auto">
+            {user && (
+              <div className="space-y-6 p-6">
+                {/* User Header with Basic Info */}
+                <div className={`p-6 rounded-lg border ${
+                  user.role === 'admin' 
+                    ? "bg-gradient-to-r from-emerald-50 to-emerald-100 dark:from-emerald-950/20 dark:to-emerald-900/20 border-emerald-200 dark:border-emerald-800"
+                    : user.role === 'internal_full_access'
+                    ? "bg-gradient-to-r from-orange-50 to-orange-100 dark:from-orange-950/20 dark:to-orange-900/20 border-orange-200 dark:border-orange-800"
+                    : user.role === 'internal_show_access'
+                    ? "bg-gradient-to-r from-blue-50 to-blue-100 dark:from-blue-950/20 dark:to-blue-900/20 border-blue-200 dark:border-blue-800"
+                    : user.role === 'partner'
+                    ? "bg-gradient-to-r from-purple-50 to-purple-100 dark:from-purple-950/20 dark:to-purple-900/20 border-purple-200 dark:border-purple-800"
+                    : "bg-gradient-to-r from-slate-50 to-slate-100 dark:from-slate-950/20 dark:to-slate-900/20 border-slate-200 dark:border-slate-800"
+                }`}>
+                  <div className="space-y-4">
+                    <div>
+                      <h2 className="text-2xl font-bold text-foreground">
+                        {user.name || "Unnamed User"}
+                      </h2>
+                      <p className="text-lg text-muted-foreground font-mono">
+                        {user.email}
+                      </p>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <div className="flex items-center">
+                        <Badge 
+                          className={`text-xs border pointer-events-none uppercase font-semibold ${
+                            user.role === 'admin' 
+                              ? "bg-emerald-100 text-emerald-800 border-emerald-300 dark:bg-emerald-900/50 dark:text-emerald-300 dark:border-emerald-700"
+                              : user.role === 'internal_full_access'
+                              ? "bg-orange-100 text-orange-800 border-orange-300 dark:bg-orange-900/50 dark:text-orange-300 dark:border-orange-700"
+                              : user.role === 'internal_show_access'
+                              ? "bg-blue-100 text-blue-800 border-blue-300 dark:bg-blue-900/50 dark:text-blue-300 dark:border-blue-700"
+                              : user.role === 'partner'
+                              ? "bg-purple-100 text-purple-800 border-purple-300 dark:bg-purple-900/50 dark:text-purple-300 dark:border-purple-700"
+                              : "bg-gray-100 text-gray-800 border-gray-300 dark:bg-gray-900/50 dark:text-gray-300 dark:border-gray-700"
+                          }`}
+                        >
+                          {formatRoleName(user.role)}
+                        </Badge>
+                      </div>
+                      {user.created_at && (
+                        <div className="text-sm text-muted-foreground">
+                          Member since {new Date(user.created_at).toLocaleDateString()}, {new Date(user.created_at).toLocaleTimeString([], { hour12: false, hour: '2-digit', minute: '2-digit' })}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Vendor Information */}
+                <Card>
+                  <CardHeader className="pb-3">
+                    <CardTitle className="flex items-center gap-2 text-lg">
+                      <Building className="h-5 w-5 text-emerald-600" />
+                      Vendor Mapping
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {user.mapped_vendor_qbo_id ? (
+                      <div className="space-y-3">
+                        <div className="p-4 bg-emerald-50 dark:bg-emerald-950/20 rounded-lg border border-emerald-200 dark:border-emerald-800">
+                          <div className="flex items-center gap-2 mb-2">
+                            <Building className="h-4 w-4 text-emerald-600" />
+                            <span className="font-semibold text-emerald-900 dark:text-emerald-100">
+                              {user.mapped_vendor_name || "Unknown Vendor"}
+                            </span>
+                          </div>
+                          <p className="text-sm text-emerald-700 dark:text-emerald-300 font-mono">
+                            QBO ID: {user.mapped_vendor_qbo_id}
+                          </p>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="text-center py-8">
+                        <Building className="h-12 w-12 text-muted-foreground mx-auto mb-3 opacity-50" />
+                        {user.role === 'admin' ? (
+                          <>
+                            <p className="text-muted-foreground font-medium">Admin users cannot be assigned to vendors</p>
+                            <p className="text-sm text-muted-foreground mt-1">
+                              Admin users have system-wide access and don't require vendor mapping
+                            </p>
+                          </>
+                        ) : (user.role === 'internal_full_access' || user.role === 'internal_show_access') ? (
+                          <>
+                            <p className="text-muted-foreground font-medium">Internal users cannot be assigned to vendors</p>
+                            <p className="text-sm text-muted-foreground mt-1">
+                              Internal users are company employees and don't need vendor mapping
+                            </p>
+                          </>
+                        ) : (
+                          <>
+                            <p className="text-muted-foreground">No vendor mapping assigned</p>
+                            <p className="text-sm text-muted-foreground mt-1">
+                              This partner user is not linked to any vendor in QuickBooks
+                            </p>
+                          </>
+                        )}
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </div>
+            )}
+          </div>
+
+          {/* Sticky Footer - Mobile: 2 lines full width, Desktop: right side */}
+          <div className="sticky bottom-0 bg-background border-t dark:border-slate-800 p-6">
+            {/* Mobile Layout */}
+            <div className="sm:hidden space-y-3">
+              <Button 
+                onClick={() => {
+                  setIsUserProfileOpen(false)
+                  window.location.href = '/user-management'
+                }}
+                className={`w-full flex items-center gap-2 ${
+                  user?.role === 'admin' 
+                    ? "bg-emerald-500 hover:bg-emerald-600 text-white border-0"
+                    : user?.role === 'internal_full_access'
+                    ? "bg-orange-500 hover:bg-orange-600 text-white border-0"
+                    : user?.role === 'internal_show_access'
+                    ? "bg-blue-500 hover:bg-blue-600 text-white border-0"
+                    : user?.role === 'partner'
+                    ? "bg-purple-500 hover:bg-purple-600 text-white border-0"
+                    : "bg-slate-500 hover:bg-slate-600 text-white border-0"
+                }`}
+              >
+                <Users className="h-4 w-4" />
+                User Management
+              </Button>
+              <Button 
+                variant="outline" 
+                onClick={() => setIsUserProfileOpen(false)}
+                className="w-full bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-950/20 dark:to-slate-900/20 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:from-slate-100 hover:to-slate-200 dark:hover:from-slate-900/30 dark:hover:to-slate-800/30"
+              >
+                Close
+              </Button>
+            </div>
+
+            {/* Desktop Layout */}
+            <div className="hidden sm:flex justify-end gap-3">
+              <Button 
+                onClick={() => {
+                  setIsUserProfileOpen(false)
+                  window.location.href = '/user-management'
+                }}
+                className={`flex items-center gap-2 ${
+                  user?.role === 'admin' 
+                    ? "bg-emerald-500 hover:bg-emerald-600 text-white border-0"
+                    : user?.role === 'internal_full_access'
+                    ? "bg-orange-500 hover:bg-orange-600 text-white border-0"
+                    : user?.role === 'internal_show_access'
+                    ? "bg-blue-500 hover:bg-blue-600 text-white border-0"
+                    : user?.role === 'partner'
+                    ? "bg-purple-500 hover:bg-purple-600 text-white border-0"
+                    : "bg-slate-500 hover:bg-slate-600 text-white border-0"
+                }`}
+              >
+                <Users className="h-4 w-4" />
+                User Management
+              </Button>
+              <Button 
+                variant="outline" 
+                onClick={() => setIsUserProfileOpen(false)}
+                className="bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-950/20 dark:to-slate-900/20 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:from-slate-100 hover:to-slate-200 dark:hover:from-slate-900/30 dark:hover:to-slate-800/30"
+              >
+                Close
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </>
   )
 }
