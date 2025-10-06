@@ -52,7 +52,6 @@ const DialogOverlay = React.forwardRef<
         console.log('[MOBILE DEBUG] Preventing overlay touchstart - popover is open and touching overlay');
         e.preventDefault();
         e.stopPropagation();
-        e.stopImmediatePropagation();
         return false;
       }
       
@@ -91,7 +90,6 @@ const DialogOverlay = React.forwardRef<
         console.log('[MOBILE DEBUG] Preventing overlay touchend - popover is open and touching overlay');
         e.preventDefault();
         e.stopPropagation();
-        e.stopImmediatePropagation();
         return false;
       }
       
