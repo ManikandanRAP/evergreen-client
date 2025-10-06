@@ -9,7 +9,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Separator } from "@/components/ui/separator"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
-import { Download, Upload, Loader2, FileText, AlertCircle, BookOpen, CheckCircle, Eye, ArrowLeft } from "lucide-react"
+import { Download, Upload, Loader2, FileText, AlertCircle, BookOpen, CheckCircle, Eye, ArrowLeft, ChevronUp, ChevronDown, ArrowUpDown, X } from "lucide-react"
 import Papa from "papaparse"
 import { apiClient, ShowCreate, DuplicateCheckResult, DuplicateAction } from "@/lib/api-client"
 
@@ -175,7 +175,60 @@ export default function ImportCSVDialog({ open, onOpenChange, onImportComplete }
   const [showsToImport, setShowsToImport] = useState<ShowCreate[]>([])
   const [duplicateCheckResults, setDuplicateCheckResults] = useState<DuplicateCheckResult[]>([])
   const [importPreview, setImportPreview] = useState<ImportPreviewRow[]>([])
+  
+  // Sorting state - using same pattern as revenue ledger
+  type SortDirection = "asc" | "desc" | null
+  type SortConfig = { key: string; direction: SortDirection }
+  const [sortConfig, setSortConfig] = useState<SortConfig>({ key: "", direction: null })
   const [showPreview, setShowPreview] = useState(false)
+  
+  // Handle sorting - same pattern as revenue ledger
+  const handleSort = (key: string) => {
+    let dir: SortDirection = "asc"
+    if (sortConfig.key === key) {
+      dir = sortConfig.direction === "asc" ? "desc" : sortConfig.direction === "desc" ? null : "asc"
+    }
+    setSortConfig({ key: dir ? key : "", direction: dir })
+  }
+  
+  // Sort data function - same pattern as revenue ledger
+  const sortData = <T extends Record<string, any>>(data: T[], cfg: SortConfig): T[] => {
+    if (!cfg.direction || !cfg.key) return data
+    return [...data].sort((a, b) => {
+      let aValue: any
+      let bValue: any
+      
+      if (cfg.key === 'title') {
+        aValue = a.title?.toLowerCase() || ''
+        bValue = b.title?.toLowerCase() || ''
+      } else if (cfg.key === 'status') {
+        aValue = a.isDuplicate ? 'duplicate' : 'new'
+        bValue = b.isDuplicate ? 'duplicate' : 'new'
+      } else {
+        return 0
+      }
+      
+      if (aValue < bValue) return cfg.direction === "asc" ? -1 : 1
+      if (aValue > bValue) return cfg.direction === "asc" ? 1 : -1
+      return 0
+    })
+  }
+  
+  // Get sorted preview data
+  const getSortedPreview = () => sortData(importPreview, sortConfig)
+  
+  // Render sort icon - same pattern as revenue ledger
+  const renderSortIcon = (key: string) => {
+    if (sortConfig.key !== key || !sortConfig.direction) {
+      return <ArrowUpDown className="ml-2 h-4 w-4 text-muted-foreground" />
+    }
+    return sortConfig.direction === "asc" ? (
+      <ChevronUp className="ml-2 h-4 w-4 text-primary" />
+    ) : (
+      <ChevronDown className="ml-2 h-4 w-4 text-primary" />
+    )
+  }
+  
   const [isCheckingDuplicates, setIsCheckingDuplicates] = useState(false)
 
   const handleDrag = (e: React.DragEvent) => {
@@ -525,33 +578,47 @@ export default function ImportCSVDialog({ open, onOpenChange, onImportComplete }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-6xl max-h-[90vh] overflow-hidden flex flex-col">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            {showPreview ? (
-              <>
-                <Eye className="h-5 w-5 text-emerald-600" />
-                Import Preview
-              </>
-            ) : (
-              <>
-                <Upload className="h-5 w-5 text-emerald-600" />
-                Import Shows from CSV
-              </>
-            )}
-          </DialogTitle>
-          {showPreview && (
-            <DialogDescription className="flex items-center justify-between">
-              <span>Review and configure how each show will be imported. Duplicates are highlighted.</span>
+      <DialogContent className="max-w-6xl max-h-[90vh] mobile-fullscreen overflow-hidden flex flex-col" hideClose>
+        <DialogHeader className="space-y-4">
+          <div className="flex items-center justify-between">
+            <DialogTitle className="flex items-center gap-2">
+              {showPreview ? (
+                <>
+                  <Eye className="h-5 w-5 text-emerald-600" />
+                  Import Preview
+                </>
+              ) : (
+                <>
+                  <Upload className="h-5 w-5 text-emerald-600" />
+                  Import Shows from CSV
+                </>
+              )}
+            </DialogTitle>
+            <div className="flex items-center gap-2">
+              {showPreview && (
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => setShowPreview(false)}
+                  className="gap-2"
+                >
+                  <ArrowLeft className="h-4 w-4" />
+                  Back
+                </Button>
+              )}
               <Button 
                 variant="outline" 
                 size="sm"
-                onClick={() => setShowPreview(false)}
-                className="gap-2"
+                onClick={() => onOpenChange(false)}
+                className="p-2"
               >
-                <ArrowLeft className="h-4 w-4" />
-                Back
+                <X className="h-4 w-4" />
               </Button>
+            </div>
+          </div>
+          {showPreview && (
+            <DialogDescription className="text-left pr-20 sm:pr-0">
+              Review and configure how each show will be imported. Duplicates are highlighted.
             </DialogDescription>
           )}
         </DialogHeader>
@@ -635,22 +702,39 @@ export default function ImportCSVDialog({ open, onOpenChange, onImportComplete }
             </div>
           ) : (
             <div className="py-4">
-              <div className="border rounded-lg overflow-hidden">
+              {/* Desktop Table View */}
+              <div className="hidden md:block border rounded-lg overflow-hidden">
                 <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
+                  <table className="w-full text-sm table-fixed">
                     <thead className="bg-muted/50">
                       <tr>
-                        <th className="p-3 text-left font-medium">Show Title</th>
-                        <th className="p-3 text-left font-medium">Status</th>
-                        <th className="p-3 text-left font-medium">Action</th>
-                        <th className="p-3 text-left font-medium">Details</th>
+                        <th className="p-3 text-left font-medium w-1/3 border-r">
+                          <button
+                            onClick={() => handleSort('title')}
+                            className="flex items-center hover:bg-muted/50 rounded px-2 py-1 -mx-2 -my-1 transition-colors"
+                          >
+                            Show Title
+                            {renderSortIcon('title')}
+                          </button>
+                        </th>
+                        <th className="p-3 text-left font-medium w-1/6 border-r">
+                          <button
+                            onClick={() => handleSort('status')}
+                            className="flex items-center hover:bg-muted/50 rounded px-2 py-1 -mx-2 -my-1 transition-colors"
+                          >
+                            Status
+                            {renderSortIcon('status')}
+                          </button>
+                        </th>
+                        <th className="p-3 text-left font-medium w-1/4 border-r">Action</th>
+                        <th className="p-3 text-left font-medium w-1/4">Details</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {importPreview.map((row, index) => (
+                      {getSortedPreview().map((row, index) => (
                         <tr key={index} className="border-t">
-                          <td className="p-3 font-medium">{row.title}</td>
-                          <td className="p-3">
+                          <td className="p-3 font-medium border-r">{row.title}</td>
+                          <td className="p-3 border-r">
                             {row.isDuplicate ? (
                               <Badge variant="destructive" className="text-xs">
                                 Duplicate Found
@@ -661,14 +745,14 @@ export default function ImportCSVDialog({ open, onOpenChange, onImportComplete }
                               </Badge>
                             )}
                           </td>
-                          <td className="p-3">
+                          <td className="p-3 border-r">
                             <Select
                               value={row.action}
                               onValueChange={(value: "create" | "update" | "skip") => 
                                 handlePreviewActionChange(row.title, value)
                               }
                             >
-                              <SelectTrigger className="w-32">
+                              <SelectTrigger className="w-48 min-w-[180px]">
                                 <SelectValue />
                               </SelectTrigger>
                               <SelectContent>
@@ -696,6 +780,58 @@ export default function ImportCSVDialog({ open, onOpenChange, onImportComplete }
                 </div>
               </div>
 
+              {/* Mobile Card View */}
+              <div className="md:hidden space-y-3">
+                {getSortedPreview().map((row, index) => (
+                  <div key={index} className="border rounded-lg p-4 bg-card">
+                    <div className="space-y-3">
+                      {/* Show Title */}
+                      <div>
+                        <h3 className="font-medium text-sm text-muted-foreground">Show Title</h3>
+                        <p className="font-medium text-base">{row.title}</p>
+                      </div>
+
+                      {/* Status and Action in a row */}
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <h4 className="font-medium text-sm text-muted-foreground mb-1">Status</h4>
+                          {row.isDuplicate ? (
+                            <Badge variant="destructive" className="text-xs">
+                              Duplicate Found
+                            </Badge>
+                          ) : (
+                            <Badge variant="secondary" className="text-xs">
+                              New Show
+                            </Badge>
+                          )}
+                        </div>
+                        <div className="flex-1 ml-4">
+                          <h4 className="font-medium text-sm text-muted-foreground mb-1">Action</h4>
+                          <Select
+                            value={row.action}
+                            onValueChange={(value: "create" | "update" | "skip") => 
+                              handlePreviewActionChange(row.title, value)
+                            }
+                          >
+                            <SelectTrigger className="w-full min-w-[140px]">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="create">Create New</SelectItem>
+                              <SelectItem value="update" disabled={!row.isDuplicate}>
+                                Update Existing
+                              </SelectItem>
+                              <SelectItem value="skip">Skip</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+
+                    </div>
+                  </div>
+                ))}
+              </div>
+
               {error && (
                 <Alert variant="destructive" className="mt-4">
                     <AlertCircle className="h-4 w-4" />
@@ -707,18 +843,29 @@ export default function ImportCSVDialog({ open, onOpenChange, onImportComplete }
           )}
         </div>
 
-        <div className="flex items-center justify-between p-6 border-t bg-background">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-6 border-t bg-background">
           {showPreview ? (
             <>
-              <div className="flex items-center gap-6 text-sm text-foreground">
-                <span><strong>Total:</strong> {importPreview.length} shows</span>
-                <span><strong>To Create:</strong> {importPreview.filter(r => r.action === 'create').length}</span>
-                <span><strong>To Update:</strong> {importPreview.filter(r => r.action === 'update').length}</span>
-                <span><strong>To Skip:</strong> {importPreview.filter(r => r.action === 'skip').length}</span>
+              <div className="flex flex-wrap items-center justify-center gap-3">
+                <div className="px-2 flex flex-col items-center justify-center min-w-[60px] gap-1 border border-input bg-background rounded-md h-10">
+                  <span className="text-sm font-bold leading-none">{importPreview.length}</span>
+                  <span className="text-xs text-muted-foreground leading-none">Total</span>
+                </div>
+                <div className="px-2 flex flex-col items-center justify-center min-w-[60px] gap-1 border border-input bg-background rounded-md h-10">
+                  <span className="text-sm font-bold leading-none">{importPreview.filter(r => r.action === 'create').length}</span>
+                  <span className="text-xs text-muted-foreground leading-none">To Create</span>
+                </div>
+                <div className="px-2 flex flex-col items-center justify-center min-w-[60px] gap-1 border border-input bg-background rounded-md h-10">
+                  <span className="text-sm font-bold leading-none">{importPreview.filter(r => r.action === 'update').length}</span>
+                  <span className="text-xs text-muted-foreground leading-none">To Update</span>
+                </div>
+                <div className="px-2 flex flex-col items-center justify-center min-w-[60px] gap-1 border border-input bg-background rounded-md h-10">
+                  <span className="text-sm font-bold leading-none">{importPreview.filter(r => r.action === 'skip').length}</span>
+                  <span className="text-xs text-muted-foreground leading-none">To Skip</span>
+                </div>
               </div>
-              <div className="flex gap-2">
-                <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
-                <Button onClick={handleFinalImport} disabled={isImporting}>
+              <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+                <Button onClick={handleFinalImport} disabled={isImporting} className="w-full sm:w-auto">
                   {isImporting ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -731,6 +878,7 @@ export default function ImportCSVDialog({ open, onOpenChange, onImportComplete }
                     </>
                   )}
                 </Button>
+                <Button variant="outline" onClick={() => onOpenChange(false)} className="w-full sm:w-auto">Cancel</Button>
               </div>
             </>
           ) : (
