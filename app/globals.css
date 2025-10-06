@@ -15,6 +15,14 @@
     pointer-events: none;
     touch-action: none;
   }
+  
+  /* Mobile viewport fixes */
+  @media (max-width: 768px) {
+    [data-radix-dialog-content] {
+      max-height: 100dvh !important;
+      height: 100dvh !important;
+    }
+  }
 }
 
 @layer base {

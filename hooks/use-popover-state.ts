@@ -25,17 +25,6 @@ export function usePopoverState() {
       
       const hasOpen = popoverOpen || selectOpen || commandOpen || comboboxOpen || anyOpenPopover || ariaExpanded
       
-      console.log('[MOBILE DEBUG] Popover state check:', {
-        popoverOpen: !!popoverOpen,
-        selectOpen: !!selectOpen,
-        commandOpen: !!commandOpen,
-        comboboxOpen: !!comboboxOpen,
-        anyOpenPopover: !!anyOpenPopover,
-        ariaExpanded: !!ariaExpanded,
-        hasOpen: !!hasOpen,
-        allOpenElements: document.querySelectorAll('[data-state="open"]').length,
-        allAriaExpanded: document.querySelectorAll('[aria-expanded="true"]').length
-      })
       
       setHasOpenPopover(!!hasOpen)
     }

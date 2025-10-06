@@ -361,7 +361,7 @@ export default function ShowViewDialog({
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-none w-full sm:w-[90%] h-screen sm:h-[95vh] flex flex-col p-0 overflow-hidden dark:bg-black border-0 [&>button:not(.navigation-button)]:hidden" hideClose>
+      <DialogContent className="max-w-none w-full sm:w-[90%] h-[100dvh] sm:h-[95vh] flex flex-col p-0 overflow-hidden dark:bg-black border-0 [&>button:not(.navigation-button)]:hidden" hideClose>
         <DialogHeader className="flex flex-row items-center justify-between px-6 py-4 bg-background dark:bg-[#262626] border-b dark:border-slate-800">
           {/* Mobile: Title left, Close right */}
           <div className="flex sm:hidden w-full items-center justify-between">

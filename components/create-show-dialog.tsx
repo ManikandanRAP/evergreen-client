@@ -687,73 +687,19 @@ export default function CreateShowDialog({
   // Track popover state to prevent dialog closing
   const hasOpenPopover = usePopoverState();
 
-  // Debug logging and aggressive event prevention
-  useEffect(() => {
-    const logEvent = (eventName: string, event: any) => {
-      console.log(`[MOBILE DEBUG] ${eventName}:`, {
-        target: event.target?.tagName,
-        currentTarget: event.currentTarget?.tagName,
-        type: event.type,
-        bubbles: event.bubbles,
-        cancelable: event.cancelable,
-        defaultPrevented: event.defaultPrevented,
-        isTrusted: event.isTrusted,
-        timestamp: Date.now()
-      });
-    };
-
-    const handleTouchStart = (e: TouchEvent) => {
-      logEvent('TOUCH_START', e);
-    };
-    
-    const handleTouchEnd = (e: TouchEvent) => {
-      logEvent('TOUCH_END', e);
-    };
-    
-    const handleClick = (e: MouseEvent) => {
-      logEvent('CLICK', e);
-    };
-    
-    const handlePointerDown = (e: PointerEvent) => {
-      logEvent('POINTER_DOWN', e);
-    };
-    
-    const handlePointerUp = (e: PointerEvent) => {
-      logEvent('POINTER_UP', e);
-    };
-
-    document.addEventListener('touchstart', handleTouchStart, true);
-    document.addEventListener('touchend', handleTouchEnd, true);
-    document.addEventListener('click', handleClick, true);
-    document.addEventListener('pointerdown', handlePointerDown, true);
-    document.addEventListener('pointerup', handlePointerUp, true);
-
-    return () => {
-      document.removeEventListener('touchstart', handleTouchStart, true);
-      document.removeEventListener('touchend', handleTouchEnd, true);
-      document.removeEventListener('click', handleClick, true);
-      document.removeEventListener('pointerdown', handlePointerDown, true);
-      document.removeEventListener('pointerup', handlePointerUp, true);
-    };
-  }, [hasOpenPopover]);
 
   // Custom onOpenChange handler that prevents closing when popover is open
   const handleOpenChange = (newOpen: boolean) => {
-    console.log('[MOBILE DEBUG] handleOpenChange called:', { newOpen, hasOpenPopover });
-    
     if (!newOpen && hasOpenPopover) {
-      console.log('[MOBILE DEBUG] Preventing dialog close - popover is open');
       return;
     }
-    
-    console.log('[MOBILE DEBUG] Allowing dialog close');
     onOpenChange(newOpen);
   };
 
   return (
     <Dialog open={open} onOpenChange={hasOpenPopover ? () => {} : handleOpenChange}>
       <DialogContent 
-        className="max-w-6xl w-full sm:w-[90%] h-screen sm:h-[90vh] flex flex-col p-0 overflow-hidden dark:bg-black border-0 [&>button:not(.navigation-button)]:hidden sm:translate-x-[-50%] sm:translate-y-[-50%] sm:left-[50%] sm:top-[50%]"
+        className="max-w-6xl w-full sm:w-[90%] h-[100dvh] sm:h-[90vh] flex flex-col p-0 overflow-hidden dark:bg-black border-0 [&>button:not(.navigation-button)]:hidden sm:translate-x-[-50%] sm:translate-y-[-50%] sm:left-[50%] sm:top-[50%]"
         onPointerDownOutside={(e) => {
           // Prevent dialog from closing when clicking on popover content
           const target = e.target as Element;

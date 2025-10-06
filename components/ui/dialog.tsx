@@ -25,23 +25,9 @@ const DialogOverlay = React.forwardRef<
       className
     )}
     onTouchStart={(e) => {
-      console.log('[MOBILE DEBUG] Overlay touchstart:', {
-        target: e.target?.tagName,
-        targetId: (e.target as Element)?.id,
-        targetClass: (e.target as Element)?.className,
-        isDialogContent: (e.target as Element)?.closest('[data-radix-dialog-content]'),
-        isPopoverContent: (e.target as Element)?.closest('[data-radix-popover-content]'),
-        isSelectContent: (e.target as Element)?.closest('[data-radix-select-content]'),
-        isCommand: (e.target as Element)?.closest('[data-radix-command]'),
-        isPopoverTrigger: (e.target as Element)?.closest('[data-radix-popover-trigger]'),
-        isSelectTrigger: (e.target as Element)?.closest('[data-radix-select-trigger]')
-      });
-      
       // Check if any popover is open
       const hasOpenPopover = document.querySelector('[data-state="open"]:not([data-radix-dialog-content]):not([data-radix-dialog-overlay])') ||
                             document.querySelector('[aria-expanded="true"]:not([data-radix-dialog-content]):not([data-radix-dialog-overlay])')
-      
-      console.log('[MOBILE DEBUG] Overlay touchstart - hasOpenPopover:', !!hasOpenPopover);
       
       // Only prevent if touching the overlay itself (not dialog content)
       const target = e.target as Element;
@@ -49,7 +35,6 @@ const DialogOverlay = React.forwardRef<
                             target.classList.contains('bg-black/80');
       
       if (hasOpenPopover && isOverlayTouch) {
-        console.log('[MOBILE DEBUG] Preventing overlay touchstart - popover is open and touching overlay');
         e.preventDefault();
         e.stopPropagation();
         return false;
@@ -62,24 +47,15 @@ const DialogOverlay = React.forwardRef<
           target.closest('[data-radix-command]') ||
           target.closest('[data-radix-popover-trigger]') ||
           target.closest('[data-radix-select-trigger]')) {
-        console.log('[MOBILE DEBUG] Preventing overlay touchstart');
         e.preventDefault();
         e.stopPropagation();
         return false;
       }
     }}
     onTouchEnd={(e) => {
-      console.log('[MOBILE DEBUG] Overlay touchend:', {
-        target: e.target?.tagName,
-        targetId: (e.target as Element)?.id,
-        targetClass: (e.target as Element)?.className
-      });
-      
       // Check if any popover is open
       const hasOpenPopover = document.querySelector('[data-state="open"]:not([data-radix-dialog-content]):not([data-radix-dialog-overlay])') ||
                             document.querySelector('[aria-expanded="true"]:not([data-radix-dialog-content]):not([data-radix-dialog-overlay])')
-      
-      console.log('[MOBILE DEBUG] Overlay touchend - hasOpenPopover:', !!hasOpenPopover);
       
       // Only prevent if touching the overlay itself (not dialog content)
       const target = e.target as Element;
@@ -87,7 +63,6 @@ const DialogOverlay = React.forwardRef<
                             target.classList.contains('bg-black/80');
       
       if (hasOpenPopover && isOverlayTouch) {
-        console.log('[MOBILE DEBUG] Preventing overlay touchend - popover is open and touching overlay');
         e.preventDefault();
         e.stopPropagation();
         return false;
@@ -100,7 +75,6 @@ const DialogOverlay = React.forwardRef<
           target.closest('[data-radix-command]') ||
           target.closest('[data-radix-popover-trigger]') ||
           target.closest('[data-radix-select-trigger]')) {
-        console.log('[MOBILE DEBUG] Preventing overlay touchend');
         e.preventDefault();
         e.stopPropagation();
         return false;
