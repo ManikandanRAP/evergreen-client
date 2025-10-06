@@ -2,6 +2,7 @@
 
 import type React from "react"
 import { useState, useRef } from "react"
+import { useRouter } from "next/navigation"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -165,6 +166,7 @@ const CSV_HEADERS = [
 ];
 
 export default function ImportCSVDialog({ open, onOpenChange, onImportComplete }: ImportCSVDialogProps) {
+  const router = useRouter()
   const [file, setFile] = useState<File | null>(null)
   const [isImporting, setIsImporting] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -662,7 +664,7 @@ export default function ImportCSVDialog({ open, onOpenChange, onImportComplete }
                     <Download className="mr-2 h-4 w-4" />
                     Download Template (.csv)
                   </Button>
-                  <Button variant="outline" onClick={() => window.open('/import-shows-guide', '_blank')}>
+                  <Button variant="outline" onClick={() => router.push('/import-shows-guide')}>
                     <BookOpen className="mr-2 h-4 w-4" />
                     View Import Guide
                   </Button>

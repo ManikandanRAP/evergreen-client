@@ -15,7 +15,7 @@ export default function SplitHistoryPage() {
   }
 
   const handleBack = () => {
-    router.push("/administrator")
+    router.back()
   }
 
   return <SplitHistory onBack={handleBack} />

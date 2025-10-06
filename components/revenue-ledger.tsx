@@ -376,11 +376,11 @@ export default function RevenueLedger() {
       <ChevronDown className="ml-2 h-4 w-4 text-primary" />
     )
   }
-  const rangeLabel = (page: number, total: number) => {
+  const rangeLabel = (page: number, total: number, entryType?: string) => {
     if (total === 0) return "0–0 of 0"
     const start = (page - 1) * PAGE_SIZE + 1
     const end = Math.min(page * PAGE_SIZE, total)
-    return `${start}–${end} of ${total}`
+    return entryType ? `Showing ${start}–${end} of ${total} ${entryType}` : `${start}–${end} of ${total}`
   }
   const clamp = (val: number, min: number, max: number) => Math.max(min, Math.min(max, val || 1))
   const tryJumpRevenue = () => setRevenuePage(clamp(parseInt(revenuePageInput, 10), 1, revenueTotalPages))
@@ -812,7 +812,7 @@ export default function RevenueLedger() {
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mt-3">
             {/* Desktop Layout */}
             <div className="hidden md:flex md:items-center md:justify-between w-full">
-              <span className="text-xs text-muted-foreground">{rangeLabel(revenuePageSafe, revenueTotal)}</span>
+              <span className="text-xs text-muted-foreground">{rangeLabel(revenuePageSafe, revenueTotal, "Revenue Entries")}</span>
               <PaginationControls
                 page={revenuePageSafe}
                 totalPages={revenueTotalPages}
@@ -825,7 +825,7 @@ export default function RevenueLedger() {
             </div>
             {/* Mobile Layout - Centered */}
             <div className="md:hidden flex flex-col items-center gap-3">
-              <span className="text-xs text-muted-foreground text-center">{rangeLabel(revenuePageSafe, revenueTotal)}</span>
+              <span className="text-xs text-muted-foreground text-center">{rangeLabel(revenuePageSafe, revenueTotal, "Revenue Entries")}</span>
               <PaginationControls
                 page={revenuePageSafe}
                 totalPages={revenueTotalPages}
@@ -973,7 +973,7 @@ export default function RevenueLedger() {
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mt-3">
             {/* Desktop Layout */}
             <div className="hidden md:flex md:items-center md:justify-between w-full">
-              <span className="text-xs text-muted-foreground">{rangeLabel(paymentsPageSafe, paymentsTotal)}</span>
+              <span className="text-xs text-muted-foreground">{rangeLabel(paymentsPageSafe, paymentsTotal, "Payment Entries")}</span>
               <PaginationControls
                 page={paymentsPageSafe}
                 totalPages={paymentsTotalPages}
@@ -986,7 +986,7 @@ export default function RevenueLedger() {
             </div>
             {/* Mobile Layout - Centered */}
             <div className="md:hidden flex flex-col items-center gap-3">
-              <span className="text-xs text-muted-foreground text-center">{rangeLabel(paymentsPageSafe, paymentsTotal)}</span>
+              <span className="text-xs text-muted-foreground text-center">{rangeLabel(paymentsPageSafe, paymentsTotal, "Payment Entries")}</span>
               <PaginationControls
                 page={paymentsPageSafe}
                 totalPages={paymentsTotalPages}

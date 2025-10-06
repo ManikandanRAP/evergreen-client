@@ -514,8 +514,10 @@ export default function Feedbacks() {
               </Select>
               
               {/* Feedbacks Count for Desktop */}
-              <div className="text-sm text-muted-foreground">
-                {filteredAndSortedFeedbacks.length} feedback{filteredAndSortedFeedbacks.length !== 1 ? "s" : ""}
+              <div>
+                <Badge variant="outline" className="text-xs font-normal">
+                  {filteredAndSortedFeedbacks.length} feedback{filteredAndSortedFeedbacks.length !== 1 ? "s" : ""}
+                </Badge>
               </div>
             </div>
             

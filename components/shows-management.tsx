@@ -5,6 +5,7 @@ import { useAuth } from "@/lib/auth-context"
 import { useShows } from "@/hooks/use-shows"
 import { apiClient, Show } from "@/lib/api-client"
 import { toast } from "sonner"
+import { useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -171,6 +172,7 @@ const getProgrammaticSplit = (show: Show) =>
 export default function ShowsManagement() {
   const { user } = useAuth()
   const { shows, loading, error, createShow, updateShow, deleteShow, fetchShows } = useShows()
+  const searchParams = useSearchParams()
 
   const [filters, setFilters] = useState<ShowFilters>(initialFilters)
   const [isFiltersOpen, setIsFiltersOpen] = useState(false)
@@ -746,6 +748,17 @@ export default function ShowsManagement() {
   useEffect(() => {
     setPage(1)
   }, [JSON.stringify(filters)])
+
+  // Check for openImport query parameter and open import dialog
+  useEffect(() => {
+    if (searchParams.get('openImport') === 'true') {
+      setIsImportDialogOpen(true)
+      // Clean up the URL by removing the query parameter
+      const url = new URL(window.location.href)
+      url.searchParams.delete('openImport')
+      window.history.replaceState({}, '', url.pathname + url.search)
+    }
+  }, [searchParams])
 
   const viewingShow = viewingShowIndex !== null ? filteredShows[viewingShowIndex] : null
 

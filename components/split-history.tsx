@@ -316,8 +316,10 @@ export default function SplitHistory({ onBack }: SplitHistoryProps) {
                   <span className="text-xs text-muted-foreground leading-none">Splits</span>
                 </Button>
               </div>
-              <div className="hidden md:block text-sm text-muted-foreground">
-                {filteredAndSortedSplits.length} split{filteredAndSortedSplits.length !== 1 ? "s" : ""}
+              <div className="hidden md:block">
+                <Badge variant="outline" className="text-xs font-normal">
+                  {filteredAndSortedSplits.length} split{filteredAndSortedSplits.length !== 1 ? "s" : ""}
+                </Badge>
               </div>
             </div>
           </div>

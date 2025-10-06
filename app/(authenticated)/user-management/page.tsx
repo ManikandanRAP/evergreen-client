@@ -15,7 +15,7 @@ export default function UserManagementPage() {
   }
 
   const handleBack = () => {
-    router.push("/administrator")
+    router.back()
   }
 
   return <UserManagement onBack={handleBack} />

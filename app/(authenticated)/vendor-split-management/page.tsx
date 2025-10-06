@@ -16,7 +16,7 @@ export default function VendorSplitManagementPage() {
   }
 
   const handleBack = () => {
-    router.push("/administrator")
+    router.back()
   }
 
   return (
