@@ -484,7 +484,7 @@ export default function Feedbacks() {
                     <TableCell className="border-r px-4 py-2 whitespace-nowrap">{feedback.createdByName}</TableCell>
                     <TableCell className="border-r px-4 py-2 whitespace-nowrap">
                       {new Date(feedback.created_at).toLocaleDateString()}{" "}
-                      {new Date(feedback.created_at).toLocaleTimeString()}
+                      {new Date(feedback.created_at).toLocaleTimeString([], { hour12: false, hour: '2-digit', minute: '2-digit' })}
                     </TableCell>
                     <TableCell className="px-4 py-2 whitespace-nowrap">
                       <div className="flex items-center gap-1">
@@ -594,7 +594,7 @@ export default function Feedbacks() {
                   <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
                     <span className="font-medium text-muted-foreground text-sm">Submission Date:</span>
                     <span className="text-sm">
-                      {new Date(selectedFeedback.created_at).toLocaleString()}
+                      {new Date(selectedFeedback.created_at).toLocaleDateString()}, {new Date(selectedFeedback.created_at).toLocaleTimeString([], { hour12: false, hour: '2-digit', minute: '2-digit' })}
                     </span>
                   </div>
                 </div>

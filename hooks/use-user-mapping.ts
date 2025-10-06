@@ -11,11 +11,8 @@ export function useUserMapping() {
   const [loading, setLoading] = useState(false)
 
   const getUserName = (userId?: string, fallbackName?: string): string => {
-    console.log('getUserName called with:', { userId, fallbackName, userMapping })
-    
     // If we have a fallback name and it's not 'Unknown', use it
     if (fallbackName && fallbackName !== 'Unknown' && fallbackName !== 'null' && fallbackName !== null) {
-      console.log('Using fallback name:', fallbackName)
       return fallbackName
     }
     
@@ -23,13 +20,11 @@ export function useUserMapping() {
     if (userId && userId !== 'system' && userId !== 'unknown') {
       const user = userMapping[userId]
       if (user) {
-        console.log('Using mapped user:', user.name || user.email)
         return user.name || user.email || 'Unknown User'
       }
     }
     
     // Fallback to the provided name or 'Unknown'
-    console.log('Using fallback:', fallbackName || 'Unknown')
     return fallbackName || 'Unknown'
   }
 

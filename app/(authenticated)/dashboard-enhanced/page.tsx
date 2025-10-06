@@ -181,10 +181,6 @@ export default function EnhancedDashboard() {
         const showsJson: Show[] = await showsRes.json()
         if (!isMounted) return
 
-        // Debug logging
-        console.log('Ledger data:', ledgerJson)
-        console.log('Payouts data:', payoutsJson)
-        console.log('Shows data:', showsJson)
 
         setLedger(Array.isArray(ledgerJson) ? ledgerJson : [])
         setPayouts(Array.isArray(payoutsJson) ? payoutsJson : [])

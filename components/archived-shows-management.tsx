@@ -533,7 +533,7 @@ export default function ArchivedShowsManagement() {
         <div className="flex flex-col gap-4 md:hidden">
           {/* Search Bar with Archived Shows Count */}
           <div className="flex items-center gap-2">
-            <div className="relative flex-1">
+            <div className="relative w-full">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
                 placeholder="Search archived shows..."
@@ -596,7 +596,7 @@ export default function ArchivedShowsManagement() {
           </div>
 
           {/* Search Bar */}
-          <div className="relative flex-1 min-w-0">
+          <div className="relative w-full min-w-0">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               placeholder="Search archived shows..."
@@ -643,16 +643,16 @@ export default function ArchivedShowsManagement() {
                     </div>
                   </div>
 
-                  {/* Archive and delete buttons - same line */}
+                  {/* Archive and delete buttons - separate lines */}
                   {selectedShows.size > 0 && (
-                    <div className="flex gap-2">
+                    <div className="space-y-2">
                       {user?.role === "admin" && (
                         <Button 
                           variant="outline" 
                           size="sm" 
                           onClick={handleBulkUnarchive}
                           disabled={isBulkUnarchiving}
-                          className="text-green-600 hover:text-green-700 hover:bg-green-50 dark:hover:bg-green-900/20 border-green-200 hover:border-green-300 dark:border-green-800 dark:hover:border-green-700 flex-1"
+                          className="text-green-600 hover:text-green-700 hover:bg-green-50 dark:hover:bg-green-900/20 border-green-200 hover:border-green-300 dark:border-green-800 dark:hover:border-green-700 w-full"
                         >
                           <RotateCcw className="h-4 w-4 mr-2" />
                           {isBulkUnarchiving ? "Unarchiving..." : "Unarchive Selected"}
@@ -663,7 +663,7 @@ export default function ArchivedShowsManagement() {
                           size="sm" 
                           onClick={handleBulkDelete}
                           disabled={isBulkDeleting}
-                          className="bg-red-100 dark:bg-red-800 border border-red-300 dark:border-red-600 text-red-700 dark:text-red-200 hover:bg-red-200 dark:hover:bg-red-700 flex-1"
+                          className="bg-red-100 dark:bg-red-800 border border-red-300 dark:border-red-600 text-red-700 dark:text-red-200 hover:bg-red-200 dark:hover:bg-red-700 w-full"
                         >
                           <Trash2 className="h-4 w-4 mr-2" />
                           {isBulkDeleting ? "Deleting..." : "Delete Selected"}
@@ -754,7 +754,7 @@ export default function ArchivedShowsManagement() {
                       onCheckedChange={() => handleSelectShow(show.id)}
                       className="mt-1"
                     />
-                    <CardTitle className="text-lg group-hover:text-emerald-600 transition-colors flex-1 line-clamp-2 leading-tight">
+                    <CardTitle className="text-lg group-hover:text-emerald-600 transition-colors w-full line-clamp-2 leading-tight">
                       {show.title}
                     </CardTitle>
                   </div>
@@ -783,7 +783,7 @@ export default function ArchivedShowsManagement() {
                 </div>
               </CardHeader>
 
-              <CardContent className="flex-1 flex flex-col justify-between space-y-4">
+              <CardContent className="w-full flex flex-col justify-between space-y-4">
                 <div className="space-y-4">
                   {/* Standard & Programmatic split rows */}
                   <div className="space-y-2">
@@ -886,16 +886,16 @@ export default function ArchivedShowsManagement() {
                     </div>
                   </div>
 
-                  {/* Archive and delete buttons - same line */}
+                  {/* Archive and delete buttons - separate lines */}
                   {selectedShows.size > 0 && (
-                    <div className="flex gap-2">
+                    <div className="space-y-2">
                       {user?.role === "admin" && (
                         <Button 
                           variant="outline" 
                           size="sm" 
                           onClick={handleBulkUnarchive}
                           disabled={isBulkUnarchiving}
-                          className="text-green-600 hover:text-green-700 hover:bg-green-50 dark:hover:bg-green-900/20 border-green-200 hover:border-green-300 dark:border-green-800 dark:hover:border-green-700 flex-1"
+                          className="text-green-600 hover:text-green-700 hover:bg-green-50 dark:hover:bg-green-900/20 border-green-200 hover:border-green-300 dark:border-green-800 dark:hover:border-green-700 w-full"
                         >
                           <RotateCcw className="h-4 w-4 mr-2" />
                           {isBulkUnarchiving ? "Unarchiving..." : "Unarchive Selected"}
@@ -906,7 +906,7 @@ export default function ArchivedShowsManagement() {
                           size="sm" 
                           onClick={handleBulkDelete}
                           disabled={isBulkDeleting}
-                          className="bg-red-100 dark:bg-red-800 border border-red-300 dark:border-red-600 text-red-700 dark:text-red-200 hover:bg-red-200 dark:hover:bg-red-700 flex-1"
+                          className="bg-red-100 dark:bg-red-800 border border-red-300 dark:border-red-600 text-red-700 dark:text-red-200 hover:bg-red-200 dark:hover:bg-red-700 w-full"
                         >
                           <Trash2 className="h-4 w-4 mr-2" />
                           {isBulkDeleting ? "Deleting..." : "Delete Selected"}
@@ -1012,16 +1012,16 @@ export default function ArchivedShowsManagement() {
                     </div>
                   </div>
 
-                  {/* Archive and delete buttons - same line */}
+                  {/* Archive and delete buttons - separate lines */}
                   {selectedShows.size > 0 && (
-                    <div className="flex gap-2">
+                    <div className="space-y-2">
                       {user?.role === "admin" && (
                         <Button 
                           variant="outline" 
                           size="sm" 
                           onClick={handleBulkUnarchive}
                           disabled={isBulkUnarchiving}
-                          className="text-green-600 hover:text-green-700 hover:bg-green-50 dark:hover:bg-green-900/20 border-green-200 hover:border-green-300 dark:border-green-800 dark:hover:border-green-700 flex-1"
+                          className="text-green-600 hover:text-green-700 hover:bg-green-50 dark:hover:bg-green-900/20 border-green-200 hover:border-green-300 dark:border-green-800 dark:hover:border-green-700 w-full"
                         >
                           <RotateCcw className="h-4 w-4 mr-2" />
                           {isBulkUnarchiving ? "Unarchiving..." : "Unarchive Selected"}
@@ -1032,7 +1032,7 @@ export default function ArchivedShowsManagement() {
                           size="sm" 
                           onClick={handleBulkDelete}
                           disabled={isBulkDeleting}
-                          className="bg-red-100 dark:bg-red-800 border border-red-300 dark:border-red-600 text-red-700 dark:text-red-200 hover:bg-red-200 dark:hover:bg-red-700 flex-1"
+                          className="bg-red-100 dark:bg-red-800 border border-red-300 dark:border-red-600 text-red-700 dark:text-red-200 hover:bg-red-200 dark:hover:bg-red-700 w-full"
                         >
                           <Trash2 className="h-4 w-4 mr-2" />
                           {isBulkDeleting ? "Deleting..." : "Delete Selected"}
@@ -1287,16 +1287,16 @@ export default function ArchivedShowsManagement() {
                     </div>
                   </div>
 
-                  {/* Archive and delete buttons - same line */}
+                  {/* Archive and delete buttons - separate lines */}
                   {selectedShows.size > 0 && (
-                    <div className="flex gap-2">
+                    <div className="space-y-2">
                       {user?.role === "admin" && (
                         <Button 
                           variant="outline" 
                           size="sm" 
                           onClick={handleBulkUnarchive}
                           disabled={isBulkUnarchiving}
-                          className="text-green-600 hover:text-green-700 hover:bg-green-50 dark:hover:bg-green-900/20 border-green-200 hover:border-green-300 dark:border-green-800 dark:hover:border-green-700 flex-1"
+                          className="text-green-600 hover:text-green-700 hover:bg-green-50 dark:hover:bg-green-900/20 border-green-200 hover:border-green-300 dark:border-green-800 dark:hover:border-green-700 w-full"
                         >
                           <RotateCcw className="h-4 w-4 mr-2" />
                           {isBulkUnarchiving ? "Unarchiving..." : "Unarchive Selected"}
@@ -1307,7 +1307,7 @@ export default function ArchivedShowsManagement() {
                           size="sm" 
                           onClick={handleBulkDelete}
                           disabled={isBulkDeleting}
-                          className="bg-red-100 dark:bg-red-800 border border-red-300 dark:border-red-600 text-red-700 dark:text-red-200 hover:bg-red-200 dark:hover:bg-red-700 flex-1"
+                          className="bg-red-100 dark:bg-red-800 border border-red-300 dark:border-red-600 text-red-700 dark:text-red-200 hover:bg-red-200 dark:hover:bg-red-700 w-full"
                         >
                           <Trash2 className="h-4 w-4 mr-2" />
                           {isBulkDeleting ? "Deleting..." : "Delete Selected"}

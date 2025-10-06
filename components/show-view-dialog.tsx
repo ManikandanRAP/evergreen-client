@@ -268,13 +268,6 @@ export default function ShowViewDialog({
   // Fetch user data when dialog opens
   useEffect(() => {
     if (open && show) {
-      console.log('Show data in dialog:', { 
-        created_by: show.created_by, 
-        created_by_id: show.created_by_id, 
-        created_at: show.created_at,
-        archived_by: show.archived_by,
-        archived_by_id: show.archived_by_id
-      })
       if (show.created_by_id) {
         fetchUser(show.created_by_id)
       }
@@ -473,27 +466,69 @@ export default function ShowViewDialog({
                     <Info className="h-5 w-5 text-emerald-500" /> Basic Information
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="grid grid-cols-3 gap-x-6 gap-y-6">
-                  <DetailItem label="Show Type" value={show.show_type} />
-                  <DetailItem label="Format" value={show.media_type ? show.media_type.charAt(0).toUpperCase() + show.media_type.slice(1) : "N/A"} />
-                  <DetailItem label="Relationship" value={show.relationship_level ? show.relationship_level.charAt(0).toUpperCase() + show.relationship_level.slice(1) : "N/A"} />
-                  <DetailItem 
-                    label="Ranking Category" 
-                    value={(() => {
-                      const rankingInfo = getRankingInfo(show.ranking_category);
-                      return rankingInfo.hasRanking ? (
-                        <Badge variant="secondary" className={rankingInfo.badgeClasses}>
-                          {rankingInfo.displayText}
-                        </Badge>
-                      ) : "N/A";
-                    })()} 
-                  />
-                  <DetailItem
-                    label="Created Date"
-                    value={show.start_date ? new Date(show.start_date).toLocaleDateString() : "N/A"}
-                  />
-                  <DetailItem label="Age" value={show.start_date ? `${Math.floor((new Date().getTime() - new Date(show.start_date).getTime()) / (1000 * 60 * 60 * 24 * 30))} months` : "N/A"} />
-                  <DetailItem label="Subnetwork" value={show.subnetwork_id} />
+                <CardContent>
+                  {/* Desktop Grid View */}
+                  <div className="hidden sm:grid grid-cols-3 gap-x-6 gap-y-6">
+                    <DetailItem label="Show Type" value={show.show_type} />
+                    <DetailItem label="Format" value={show.media_type ? show.media_type.charAt(0).toUpperCase() + show.media_type.slice(1) : "N/A"} />
+                    <DetailItem label="Relationship" value={show.relationship_level ? show.relationship_level.charAt(0).toUpperCase() + show.relationship_level.slice(1) : "N/A"} />
+                    <DetailItem 
+                      label="Ranking Category" 
+                      value={(() => {
+                        const rankingInfo = getRankingInfo(show.ranking_category);
+                        return rankingInfo.hasRanking ? (
+                          <Badge variant="secondary" className={rankingInfo.badgeClasses}>
+                            {rankingInfo.displayText}
+                          </Badge>
+                        ) : "N/A";
+                      })()} 
+                    />
+                    <DetailItem
+                      label="Created Date"
+                      value={show.start_date ? new Date(show.start_date).toLocaleDateString() : "N/A"}
+                    />
+                    <DetailItem label="Age" value={show.start_date ? `${Math.floor((new Date().getTime() - new Date(show.start_date).getTime()) / (1000 * 60 * 60 * 24 * 30))} months` : "N/A"} />
+                    <DetailItem label="Subnetwork" value={show.subnetwork_id} />
+                  </div>
+
+                  {/* Mobile List View */}
+                  <div className="sm:hidden space-y-2">
+                    <div className="flex justify-between items-center p-2 border-b">
+                      <span className="text-sm font-medium text-muted-foreground">Show Type</span>
+                      <span className="text-sm">{show.show_type || "N/A"}</span>
+                    </div>
+                    <div className="flex justify-between items-center p-2 border-b">
+                      <span className="text-sm font-medium text-muted-foreground">Format</span>
+                      <span className="text-sm">{show.media_type ? show.media_type.charAt(0).toUpperCase() + show.media_type.slice(1) : "N/A"}</span>
+                    </div>
+                    <div className="flex justify-between items-center p-2 border-b">
+                      <span className="text-sm font-medium text-muted-foreground">Relationship</span>
+                      <span className="text-sm">{show.relationship_level ? show.relationship_level.charAt(0).toUpperCase() + show.relationship_level.slice(1) : "N/A"}</span>
+                    </div>
+                    <div className="flex justify-between items-center p-2 border-b">
+                      <span className="text-sm font-medium text-muted-foreground">Ranking Category</span>
+                      <span className="text-sm">{(() => {
+                        const rankingInfo = getRankingInfo(show.ranking_category);
+                        return rankingInfo.hasRanking ? rankingInfo.displayText : "N/A";
+                      })()}</span>
+                    </div>
+                    <div className="flex justify-between items-center p-2 border-b">
+                      <span className="text-sm font-medium text-muted-foreground">Created Date</span>
+                      <span className="text-sm">{show.start_date ? new Date(show.start_date).toLocaleDateString() : "N/A"}</span>
+                    </div>
+                    <div className="flex justify-between items-center p-2 border-b">
+                      <span className="text-sm font-medium text-muted-foreground">Age</span>
+                      <span className="text-sm">{show.start_date ? `${Math.floor((new Date().getTime() - new Date(show.start_date).getTime()) / (1000 * 60 * 60 * 24 * 30))} months` : "N/A"}</span>
+                    </div>
+                    <div className="flex justify-between items-center p-2">
+                      <span className="text-sm font-medium text-muted-foreground">Subnetwork</span>
+                      <span className="text-sm">{show.subnetwork_id || "N/A"}</span>
+                    </div>
+                  </div>
+
+                  {/* Mobile Separator */}
+                  <div className="sm:hidden border-t my-3"></div>
+
                   <div className="col-span-3">
                     <label className="text-xs font-medium text-muted-foreground">
                       Status Flags
@@ -576,17 +611,35 @@ export default function ShowViewDialog({
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="grid grid-cols-3 gap-6 mb-6">
+                  {/* Desktop Grid View */}
+                  <div className="hidden sm:grid grid-cols-3 gap-6 mb-6">
                     <DetailItem label="EVG Ownership %" value={show.evergreen_ownership_pct ? `${show.evergreen_ownership_pct}%` : "N/A"} />
                     <DetailItem label="Span CPM" value={show.span_cpm_usd ? `$${show.span_cpm_usd}` : "N/A"} />
                     <DetailItem label="Latest CPM" value={show.latest_cpm_usd ? `$${show.latest_cpm_usd}` : "N/A"} />
+                  </div>
+
+                  {/* Mobile List View */}
+                  <div className="sm:hidden space-y-2 mb-6">
+                    <div className="flex justify-between items-center p-2 border-b">
+                      <span className="text-sm font-medium text-muted-foreground">EVG Ownership %</span>
+                      <span className="text-sm">{show.evergreen_ownership_pct ? `${show.evergreen_ownership_pct}%` : "N/A"}</span>
+                    </div>
+                    <div className="flex justify-between items-center p-2 border-b">
+                      <span className="text-sm font-medium text-muted-foreground">Span CPM</span>
+                      <span className="text-sm">{show.span_cpm_usd ? `$${show.span_cpm_usd}` : "N/A"}</span>
+                    </div>
+                    <div className="flex justify-between items-center p-2">
+                      <span className="text-sm font-medium text-muted-foreground">Latest CPM</span>
+                      <span className="text-sm">{show.latest_cpm_usd ? `$${show.latest_cpm_usd}` : "N/A"}</span>
+                    </div>
                   </div>
                   <div className="space-y-6">
                     <div>
                       <h4 className="font-semibold flex items-center gap-2 mb-3 text-base">
                         <BarChart3 className="h-4 w-4" /> Revenue by Year
                       </h4>
-                      <div className="grid grid-cols-3 gap-3">
+                      {/* Desktop Grid View */}
+                      <div className="hidden sm:grid grid-cols-3 gap-3">
                         <div className="text-center p-3 bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-950/20 dark:to-emerald-900/20 rounded-lg border border-emerald-200 dark:border-emerald-800">
                           <p className="text-xs text-emerald-700 dark:text-emerald-300">2023</p>
                           <p className="text-base font-bold text-emerald-600">
@@ -606,12 +659,29 @@ export default function ShowViewDialog({
                           </p>
                         </div>
                       </div>
+
+                      {/* Mobile List View */}
+                      <div className="sm:hidden space-y-2">
+                        <div className="flex justify-between items-center p-3 bg-gradient-to-r from-emerald-50 to-emerald-100 dark:from-emerald-950/20 dark:to-emerald-900/20 rounded-lg border border-emerald-200 dark:border-emerald-800">
+                          <span className="text-sm font-medium text-emerald-700 dark:text-emerald-300">2023</span>
+                          <span className="text-sm font-bold text-emerald-600">{formatCurrency(show.revenue_2023)}</span>
+                        </div>
+                        <div className="flex justify-between items-center p-3 bg-gradient-to-r from-cyan-50 to-cyan-100 dark:from-cyan-950/20 dark:to-cyan-900/20 rounded-lg border border-cyan-200 dark:border-cyan-800">
+                          <span className="text-sm font-medium text-cyan-700 dark:text-cyan-300">2024</span>
+                          <span className="text-sm font-bold text-cyan-600">{formatCurrency(show.revenue_2024)}</span>
+                        </div>
+                        <div className="flex justify-between items-center p-3 bg-gradient-to-r from-green-50 to-green-100 dark:from-green-950/20 dark:to-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
+                          <span className="text-sm font-medium text-green-700 dark:text-green-300">2025</span>
+                          <span className="text-sm font-bold text-green-600">{formatCurrency(show.revenue_2025)}</span>
+                        </div>
+                      </div>
                     </div>
                     <div>
                       <h4 className="font-semibold flex items-center gap-2 mb-3 text-base">
                         <Percent className="h-4 w-4" /> Revenue Split to Partner
                       </h4>
-                      <div className="grid grid-cols-2 gap-3">
+                      {/* Desktop Grid View */}
+                      <div className="hidden sm:grid grid-cols-2 gap-3">
                         <div className="text-center p-3 bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950/20 dark:to-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
                           <p className="text-xs text-blue-700 dark:text-blue-300">Standard Ads</p>
                           <p className="text-base font-bold text-blue-600">
@@ -623,6 +693,22 @@ export default function ShowViewDialog({
                           <p className="text-base font-bold text-purple-600">
                             {show.programmatic_ads_span_percent ? `${show.programmatic_ads_span_percent}%` : "N/A"}
                           </p>
+                        </div>
+                      </div>
+
+                      {/* Mobile List View */}
+                      <div className="sm:hidden space-y-2">
+                        <div className="flex justify-between items-center p-3 bg-gradient-to-r from-blue-50 to-blue-100 dark:from-blue-950/20 dark:to-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                          <span className="text-sm font-medium text-blue-700 dark:text-blue-300">Standard Ads</span>
+                          <span className="text-sm font-bold text-blue-600">
+                            {show.standard_ads_percent ? `${show.standard_ads_percent}%` : "N/A"}
+                          </span>
+                        </div>
+                        <div className="flex justify-between items-center p-3 bg-gradient-to-r from-purple-50 to-purple-100 dark:from-purple-950/20 dark:to-purple-900/20 rounded-lg border border-purple-200 dark:border-purple-800">
+                          <span className="text-sm font-medium text-purple-700 dark:text-purple-300">Programmatic Ads</span>
+                          <span className="text-sm font-bold text-purple-600">
+                            {show.programmatic_ads_span_percent ? `${show.programmatic_ads_span_percent}%` : "N/A"}
+                          </span>
                         </div>
                       </div>
                     </div>
@@ -701,11 +787,34 @@ export default function ShowViewDialog({
                     <Radio className="h-5 w-5 text-emerald-500" /> Content Details
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="grid grid-cols-2 gap-6">
-                  <DetailItem label="Genre" value={show.genre_name} />
-                  <DetailItem label="Cadence" value={show.cadence} />
-                  <DetailItem label="Ad Slots" value={show.ad_slots} />
-                  <DetailItem label="Average Length" value={show.avg_show_length_mins ? `${show.avg_show_length_mins} min` : "N/A"} />
+                <CardContent>
+                  {/* Desktop Grid View */}
+                  <div className="hidden sm:grid grid-cols-2 gap-6">
+                    <DetailItem label="Genre" value={show.genre_name} />
+                    <DetailItem label="Cadence" value={show.cadence} />
+                    <DetailItem label="Ad Slots" value={show.ad_slots} />
+                    <DetailItem label="Average Length" value={show.avg_show_length_mins ? `${show.avg_show_length_mins} min` : "N/A"} />
+                  </div>
+
+                  {/* Mobile List View */}
+                  <div className="sm:hidden space-y-2">
+                    <div className="flex justify-between items-center p-2 border-b">
+                      <span className="text-sm font-medium text-muted-foreground">Genre</span>
+                      <span className="text-sm">{show.genre_name || "N/A"}</span>
+                    </div>
+                    <div className="flex justify-between items-center p-2 border-b">
+                      <span className="text-sm font-medium text-muted-foreground">Cadence</span>
+                      <span className="text-sm">{show.cadence || "N/A"}</span>
+                    </div>
+                    <div className="flex justify-between items-center p-2 border-b">
+                      <span className="text-sm font-medium text-muted-foreground">Ad Slots</span>
+                      <span className="text-sm">{show.ad_slots || "N/A"}</span>
+                    </div>
+                    <div className="flex justify-between items-center p-2">
+                      <span className="text-sm font-medium text-muted-foreground">Average Length</span>
+                      <span className="text-sm">{show.avg_show_length_mins ? `${show.avg_show_length_mins} min` : "N/A"}</span>
+                    </div>
+                  </div>
                 </CardContent>
               </Card>
               <Card className="dark:bg-[#262626]">
@@ -715,12 +824,37 @@ export default function ShowViewDialog({
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="grid grid-cols-3 gap-4">
+                  {/* Desktop Grid View */}
+                  <div className="hidden sm:grid grid-cols-3 gap-4">
                     <DetailItem label="Age" value={show.age_demographic} />
                     <DetailItem label="Gender (M/F)" value={show.gender} />
                     <DetailItem label="Region" value={show.region} />
                     <DetailItem label="Primary Education" value={show.primary_education} />
                     <DetailItem label="Secondary Education" value={show.secondary_education} />
+                  </div>
+
+                  {/* Mobile List View */}
+                  <div className="sm:hidden space-y-2">
+                    <div className="flex justify-between items-center p-2 border-b">
+                      <span className="text-sm font-medium text-muted-foreground">Age</span>
+                      <span className="text-sm">{show.age_demographic || "N/A"}</span>
+                    </div>
+                    <div className="flex justify-between items-center p-2 border-b">
+                      <span className="text-sm font-medium text-muted-foreground">Gender (M/F)</span>
+                      <span className="text-sm">{show.gender || "N/A"}</span>
+                    </div>
+                    <div className="flex justify-between items-center p-2 border-b">
+                      <span className="text-sm font-medium text-muted-foreground">Region</span>
+                      <span className="text-sm">{show.region || "N/A"}</span>
+                    </div>
+                    <div className="flex justify-between items-center p-2 border-b">
+                      <span className="text-sm font-medium text-muted-foreground">Primary Education</span>
+                      <span className="text-sm">{show.primary_education || "N/A"}</span>
+                    </div>
+                    <div className="flex justify-between items-center p-2">
+                      <span className="text-sm font-medium text-muted-foreground">Secondary Education</span>
+                      <span className="text-sm">{show.secondary_education || "N/A"}</span>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
@@ -863,7 +997,7 @@ export default function ShowViewDialog({
                 <span>
                   Created by <span className="font-medium">{getUserName(show.created_by_id, show.created_by)}</span> on{' '}
                   <span className="font-medium">
-                    {show.created_at ? new Date(show.created_at).toLocaleString() : 'Unknown date'}
+                    {show.created_at ? `${new Date(show.created_at).toLocaleDateString()}, ${new Date(show.created_at).toLocaleTimeString([], { hour12: false, hour: '2-digit', minute: '2-digit' })}` : 'Unknown date'}
                   </span>
                 </span>
               </div>
@@ -875,7 +1009,7 @@ export default function ShowViewDialog({
                     <span>
                       Archived by <span className="font-medium">{getUserName(show.archived_by_id, show.archived_by)}</span> on{' '}
                       <span className="font-medium">
-                        {show.archived_at ? new Date(show.archived_at).toLocaleString() : 'Unknown date'}
+                        {show.archived_at ? `${new Date(show.archived_at).toLocaleDateString()}, ${new Date(show.archived_at).toLocaleTimeString([], { hour12: false, hour: '2-digit', minute: '2-digit' })}` : 'Unknown date'}
                       </span>
                     </span>
                   </div>
@@ -895,7 +1029,7 @@ export default function ShowViewDialog({
                   <span>
                     Created by <span className="font-medium">{getUserName(show.created_by_id, show.created_by)}</span> on{' '}
                     <span className="font-medium">
-                      {show.created_at ? new Date(show.created_at).toLocaleString() : 'Unknown date'}
+                      {show.created_at ? `${new Date(show.created_at).toLocaleDateString()}, ${new Date(show.created_at).toLocaleTimeString([], { hour12: false, hour: '2-digit', minute: '2-digit' })}` : 'Unknown date'}
                     </span>
                   </span>
                 </div>
@@ -907,7 +1041,7 @@ export default function ShowViewDialog({
                       <span>
                         Archived by <span className="font-medium">{getUserName(show.archived_by_id, show.archived_by)}</span> on{' '}
                         <span className="font-medium">
-                          {show.archived_at ? new Date(show.archived_at).toLocaleString() : 'Unknown date'}
+                          {show.archived_at ? `${new Date(show.archived_at).toLocaleDateString()}, ${new Date(show.archived_at).toLocaleTimeString([], { hour12: false, hour: '2-digit', minute: '2-digit' })}` : 'Unknown date'}
                         </span>
                       </span>
                     </div>

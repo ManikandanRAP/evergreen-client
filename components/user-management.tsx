@@ -794,7 +794,7 @@ export default function UserManagement({ onBack }: UserManagementProps) {
                           </Badge>
                         </TableCell>
                         <TableCell className="border-r px-4 py-2">
-                          {u.created_at ? new Date(u.created_at).toLocaleString() : "—"}
+                          {u.created_at ? `${new Date(u.created_at).toLocaleDateString()}, ${new Date(u.created_at).toLocaleTimeString([], { hour12: false, hour: '2-digit', minute: '2-digit' })}` : "—"}
                         </TableCell>
                         <TableCell className="border-r px-4 py-2">
                           {u.mapped_vendor_qbo_id != null ? (
@@ -1185,7 +1185,7 @@ export default function UserManagement({ onBack }: UserManagementProps) {
                       <div className="flex justify-between items-center py-2">
                         <span className="font-medium text-muted-foreground">Account Created</span>
                         <span className="text-sm">
-                          {viewingUser.created_at ? new Date(viewingUser.created_at).toLocaleString() : "—"}
+                          {viewingUser.created_at ? `${new Date(viewingUser.created_at).toLocaleDateString()}, ${new Date(viewingUser.created_at).toLocaleTimeString([], { hour12: false, hour: '2-digit', minute: '2-digit' })}` : "—"}
                         </span>
                       </div>
                     </div>
