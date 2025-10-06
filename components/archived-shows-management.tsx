@@ -59,6 +59,200 @@ import {
 } from "@/components/ui/alert-dialog"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import AnimatedSwitcher from "@/components/animated-switcher"
+
+// Mobile Toolbar Components
+const MobileTopToolbar = ({ 
+  selectedShows, 
+  filteredShows, 
+  handleSelectAll, 
+  handleBulkUnarchive, 
+  handleBulkDelete, 
+  isBulkUnarchiving, 
+  isBulkDeleting, 
+  user, 
+  page, 
+  totalPages, 
+  gotoPrev, 
+  gotoNext 
+}: {
+  selectedShows: Set<string>
+  filteredShows: Show[]
+  handleSelectAll: () => void
+  handleBulkUnarchive: () => void
+  handleBulkDelete: () => void
+  isBulkUnarchiving: boolean
+  isBulkDeleting: boolean
+  user: any
+  page: number
+  totalPages: number
+  gotoPrev: () => void
+  gotoNext: () => void
+}) => (
+  <div className="md:hidden space-y-3">
+    {/* First line: Pagination (centered) */}
+    <div className="flex justify-center">
+      <div className="flex items-center gap-2">
+        <Button variant="outline" size="sm" onClick={gotoPrev} disabled={page === 1}>
+          <ChevronLeft className="h-4 w-4" />
+          Prev
+        </Button>
+        <span className="text-xs text-muted-foreground">
+          Page {page} of {totalPages}
+        </span>
+        <Button variant="outline" size="sm" onClick={gotoNext} disabled={page === totalPages}>
+          Next
+          <ChevronRight className="h-4 w-4" />
+        </Button>
+      </div>
+    </div>
+
+    {/* Second line: Selected count and Select All button - same line */}
+    <div className="flex items-center justify-between gap-2">
+      {/* Selected count on left */}
+      <div className="px-2 flex flex-col items-center justify-center min-w-[60px] gap-0 h-9 border border-input bg-background rounded-md">
+        <span className="text-sm font-bold leading-none">{selectedShows.size}</span>
+        <span className="text-xs text-muted-foreground leading-none">Selected</span>
+      </div>
+      
+      {/* Select All button on right */}
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={handleSelectAll}
+        className="flex items-center gap-2 hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50 border-border hover:border-border flex-1"
+      >
+        <Check className="h-4 w-4" />
+        {selectedShows.size === filteredShows.length ? "Deselect All" : "Select All"}
+        </Button>
+    </div>
+
+    {/* Third line: Archive and delete buttons - separate lines */}
+    {selectedShows.size > 0 && (
+      <div className="space-y-2">
+        {user?.role === "admin" && (
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={handleBulkUnarchive}
+            disabled={isBulkUnarchiving}
+            className="text-green-600 hover:text-green-700 hover:bg-green-50 dark:hover:bg-green-900/20 border-green-200 hover:border-green-300 dark:border-green-800 dark:hover:border-green-700 w-full"
+          >
+            <RotateCcw className="h-4 w-4 mr-2" />
+            {isBulkUnarchiving ? "Unarchiving..." : "Unarchive Selected"}
+          </Button>
+        )}
+        {user?.role === "admin" && (
+          <Button 
+            size="sm" 
+            onClick={handleBulkDelete}
+            disabled={isBulkDeleting}
+            className="bg-red-100 dark:bg-red-800 border border-red-300 dark:border-red-600 text-red-700 dark:text-red-200 hover:bg-red-200 dark:hover:bg-red-700 w-full"
+          >
+            <Trash2 className="h-4 w-4 mr-2" />
+            {isBulkDeleting ? "Deleting..." : "Delete Selected"}
+          </Button>
+        )}
+      </div>
+    )}
+  </div>
+)
+
+const MobileBottomToolbar = ({ 
+  selectedShows, 
+  filteredShows, 
+  handleSelectAll, 
+  handleBulkUnarchive, 
+  handleBulkDelete, 
+  isBulkUnarchiving, 
+  isBulkDeleting, 
+  user, 
+  page, 
+  totalPages, 
+  gotoPrev, 
+  gotoNext 
+}: {
+  selectedShows: Set<string>
+  filteredShows: Show[]
+  handleSelectAll: () => void
+  handleBulkUnarchive: () => void
+  handleBulkDelete: () => void
+  isBulkUnarchiving: boolean
+  isBulkDeleting: boolean
+  user: any
+  page: number
+  totalPages: number
+  gotoPrev: () => void
+  gotoNext: () => void
+}) => (
+  <div className="md:hidden space-y-3">
+    {/* First line: Selected count and Select All button - same line */}
+    <div className="flex items-center justify-between gap-2">
+      {/* Selected count on left */}
+      <div className="px-2 flex flex-col items-center justify-center min-w-[60px] gap-0 h-9 border border-input bg-background rounded-md">
+        <span className="text-sm font-bold leading-none">{selectedShows.size}</span>
+        <span className="text-xs text-muted-foreground leading-none">Selected</span>
+      </div>
+      
+      {/* Select All button on right */}
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={handleSelectAll}
+        className="flex items-center gap-2 hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50 border-border hover:border-border flex-1"
+      >
+        <Check className="h-4 w-4" />
+        {selectedShows.size === filteredShows.length ? "Deselect All" : "Select All"}
+      </Button>
+    </div>
+
+    {/* Second line: Archive and delete buttons - separate lines */}
+    {selectedShows.size > 0 && (
+      <div className="space-y-2">
+        {user?.role === "admin" && (
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={handleBulkUnarchive}
+            disabled={isBulkUnarchiving}
+            className="text-green-600 hover:text-green-700 hover:bg-green-50 dark:hover:bg-green-900/20 border-green-200 hover:border-green-300 dark:border-green-800 dark:hover:border-green-700 w-full"
+          >
+            <RotateCcw className="h-4 w-4 mr-2" />
+            {isBulkUnarchiving ? "Unarchiving..." : "Unarchive Selected"}
+          </Button>
+        )}
+        {user?.role === "admin" && (
+          <Button 
+            size="sm" 
+            onClick={handleBulkDelete}
+            disabled={isBulkDeleting}
+            className="bg-red-100 dark:bg-red-800 border border-red-300 dark:border-red-600 text-red-700 dark:text-red-200 hover:bg-red-200 dark:hover:bg-red-700 w-full"
+          >
+            <Trash2 className="h-4 w-4 mr-2" />
+            {isBulkDeleting ? "Deleting..." : "Delete Selected"}
+          </Button>
+        )}
+      </div>
+    )}
+
+    {/* Third line: Pagination (centered) */}
+    <div className="flex justify-center">
+      <div className="flex items-center gap-2">
+        <Button variant="outline" size="sm" onClick={gotoPrev} disabled={page === 1}>
+          <ChevronLeft className="h-4 w-4" />
+          Prev
+        </Button>
+        <span className="text-xs text-muted-foreground">
+          Page {page} of {totalPages}
+        </span>
+        <Button variant="outline" size="sm" onClick={gotoNext} disabled={page === totalPages}>
+          Next
+          <ChevronRight className="h-4 w-4" />
+        </Button>
+      </div>
+    </div>
+  </div>
+)
 
 interface ImportResult {
   success: boolean
@@ -102,7 +296,7 @@ export default function ArchivedShowsManagement() {
   const [showingUnarchiveShow, setShowingUnarchiveShow] = useState<Show | null>(null)
 
   // Sorting state
-  type SortField = 'name' | 'show_type' | 'isRateCard' | 'standardSplit' | 'programmaticSplit' | 'ranking_category'
+  type SortField = 'name' | 'show_type' | 'isRateCard' | 'standardSplit' | 'programmaticSplit' | 'ranking_category' | 'archived_by' | 'archived_at'
   type SortDirection = 'asc' | 'desc' | null
   const [sortField, setSortField] = useState<SortField | null>(null)
   const [sortDirection, setSortDirection] = useState<SortDirection>(null)
@@ -358,6 +552,14 @@ export default function ArchivedShowsManagement() {
             aValue = a.ranking_category ? parseInt(a.ranking_category) : 0
             bValue = b.ranking_category ? parseInt(b.ranking_category) : 0
             break
+          case 'archived_by':
+            aValue = getUserName(a.archived_by_id, a.archived_by)?.toLowerCase() || ''
+            bValue = getUserName(b.archived_by_id, b.archived_by)?.toLowerCase() || ''
+            break
+          case 'archived_at':
+            aValue = a.archived_at ? new Date(a.archived_at).getTime() : 0
+            bValue = b.archived_at ? new Date(b.archived_at).getTime() : 0
+            break
           default:
             return 0
         }
@@ -501,32 +703,15 @@ export default function ArchivedShowsManagement() {
           </div>
 
           {/* View switcher - mobile only, top right */}
-          <div className="flex items-center border rounded-lg p-1 bg-gradient-to-r from-emerald-50 to-cyan-50 dark:from-emerald-950/20 dark:to-cyan-950/20 border-emerald-200 dark:border-emerald-800 md:hidden">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setViewMode("cards")}
-              className={`h-8 px-3 ${
-                viewMode === "cards" 
-                  ? "bg-emerald-100 dark:bg-emerald-900/50 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-200 dark:hover:bg-emerald-800/50" 
-                  : "text-emerald-600 dark:text-emerald-400 hover:bg-emerald-100/50 dark:hover:bg-emerald-900/30"
-              }`}
-            >
-              <Grid3X3 className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setViewMode("list")}
-              className={`h-8 px-3 ${
-                viewMode === "list" 
-                  ? "bg-cyan-100 dark:bg-cyan-900/50 text-cyan-700 dark:text-cyan-300 hover:bg-cyan-200 dark:hover:bg-cyan-800/50" 
-                  : "text-cyan-600 dark:text-cyan-400 hover:bg-cyan-100/50 dark:hover:bg-cyan-900/30"
-              }`}
-            >
-              <List className="h-4 w-4" />
-            </Button>
-          </div>
+          <AnimatedSwitcher
+            activeIndex={viewMode === "cards" ? 0 : 1}
+            onIndexChange={(index) => setViewMode(index === 0 ? "cards" : "list")}
+            options={[
+              { value: "cards", label: "Cards", icon: Grid3X3 },
+              { value: "list", label: "List", icon: List }
+            ]}
+            className="md:hidden"
+          />
         </div>
         
         {/* Mobile Layout */}
@@ -539,11 +724,12 @@ export default function ArchivedShowsManagement() {
                 placeholder="Search archived shows..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
+                className="pl-10 text-sm"
               />
             </div>
-            <div className="inline-flex items-center px-3 py-2 h-10 bg-orange-100 text-orange-800 border border-orange-200 dark:bg-orange-900/50 dark:text-orange-300 dark:border-orange-700 rounded-md whitespace-nowrap text-sm">
-              {filteredShows.length} Archived Shows
+            <div className="px-2 flex flex-col items-center justify-center min-w-[60px] gap-0 h-10 border border-orange-200 bg-orange-100 dark:bg-orange-900/50 rounded-md">
+              <span className="text-sm font-bold leading-none text-orange-800 dark:text-orange-300">{filteredShows.length}</span>
+              <span className="text-xs text-orange-600 dark:text-orange-400 leading-none">Archived</span>
             </div>
             {searchTerm && (
               <Badge variant="outline" className="text-sm whitespace-nowrap">
@@ -557,7 +743,7 @@ export default function ArchivedShowsManagement() {
         <div className="hidden md:flex items-center gap-3">
           {/* Show Numbers */}
           <div className="flex items-center gap-2">
-            <Badge className="px-3 py-1 bg-orange-100 text-orange-800 border-orange-200 dark:bg-orange-900/50 dark:text-orange-300 dark:border-orange-700 hover:bg-orange-100 hover:text-orange-800 dark:hover:bg-orange-900/50 dark:hover:text-orange-300 text-center">
+            <Badge className="px-3 py-1 bg-orange-100 text-orange-800 border-orange-200 dark:bg-orange-900/50 dark:text-orange-300 dark:border-orange-700 hover:bg-orange-100 hover:text-orange-800 dark:hover:bg-orange-900/50 dark:hover:text-orange-300 text-center whitespace-nowrap">
               {filteredShows.length} Archived Shows
             </Badge>
             {searchTerm && (
@@ -568,32 +754,14 @@ export default function ArchivedShowsManagement() {
           </div>
           
           {/* View Switcher */}
-          <div className="flex items-center border rounded-lg p-1 bg-gradient-to-r from-emerald-50 to-cyan-50 dark:from-emerald-950/20 dark:to-cyan-950/20 border-emerald-200 dark:border-emerald-800">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setViewMode("cards")}
-              className={`h-8 px-3 ${
-                viewMode === "cards" 
-                  ? "bg-emerald-100 dark:bg-emerald-900/50 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-200 dark:hover:bg-emerald-800/50" 
-                  : "text-emerald-600 dark:text-emerald-400 hover:bg-emerald-100/50 dark:hover:bg-emerald-900/30"
-              }`}
-            >
-              <Grid3X3 className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setViewMode("list")}
-              className={`h-8 px-3 ${
-                viewMode === "list" 
-                  ? "bg-cyan-100 dark:bg-cyan-900/50 text-cyan-700 dark:text-cyan-300 hover:bg-cyan-200 dark:hover:bg-cyan-800/50" 
-                  : "text-cyan-600 dark:text-cyan-400 hover:bg-cyan-100/50 dark:hover:bg-cyan-900/30"
-              }`}
-            >
-              <List className="h-4 w-4" />
-            </Button>
-          </div>
+          <AnimatedSwitcher
+            activeIndex={viewMode === "cards" ? 0 : 1}
+            onIndexChange={(index) => setViewMode(index === 0 ? "cards" : "list")}
+            options={[
+              { value: "cards", label: "Cards", icon: Grid3X3 },
+              { value: "list", label: "List", icon: List }
+            ]}
+          />
 
           {/* Search Bar */}
           <div className="relative w-full min-w-0">
@@ -614,64 +782,23 @@ export default function ArchivedShowsManagement() {
       {viewMode === "cards" ? (
         <Card>
           <CardContent className="p-6">
-            {/* TOP TOOLBAR: Selection (left) + Pagination (right) */}
+            {/* TOP TOOLBAR: Mobile Layout */}
             {filteredShows.length > 0 && (
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between pb-4 rounded-lg mb-2">
-                {/* Mobile Layout */}
-                <div className="md:hidden space-y-3">
-                  {/* Pagination - selected count on left, pagination on right */}
-                  <div className="flex items-center justify-between">
-                    {/* Selected count on left - match pagination button height */}
-                    <Button variant="outline" size="sm" className="px-2 flex flex-col items-center justify-center min-w-[60px] gap-0">
-                      <span className="text-sm font-bold leading-none">{selectedShows.size}</span>
-                      <span className="text-xs text-muted-foreground leading-none">Selected</span>
-                    </Button>
-                    
-                    {/* Pagination on right */}
-                    <div className="flex items-center gap-2">
-                      <Button variant="outline" size="sm" onClick={gotoPrev} disabled={page === 1}>
-                        <ChevronLeft className="h-4 w-4" />
-                        Prev
-                      </Button>
-                      <span className="text-xs text-muted-foreground">
-                        Page {page} / {totalPages}
-                      </span>
-                      <Button variant="outline" size="sm" onClick={gotoNext} disabled={page === totalPages}>
-                        Next
-                        <ChevronRight className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
-
-                  {/* Archive and delete buttons - separate lines */}
-                  {selectedShows.size > 0 && (
-                    <div className="space-y-2">
-                      {user?.role === "admin" && (
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
-                          onClick={handleBulkUnarchive}
-                          disabled={isBulkUnarchiving}
-                          className="text-green-600 hover:text-green-700 hover:bg-green-50 dark:hover:bg-green-900/20 border-green-200 hover:border-green-300 dark:border-green-800 dark:hover:border-green-700 w-full"
-                        >
-                          <RotateCcw className="h-4 w-4 mr-2" />
-                          {isBulkUnarchiving ? "Unarchiving..." : "Unarchive Selected"}
-                        </Button>
-                      )}
-                      {user?.role === "admin" && (
-                        <Button 
-                          size="sm" 
-                          onClick={handleBulkDelete}
-                          disabled={isBulkDeleting}
-                          className="bg-red-100 dark:bg-red-800 border border-red-300 dark:border-red-600 text-red-700 dark:text-red-200 hover:bg-red-200 dark:hover:bg-red-700 w-full"
-                        >
-                          <Trash2 className="h-4 w-4 mr-2" />
-                          {isBulkDeleting ? "Deleting..." : "Delete Selected"}
-                        </Button>
-                      )}
-                    </div>
-                  )}
-                </div>
+                <MobileTopToolbar
+                  selectedShows={selectedShows}
+                  filteredShows={filteredShows}
+                  handleSelectAll={handleSelectAll}
+                  handleBulkUnarchive={handleBulkUnarchive}
+                  handleBulkDelete={handleBulkDelete}
+                  isBulkUnarchiving={isBulkUnarchiving}
+                  isBulkDeleting={isBulkDeleting}
+                  user={user}
+                  page={page}
+                  totalPages={totalPages}
+                  gotoPrev={gotoPrev}
+                  gotoNext={gotoNext}
+                />
 
                 {/* Desktop Layout */}
                 <div className="hidden md:flex items-center gap-3">
@@ -684,7 +811,9 @@ export default function ArchivedShowsManagement() {
                     <Check className="h-4 w-4" />
                     {selectedShows.size === filteredShows.length ? "Deselect All" : "Select All"}
                   </Button>
-                  <span className="text-sm text-muted-foreground">{selectedShows.size} selected</span>
+                  <Badge variant="outline" className="text-xs font-normal">
+                    {selectedShows.size} of {filteredShows.length} selected
+                  </Badge>
                   {selectedShows.size > 0 && (
                     <>
                       {user?.role === "admin" && (
@@ -725,7 +854,7 @@ export default function ArchivedShowsManagement() {
                       Prev
                     </Button>
                     <span className="text-xs text-muted-foreground">
-                      Page {page} / {totalPages}
+                      Page {page} of {totalPages}
                     </span>
                     <Button variant="outline" size="sm" onClick={gotoNext} disabled={page === totalPages}>
                       Next
@@ -844,77 +973,23 @@ export default function ArchivedShowsManagement() {
               ))}
             </div>
             
-            {/* BOTTOM TOOLBAR: Selection (left) + Pagination (right) */}
+            {/* BOTTOM TOOLBAR: Mobile Layout */}
             {filteredShows.length > 0 && (
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between pt-4 rounded-lg mt-2">
-                {/* Mobile Layout */}
-                <div className="md:hidden space-y-3">
-                  {/* Select all button */}
-                  <div className="w-full">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={handleSelectAll}
-                      className="flex items-center gap-2 hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50 border-border hover:border-border w-full"
-                    >
-                      <Check className="h-4 w-4" />
-                      {selectedShows.size === filteredShows.length ? "Deselect All" : "Select All"}
-                    </Button>
-                  </div>
-
-                  {/* Pagination - selected count on left, pagination on right */}
-                  <div className="flex items-center justify-between">
-                    {/* Selected count on left - match pagination button height */}
-                    <Button variant="outline" size="sm" className="px-2 flex flex-col items-center justify-center min-w-[60px] gap-0">
-                      <span className="text-sm font-bold leading-none">{selectedShows.size}</span>
-                      <span className="text-xs text-muted-foreground leading-none">Selected</span>
-                    </Button>
-                    
-                    {/* Pagination on right */}
-                    <div className="flex items-center gap-2">
-                      <Button variant="outline" size="sm" onClick={gotoPrev} disabled={page === 1}>
-                        <ChevronLeft className="h-4 w-4" />
-                        Prev
-                      </Button>
-                      <span className="text-xs text-muted-foreground">
-                        Page {page} / {totalPages}
-                      </span>
-                      <Button variant="outline" size="sm" onClick={gotoNext} disabled={page === totalPages}>
-                        Next
-                        <ChevronRight className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
-
-                  {/* Archive and delete buttons - separate lines */}
-                  {selectedShows.size > 0 && (
-                    <div className="space-y-2">
-                      {user?.role === "admin" && (
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
-                          onClick={handleBulkUnarchive}
-                          disabled={isBulkUnarchiving}
-                          className="text-green-600 hover:text-green-700 hover:bg-green-50 dark:hover:bg-green-900/20 border-green-200 hover:border-green-300 dark:border-green-800 dark:hover:border-green-700 w-full"
-                        >
-                          <RotateCcw className="h-4 w-4 mr-2" />
-                          {isBulkUnarchiving ? "Unarchiving..." : "Unarchive Selected"}
-                        </Button>
-                      )}
-                      {user?.role === "admin" && (
-                        <Button 
-                          size="sm" 
-                          onClick={handleBulkDelete}
-                          disabled={isBulkDeleting}
-                          className="bg-red-100 dark:bg-red-800 border border-red-300 dark:border-red-600 text-red-700 dark:text-red-200 hover:bg-red-200 dark:hover:bg-red-700 w-full"
-                        >
-                          <Trash2 className="h-4 w-4 mr-2" />
-                          {isBulkDeleting ? "Deleting..." : "Delete Selected"}
-                        </Button>
-                      )}
-                    </div>
-                  )}
-                </div>
+                <MobileBottomToolbar
+                  selectedShows={selectedShows}
+                  filteredShows={filteredShows}
+                  handleSelectAll={handleSelectAll}
+                  handleBulkUnarchive={handleBulkUnarchive}
+                  handleBulkDelete={handleBulkDelete}
+                  isBulkUnarchiving={isBulkUnarchiving}
+                  isBulkDeleting={isBulkDeleting}
+                  user={user}
+                  page={page}
+                  totalPages={totalPages}
+                  gotoPrev={gotoPrev}
+                  gotoNext={gotoNext}
+                />
 
                 {/* Desktop Layout */}
                 <div className="hidden md:flex items-center gap-3">
@@ -927,7 +1002,9 @@ export default function ArchivedShowsManagement() {
                     <Check className="h-4 w-4" />
                     {selectedShows.size === filteredShows.length ? "Deselect All" : "Select All"}
                   </Button>
-                  <span className="text-sm text-muted-foreground">{selectedShows.size} selected</span>
+                  <Badge variant="outline" className="text-xs font-normal">
+                    {selectedShows.size} of {filteredShows.length} selected
+                  </Badge>
                   {selectedShows.size > 0 && (
                     <>
                       {user?.role === "admin" && (
@@ -968,7 +1045,7 @@ export default function ArchivedShowsManagement() {
                       Prev
                     </Button>
                     <span className="text-xs text-muted-foreground">
-                      Page {page} / {totalPages}
+                      Page {page} of {totalPages}
                     </span>
                     <Button variant="outline" size="sm" onClick={gotoNext} disabled={page === totalPages}>
                       Next
@@ -983,64 +1060,23 @@ export default function ArchivedShowsManagement() {
       ) : (
         <Card>
           <CardContent className="p-6">
-            {/* TOP TOOLBAR: Selection (left) + Pagination (right) */}
+            {/* TOP TOOLBAR: Mobile Layout */}
             {filteredShows.length > 0 && (
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between pb-4 rounded-lg mb-2">
-                {/* Mobile Layout */}
-                <div className="md:hidden space-y-3">
-                  {/* Pagination - selected count on left, pagination on right */}
-                  <div className="flex items-center justify-between">
-                    {/* Selected count on left - match pagination button height */}
-                    <Button variant="outline" size="sm" className="px-2 flex flex-col items-center justify-center min-w-[60px] gap-0">
-                      <span className="text-sm font-bold leading-none">{selectedShows.size}</span>
-                      <span className="text-xs text-muted-foreground leading-none">Selected</span>
-                    </Button>
-                    
-                    {/* Pagination on right */}
-                    <div className="flex items-center gap-2">
-                      <Button variant="outline" size="sm" onClick={gotoPrev} disabled={page === 1}>
-                        <ChevronLeft className="h-4 w-4" />
-                        Prev
-                      </Button>
-                      <span className="text-xs text-muted-foreground">
-                        Page {page} / {totalPages}
-                      </span>
-                      <Button variant="outline" size="sm" onClick={gotoNext} disabled={page === totalPages}>
-                        Next
-                        <ChevronRight className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
-
-                  {/* Archive and delete buttons - separate lines */}
-                  {selectedShows.size > 0 && (
-                    <div className="space-y-2">
-                      {user?.role === "admin" && (
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
-                          onClick={handleBulkUnarchive}
-                          disabled={isBulkUnarchiving}
-                          className="text-green-600 hover:text-green-700 hover:bg-green-50 dark:hover:bg-green-900/20 border-green-200 hover:border-green-300 dark:border-green-800 dark:hover:border-green-700 w-full"
-                        >
-                          <RotateCcw className="h-4 w-4 mr-2" />
-                          {isBulkUnarchiving ? "Unarchiving..." : "Unarchive Selected"}
-                        </Button>
-                      )}
-                      {user?.role === "admin" && (
-                        <Button 
-                          size="sm" 
-                          onClick={handleBulkDelete}
-                          disabled={isBulkDeleting}
-                          className="bg-red-100 dark:bg-red-800 border border-red-300 dark:border-red-600 text-red-700 dark:text-red-200 hover:bg-red-200 dark:hover:bg-red-700 w-full"
-                        >
-                          <Trash2 className="h-4 w-4 mr-2" />
-                          {isBulkDeleting ? "Deleting..." : "Delete Selected"}
-                        </Button>
-                      )}
-                    </div>
-                  )}
-                </div>
+                <MobileTopToolbar
+                  selectedShows={selectedShows}
+                  filteredShows={filteredShows}
+                  handleSelectAll={handleSelectAll}
+                  handleBulkUnarchive={handleBulkUnarchive}
+                  handleBulkDelete={handleBulkDelete}
+                  isBulkUnarchiving={isBulkUnarchiving}
+                  isBulkDeleting={isBulkDeleting}
+                  user={user}
+                  page={page}
+                  totalPages={totalPages}
+                  gotoPrev={gotoPrev}
+                  gotoNext={gotoNext}
+                />
 
                 {/* Desktop Layout */}
                 <div className="hidden md:flex items-center gap-3">
@@ -1053,7 +1089,9 @@ export default function ArchivedShowsManagement() {
                     <Check className="h-4 w-4" />
                     {selectedShows.size === filteredShows.length ? "Deselect All" : "Select All"}
                   </Button>
-                  <span className="text-sm text-muted-foreground">{selectedShows.size} selected</span>
+                  <Badge variant="outline" className="text-xs font-normal">
+                    {selectedShows.size} of {filteredShows.length} selected
+                  </Badge>
                   {selectedShows.size > 0 && (
                     <>
                       {user?.role === "admin" && (
@@ -1094,7 +1132,7 @@ export default function ArchivedShowsManagement() {
                       Prev
                     </Button>
                     <span className="text-xs text-muted-foreground">
-                      Page {page} / {totalPages}
+                      Page {page} of {totalPages}
                     </span>
                     <Button variant="outline" size="sm" onClick={gotoNext} disabled={page === totalPages}>
                       Next
@@ -1123,14 +1161,22 @@ export default function ArchivedShowsManagement() {
                         {getSortIcon('name')}
                       </div>
                     </th>
-                    <th className="pl-6 pr-6 py-4 font-semibold border-r bg-muted/50 w-32 whitespace-nowrap">
+                    <th 
+                      className="pl-6 pr-6 py-4 font-semibold border-r cursor-pointer hover:bg-accent/50 transition-colors bg-muted/50 w-32 whitespace-nowrap"
+                      onClick={() => handleSort('archived_by')}
+                    >
                       <div className="flex items-center gap-2">
                         Archived By
+                        {getSortIcon('archived_by')}
                       </div>
                     </th>
-                    <th className="pl-6 pr-6 py-4 font-semibold border-r bg-muted/50 w-32 whitespace-nowrap">
+                    <th 
+                      className="pl-6 pr-6 py-4 font-semibold border-r cursor-pointer hover:bg-accent/50 transition-colors bg-muted/50 w-32 whitespace-nowrap"
+                      onClick={() => handleSort('archived_at')}
+                    >
                       <div className="flex items-center gap-2">
                         Archived At
+                        {getSortIcon('archived_at')}
                       </div>
                     </th>
                     <th 
@@ -1245,77 +1291,23 @@ export default function ArchivedShowsManagement() {
               </table>
             </div>
             
-            {/* BOTTOM TOOLBAR: Selection (left) + Pagination (right) */}
+            {/* BOTTOM TOOLBAR: Mobile Layout */}
             {filteredShows.length > 0 && (
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between pt-4 rounded-lg mt-2">
-                {/* Mobile Layout */}
-                <div className="md:hidden space-y-3">
-                  {/* Select all button - full width */}
-                  <div className="w-full">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={handleSelectAll}
-                      className="flex items-center gap-2 hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50 border-border hover:border-border w-full"
-                    >
-                      <Check className="h-4 w-4" />
-                      {selectedShows.size === filteredShows.length ? "Deselect All" : "Select All"}
-                    </Button>
-                  </div>
-
-                  {/* Pagination - selected count on left, pagination on right */}
-                  <div className="flex items-center justify-between">
-                    {/* Selected count on left - match pagination button height */}
-                    <Button variant="outline" size="sm" className="px-2 flex flex-col items-center justify-center min-w-[60px] gap-0">
-                      <span className="text-sm font-bold leading-none">{selectedShows.size}</span>
-                      <span className="text-xs text-muted-foreground leading-none">Selected</span>
-                    </Button>
-                    
-                    {/* Pagination on right */}
-                    <div className="flex items-center gap-2">
-                      <Button variant="outline" size="sm" onClick={gotoPrev} disabled={page === 1}>
-                        <ChevronLeft className="h-4 w-4" />
-                        Prev
-                      </Button>
-                      <span className="text-xs text-muted-foreground">
-                        Page {page} / {totalPages}
-                      </span>
-                      <Button variant="outline" size="sm" onClick={gotoNext} disabled={page === totalPages}>
-                        Next
-                        <ChevronRight className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
-
-                  {/* Archive and delete buttons - separate lines */}
-                  {selectedShows.size > 0 && (
-                    <div className="space-y-2">
-                      {user?.role === "admin" && (
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
-                          onClick={handleBulkUnarchive}
-                          disabled={isBulkUnarchiving}
-                          className="text-green-600 hover:text-green-700 hover:bg-green-50 dark:hover:bg-green-900/20 border-green-200 hover:border-green-300 dark:border-green-800 dark:hover:border-green-700 w-full"
-                        >
-                          <RotateCcw className="h-4 w-4 mr-2" />
-                          {isBulkUnarchiving ? "Unarchiving..." : "Unarchive Selected"}
-                        </Button>
-                      )}
-                      {user?.role === "admin" && (
-                        <Button 
-                          size="sm" 
-                          onClick={handleBulkDelete}
-                          disabled={isBulkDeleting}
-                          className="bg-red-100 dark:bg-red-800 border border-red-300 dark:border-red-600 text-red-700 dark:text-red-200 hover:bg-red-200 dark:hover:bg-red-700 w-full"
-                        >
-                          <Trash2 className="h-4 w-4 mr-2" />
-                          {isBulkDeleting ? "Deleting..." : "Delete Selected"}
-                        </Button>
-                      )}
-                    </div>
-                  )}
-                </div>
+                <MobileBottomToolbar
+                  selectedShows={selectedShows}
+                  filteredShows={filteredShows}
+                  handleSelectAll={handleSelectAll}
+                  handleBulkUnarchive={handleBulkUnarchive}
+                  handleBulkDelete={handleBulkDelete}
+                  isBulkUnarchiving={isBulkUnarchiving}
+                  isBulkDeleting={isBulkDeleting}
+                  user={user}
+                  page={page}
+                  totalPages={totalPages}
+                  gotoPrev={gotoPrev}
+                  gotoNext={gotoNext}
+                />
 
                 {/* Desktop Layout */}
                 <div className="hidden md:flex items-center gap-3">
@@ -1328,7 +1320,9 @@ export default function ArchivedShowsManagement() {
                     <Check className="h-4 w-4" />
                     {selectedShows.size === filteredShows.length ? "Deselect All" : "Select All"}
                   </Button>
-                  <span className="text-sm text-muted-foreground">{selectedShows.size} selected</span>
+                  <Badge variant="outline" className="text-xs font-normal">
+                    {selectedShows.size} of {filteredShows.length} selected
+                  </Badge>
                   {selectedShows.size > 0 && (
                     <>
                       {user?.role === "admin" && (
@@ -1369,7 +1363,7 @@ export default function ArchivedShowsManagement() {
                       Prev
                     </Button>
                     <span className="text-xs text-muted-foreground">
-                      Page {page} / {totalPages}
+                      Page {page} of {totalPages}
                     </span>
                     <Button variant="outline" size="sm" onClick={gotoNext} disabled={page === totalPages}>
                       Next
