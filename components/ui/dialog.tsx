@@ -25,6 +25,18 @@ const DialogOverlay = React.forwardRef<
       className
     )}
     onTouchStart={(e) => {
+      console.log('[MOBILE DEBUG] Overlay touchstart:', {
+        target: e.target?.tagName,
+        targetId: (e.target as Element)?.id,
+        targetClass: (e.target as Element)?.className,
+        isDialogContent: (e.target as Element)?.closest('[data-radix-dialog-content]'),
+        isPopoverContent: (e.target as Element)?.closest('[data-radix-popover-content]'),
+        isSelectContent: (e.target as Element)?.closest('[data-radix-select-content]'),
+        isCommand: (e.target as Element)?.closest('[data-radix-command]'),
+        isPopoverTrigger: (e.target as Element)?.closest('[data-radix-popover-trigger]'),
+        isSelectTrigger: (e.target as Element)?.closest('[data-radix-select-trigger]')
+      });
+      
       // Prevent overlay from closing dialog on mobile when touching inside dialog content
       const target = e.target as Element;
       if (target.closest('[data-radix-dialog-content]') || 
@@ -33,12 +45,19 @@ const DialogOverlay = React.forwardRef<
           target.closest('[data-radix-command]') ||
           target.closest('[data-radix-popover-trigger]') ||
           target.closest('[data-radix-select-trigger]')) {
+        console.log('[MOBILE DEBUG] Preventing overlay touchstart');
         e.preventDefault();
         e.stopPropagation();
         return false;
       }
     }}
     onTouchEnd={(e) => {
+      console.log('[MOBILE DEBUG] Overlay touchend:', {
+        target: e.target?.tagName,
+        targetId: (e.target as Element)?.id,
+        targetClass: (e.target as Element)?.className
+      });
+      
       // Prevent overlay from closing dialog on mobile when touching inside dialog content
       const target = e.target as Element;
       if (target.closest('[data-radix-dialog-content]') || 
@@ -47,6 +66,7 @@ const DialogOverlay = React.forwardRef<
           target.closest('[data-radix-command]') ||
           target.closest('[data-radix-popover-trigger]') ||
           target.closest('[data-radix-select-trigger]')) {
+        console.log('[MOBILE DEBUG] Preventing overlay touchend');
         e.preventDefault();
         e.stopPropagation();
         return false;

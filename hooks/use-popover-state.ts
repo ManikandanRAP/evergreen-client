@@ -7,10 +7,20 @@ export function usePopoverState() {
 
   useEffect(() => {
     const checkPopoverState = () => {
-      const hasOpen = document.querySelector('[data-radix-popover-content][data-state="open"]') ||
-                     document.querySelector('[data-radix-select-content][data-state="open"]') ||
-                     document.querySelector('[data-radix-command][data-state="open"]') ||
-                     document.querySelector('[data-radix-combobox-content][data-state="open"]')
+      const popoverOpen = document.querySelector('[data-radix-popover-content][data-state="open"]')
+      const selectOpen = document.querySelector('[data-radix-select-content][data-state="open"]')
+      const commandOpen = document.querySelector('[data-radix-command][data-state="open"]')
+      const comboboxOpen = document.querySelector('[data-radix-combobox-content][data-state="open"]')
+      
+      const hasOpen = popoverOpen || selectOpen || commandOpen || comboboxOpen
+      
+      console.log('[MOBILE DEBUG] Popover state check:', {
+        popoverOpen: !!popoverOpen,
+        selectOpen: !!selectOpen,
+        commandOpen: !!commandOpen,
+        comboboxOpen: !!comboboxOpen,
+        hasOpen: !!hasOpen
+      })
       
       setHasOpenPopover(!!hasOpen)
     }
