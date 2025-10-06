@@ -705,14 +705,6 @@ export default function CreateShowDialog({
             e.preventDefault();
           }
         }}
-        onTouchStart={(e) => {
-          // Prevent touch events from bubbling up on mobile
-          e.stopPropagation();
-        }}
-        onTouchEnd={(e) => {
-          // Prevent touch events from bubbling up on mobile
-          e.stopPropagation();
-        }}
       >
         <DialogHeader className="flex flex-row items-center justify-between px-6 py-4 bg-background dark:bg-[#262626] border-b dark:border-slate-800">
           <DialogTitle className="text-lg sm:text-2xl font-bold bg-gradient-to-r from-emerald-600 to-cyan-600 bg-clip-text text-transparent">
