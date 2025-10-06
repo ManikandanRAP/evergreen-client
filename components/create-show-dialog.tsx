@@ -17,7 +17,6 @@ import { cn } from "@/lib/utils"
 import type { Show } from "@/lib/api-client"
 import { ShowCreate, ShowUpdate, fetchAllclass, apiClient } from "@/lib/api-client" // Import both types
 import { toast } from "@/hooks/use-toast"
-import { usePopoverState } from "@/hooks/use-popover-state"
 import { Popover, PopoverTrigger } from "@/components/ui/popover"
 import { CustomPopoverContent } from "@/components/ui/custom-popover-content"
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command"
@@ -684,22 +683,10 @@ export default function CreateShowDialog({
 
   const getFieldError = (field: string) => errors[field]
 
-  // Track popover state to prevent dialog closing
-  const hasOpenPopover = usePopoverState();
-
-
-  // Custom onOpenChange handler that prevents closing when popover is open
-  const handleOpenChange = (newOpen: boolean) => {
-    if (!newOpen && hasOpenPopover) {
-      return;
-    }
-    onOpenChange(newOpen);
-  };
-
   return (
-    <Dialog open={open} onOpenChange={hasOpenPopover ? () => {} : handleOpenChange}>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent 
-        className="max-w-6xl w-full sm:w-[90%] h-[100dvh] sm:h-[90vh] flex flex-col p-0 overflow-hidden dark:bg-black border-0 [&>button:not(.navigation-button)]:hidden sm:translate-x-[-50%] sm:translate-y-[-50%] sm:left-[50%] sm:top-[50%]"
+        className="max-w-6xl w-full sm:w-[90%] h-screen sm:h-[90vh] mobile-fullscreen flex flex-col p-0 overflow-hidden dark:bg-black border-0 [&>button:not(.navigation-button)]:hidden sm:translate-x-[-50%] sm:translate-y-[-50%] sm:left-[50%] sm:top-[50%]"
         onPointerDownOutside={(e) => {
           // Prevent dialog from closing when clicking on popover content
           const target = e.target as Element;

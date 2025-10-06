@@ -16,9 +16,9 @@
     touch-action: none;
   }
   
-  /* Mobile viewport fixes */
+  /* Mobile viewport fixes for full-screen dialogs only */
   @media (max-width: 768px) {
-    [data-radix-dialog-content] {
+    [data-radix-dialog-content].mobile-fullscreen {
       max-height: 100dvh !important;
       height: 100dvh !important;
     }
