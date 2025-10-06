@@ -43,9 +43,13 @@ const DialogOverlay = React.forwardRef<
       
       console.log('[MOBILE DEBUG] Overlay touchstart - hasOpenPopover:', !!hasOpenPopover);
       
-      // If popover is open, prevent ALL touch events on overlay
-      if (hasOpenPopover) {
-        console.log('[MOBILE DEBUG] Preventing overlay touchstart - popover is open');
+      // Only prevent if touching the overlay itself (not dialog content)
+      const target = e.target as Element;
+      const isOverlayTouch = target.classList.contains('mobile-dialog-overlay') || 
+                            target.classList.contains('bg-black/80');
+      
+      if (hasOpenPopover && isOverlayTouch) {
+        console.log('[MOBILE DEBUG] Preventing overlay touchstart - popover is open and touching overlay');
         e.preventDefault();
         e.stopPropagation();
         e.stopImmediatePropagation();
@@ -53,7 +57,6 @@ const DialogOverlay = React.forwardRef<
       }
       
       // Prevent overlay from closing dialog on mobile when touching inside dialog content
-      const target = e.target as Element;
       if (target.closest('[data-radix-dialog-content]') || 
           target.closest('[data-radix-popover-content]') || 
           target.closest('[data-radix-select-content]') ||
@@ -79,9 +82,13 @@ const DialogOverlay = React.forwardRef<
       
       console.log('[MOBILE DEBUG] Overlay touchend - hasOpenPopover:', !!hasOpenPopover);
       
-      // If popover is open, prevent ALL touch events on overlay
-      if (hasOpenPopover) {
-        console.log('[MOBILE DEBUG] Preventing overlay touchend - popover is open');
+      // Only prevent if touching the overlay itself (not dialog content)
+      const target = e.target as Element;
+      const isOverlayTouch = target.classList.contains('mobile-dialog-overlay') || 
+                            target.classList.contains('bg-black/80');
+      
+      if (hasOpenPopover && isOverlayTouch) {
+        console.log('[MOBILE DEBUG] Preventing overlay touchend - popover is open and touching overlay');
         e.preventDefault();
         e.stopPropagation();
         e.stopImmediatePropagation();
@@ -89,7 +96,6 @@ const DialogOverlay = React.forwardRef<
       }
       
       // Prevent overlay from closing dialog on mobile when touching inside dialog content
-      const target = e.target as Element;
       if (target.closest('[data-radix-dialog-content]') || 
           target.closest('[data-radix-popover-content]') || 
           target.closest('[data-radix-select-content]') ||

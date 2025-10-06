@@ -704,57 +704,22 @@ export default function CreateShowDialog({
 
     const handleTouchStart = (e: TouchEvent) => {
       logEvent('TOUCH_START', e);
-      // Aggressively prevent touch events when popover is open
-      if (hasOpenPopover) {
-        console.log('[MOBILE DEBUG] Aggressively preventing touchstart - popover open');
-        e.preventDefault();
-        e.stopPropagation();
-        e.stopImmediatePropagation();
-      }
     };
     
     const handleTouchEnd = (e: TouchEvent) => {
       logEvent('TOUCH_END', e);
-      // Aggressively prevent touch events when popover is open
-      if (hasOpenPopover) {
-        console.log('[MOBILE DEBUG] Aggressively preventing touchend - popover open');
-        e.preventDefault();
-        e.stopPropagation();
-        e.stopImmediatePropagation();
-      }
     };
     
     const handleClick = (e: MouseEvent) => {
       logEvent('CLICK', e);
-      // Aggressively prevent click events when popover is open
-      if (hasOpenPopover) {
-        console.log('[MOBILE DEBUG] Aggressively preventing click - popover open');
-        e.preventDefault();
-        e.stopPropagation();
-        e.stopImmediatePropagation();
-      }
     };
     
     const handlePointerDown = (e: PointerEvent) => {
       logEvent('POINTER_DOWN', e);
-      // Aggressively prevent pointer events when popover is open
-      if (hasOpenPopover) {
-        console.log('[MOBILE DEBUG] Aggressively preventing pointerdown - popover open');
-        e.preventDefault();
-        e.stopPropagation();
-        e.stopImmediatePropagation();
-      }
     };
     
     const handlePointerUp = (e: PointerEvent) => {
       logEvent('POINTER_UP', e);
-      // Aggressively prevent pointer events when popover is open
-      if (hasOpenPopover) {
-        console.log('[MOBILE DEBUG] Aggressively preventing pointerup - popover open');
-        e.preventDefault();
-        e.stopPropagation();
-        e.stopImmediatePropagation();
-      }
     };
 
     document.addEventListener('touchstart', handleTouchStart, true);
