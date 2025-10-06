@@ -21,6 +21,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import { useAuth } from "@/lib/auth-context"
+import { useRouter } from "next/navigation"
 import {
   Search,
   Download,
@@ -36,6 +37,8 @@ import {
   FileText,
   ChevronLeft,
   ChevronRight,
+  ArrowLeft,
+  X,
 } from "lucide-react"
 import type { Feedback } from "@/lib/feedback"
 import { toast } from "sonner"
@@ -48,6 +51,7 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000"
 
 export default function Feedbacks() {
   const { user, token } = useAuth()
+  const router = useRouter()
   const [feedbacks, setFeedbacks] = useState<Feedback[]>([])
   const [searchTerm, setSearchTerm] = useState("")
   const [typeFilter, setTypeFilter] = useState<string>("all")
@@ -58,6 +62,9 @@ export default function Feedbacks() {
   const [currentFeedbackIndex, setCurrentFeedbackIndex] = useState<number>(0)
   const [animationDirection, setAnimationDirection] = useState<"next" | "previous" | null>(null)
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false)
+  const [touchStart, setTouchStart] = useState<{ x: number; y: number } | null>(null)
+  const [touchEnd, setTouchEnd] = useState<{ x: number; y: number } | null>(null)
+  const [isSwipeActive, setIsSwipeActive] = useState(false)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [feedbackToDelete, setFeedbackToDelete] = useState<Feedback | null>(null)
   const [currentPage, setCurrentPage] = useState(1)
@@ -244,6 +251,56 @@ export default function Feedbacks() {
     }
   }
 
+  // Touch navigation handlers
+  const handleTouchStart = (e: React.TouchEvent) => {
+    const touch = e.touches[0]
+    setTouchStart({ x: touch.clientX, y: touch.clientY })
+    setTouchEnd(null)
+    setIsSwipeActive(false)
+  }
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    const touch = e.touches[0]
+    setTouchEnd({ x: touch.clientX, y: touch.clientY })
+    
+    // Provide visual feedback during swipe
+    if (touchStart) {
+      const deltaX = touchStart.x - touch.clientX
+      const deltaY = touchStart.y - touch.clientY
+      const minSwipeDistance = 30 // Start showing feedback earlier
+      const maxVerticalDistance = 100
+      
+      if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaY) < maxVerticalDistance && Math.abs(deltaX) > minSwipeDistance) {
+        setIsSwipeActive(true)
+      }
+    }
+  }
+
+  const handleTouchEnd = () => {
+    if (!touchStart || !touchEnd) return
+
+    const deltaX = touchStart.x - touchEnd.x
+    const deltaY = touchStart.y - touchEnd.y
+    const minSwipeDistance = 50 // Minimum distance for a swipe
+    const maxVerticalDistance = 100 // Maximum vertical movement to still count as horizontal swipe
+
+    // Check if it's a horizontal swipe (not vertical scroll)
+    if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaY) < maxVerticalDistance) {
+      if (Math.abs(deltaX) > minSwipeDistance) {
+        if (deltaX > 0 && currentFeedbackIndex < currentPageFeedbacks.length - 1) {
+          // Swipe left - go to next
+          handleNextFeedback()
+        } else if (deltaX < 0 && currentFeedbackIndex > 0) {
+          // Swipe right - go to previous
+          handlePreviousFeedback()
+        }
+      }
+    }
+    
+    // Reset swipe state
+    setIsSwipeActive(false)
+  }
+
   const handleDeleteClick = (feedback: Feedback) => {
     setFeedbackToDelete(feedback)
     setDeleteDialogOpen(true)
@@ -366,10 +423,31 @@ export default function Feedbacks() {
 
   return (
     <div className="space-y-8">
-      <div className="flex items-center justify-between">
+      {/* Header with back button - Mobile: below title, Desktop: back button before title */}
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        {/* Desktop: back button before title, Mobile: title first */}
+        <div className="flex flex-col md:flex-row md:items-center gap-4">
+          {/* Back button - Desktop: show before title, Mobile: hide here */}
+          <Button variant="outline" onClick={() => router.back()} className="gap-2 w-fit hidden md:flex">
+            <ArrowLeft className="h-4 w-4" />
+            Back
+          </Button>
         <div>
           <h1 className="text-xl sm:text-3xl font-bold bg-gradient-to-r from-emerald-600 to-cyan-600 bg-clip-text text-transparent tracking-tight">Feedbacks</h1>
           <p className="text-sm sm:text-base text-muted-foreground">View and manage user feedback and feature suggestions.</p>
+          </div>
+        </div>
+        <div className="flex items-center justify-between md:justify-end gap-2">
+          {/* Back button - Mobile: show here, Desktop: hide */}
+          <Button variant="outline" onClick={() => router.back()} className="gap-2 w-fit md:hidden">
+            <ArrowLeft className="h-4 w-4" />
+            Back
+          </Button>
+          {/* Export CSV button - Mobile: right side of back button line, Desktop: right side of title line */}
+          <Button className="evergreen-button" onClick={handleExport} disabled={filteredAndSortedFeedbacks.length === 0}>
+            <Download className="mr-2 h-4 w-4" />
+            Export CSV
+          </Button>
         </div>
       </div>
 
@@ -395,7 +473,7 @@ export default function Feedbacks() {
               </Button>
             </div>
             
-            {/* Type Filter and Export Button for Mobile */}
+            {/* Type Filter for Mobile */}
             <div className="flex items-center space-x-4 w-full">
               <Select value={typeFilter} onValueChange={setTypeFilter}>
                 <SelectTrigger className="flex-1">
@@ -407,11 +485,6 @@ export default function Feedbacks() {
                   <SelectItem value="General Feedback">General Feedback</SelectItem>
                 </SelectContent>
               </Select>
-              
-              <Button className="evergreen-button" onClick={handleExport} disabled={filteredAndSortedFeedbacks.length === 0}>
-                <Download className="mr-2 h-4 w-4" />
-                Export CSV
-              </Button>
             </div>
           </div>
 
@@ -446,13 +519,6 @@ export default function Feedbacks() {
               </div>
             </div>
             
-            <div className="flex items-center space-x-4">
-              {/* Desktop Export Button inside list box */}
-              <Button className="evergreen-button" onClick={handleExport} disabled={filteredAndSortedFeedbacks.length === 0}>
-                <Download className="mr-2 h-4 w-4" />
-                Export CSV
-              </Button>
-            </div>
           </div>
         </CardHeader>
         <CardContent className="md:px-6 px-4">
@@ -558,17 +624,48 @@ export default function Feedbacks() {
 
       {/* View Feedback Dialog */}
       <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
-        <DialogContent className="max-w-4xl sm:max-w-4xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="text-2xl font-bold">Feedback Details</DialogTitle>
-            <DialogDescription>Complete information about this feedback submission</DialogDescription>
+        <DialogContent className="max-w-none w-full sm:w-[90%] h-screen sm:h-[95vh] mobile-fullscreen flex flex-col p-0 overflow-hidden dark:bg-black border-0 [&>button:not(.navigation-button)]:hidden" hideClose>
+          <DialogHeader className="flex flex-row items-center justify-between px-6 py-4 bg-background dark:bg-[#262626] border-b dark:border-slate-800">
+            {/* Mobile: Title left, Close right */}
+            <div className="flex sm:hidden w-full items-center justify-between">
+              <DialogTitle className="text-lg font-semibold text-left truncate flex-1 pr-4">
+                Feedback Details
+              </DialogTitle>
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => setIsViewDialogOpen(false)}
+                className="p-2"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+
+            {/* Desktop: Navigation, Title, Actions in one row */}
+            <div className="hidden sm:flex flex-row items-center justify-between w-full">
+              <DialogTitle className="text-2xl font-bold">Feedback Details</DialogTitle>
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => setIsViewDialogOpen(false)}
+                className="p-2"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
           </DialogHeader>
 
-          {selectedFeedback && (
-            <div 
-              key={selectedFeedback.id} 
-              className={`space-y-6 transition-all duration-300 overflow-hidden ${animationClass}`}
-            >
+          <div 
+            className="flex-1 overflow-y-auto pb-32"
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
+          >
+            {selectedFeedback && (
+              <div 
+                key={selectedFeedback.id} 
+                className={`space-y-6 transition-all duration-300 overflow-hidden p-6 ${animationClass} ${isSwipeActive ? 'opacity-90' : 'opacity-100'}`}
+              >
               {/* Feedback Header with Details */}
               <div className={`p-4 sm:p-6 rounded-lg border ${
                 selectedFeedback.type === 'New Feature'
@@ -616,112 +713,105 @@ export default function Feedbacks() {
               </Card>
 
 
-              {/* Actions */}
-              <div className="pt-4 border-t">
-                {/* Mobile Layout */}
-                <div className="sm:hidden">
-                  {/* Navigation buttons - centered on mobile */}
-                  <div className="flex justify-center items-center gap-2 mb-4">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={handlePreviousFeedback}
-                      disabled={currentFeedbackIndex === 0}
-                      className="flex items-center gap-1"
-                    >
-                      <ChevronLeft className="h-4 w-4" />
-                      Previous
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={handleNextFeedback}
-                      disabled={currentFeedbackIndex === currentPageFeedbacks.length - 1}
-                      className="flex items-center gap-1"
-                    >
-                      Next
-                      <ChevronRight className="h-4 w-4" />
-                    </Button>
-                    <span className="text-sm text-muted-foreground ml-2">
-                      {currentFeedbackIndex + 1} of {currentPageFeedbacks.length}
-                    </span>
-                  </div>
+            </div>
+            )}
+          </div>
 
-                  {/* Action buttons - full width on mobile */}
-                  <div className="flex flex-col gap-3">
-                    <Button 
-                      onClick={() => {
-                        setIsViewDialogOpen(false)
-                        handleDeleteClick(selectedFeedback)
-                      }}
-                      className="w-full bg-red-100 dark:bg-red-800 border border-red-300 dark:border-red-600 text-red-700 dark:text-red-200 hover:bg-red-200 dark:hover:bg-red-700"
-                    >
-                      <Trash2 className="h-4 w-4 mr-2" />
-                      Delete Feedback
-                    </Button>
-                    <Button 
-                      variant="outline" 
-                      onClick={() => setIsViewDialogOpen(false)}
-                      className="w-full bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-950/20 dark:to-slate-900/20 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:from-slate-100 hover:to-slate-200 dark:hover:from-slate-900/30 dark:hover:to-slate-800/30"
-                    >
-                      Close
-                    </Button>
-                  </div>
-                </div>
-
-                {/* Desktop Layout */}
-                <div className="hidden sm:flex justify-between items-center">
-                  {/* Navigation buttons */}
-                  <div className="flex items-center gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={handlePreviousFeedback}
-                      disabled={currentFeedbackIndex === 0}
-                      className="flex items-center gap-1"
-                    >
-                      <ChevronLeft className="h-4 w-4" />
-                      Previous
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={handleNextFeedback}
-                      disabled={currentFeedbackIndex === currentPageFeedbacks.length - 1}
-                      className="flex items-center gap-1"
-                    >
-                      Next
-                      <ChevronRight className="h-4 w-4" />
-                    </Button>
-                    <span className="text-sm text-muted-foreground ml-2">
-                      {currentFeedbackIndex + 1} of {currentPageFeedbacks.length}
-                    </span>
-                  </div>
-
-                  {/* Action buttons */}
-                  <div className="flex gap-3">
-                    <Button 
-                      onClick={() => {
-                        setIsViewDialogOpen(false)
-                        handleDeleteClick(selectedFeedback)
-                      }}
-                      className="bg-red-100 dark:bg-red-800 border border-red-300 dark:border-red-600 text-red-700 dark:text-red-200 hover:bg-red-200 dark:hover:bg-red-700"
-                    >
-                      <Trash2 className="h-4 w-4 mr-2" />
-                      Delete Feedback
-                    </Button>
-                    <Button 
-                      variant="outline" 
-                      onClick={() => setIsViewDialogOpen(false)}
-                      className="bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-950/20 dark:to-slate-900/20 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:from-slate-100 hover:to-slate-200 dark:hover:from-slate-900/30 dark:hover:to-slate-800/30"
-                    >
-                      Close
-                    </Button>
-                  </div>
-                </div>
+          {/* Fixed Footer with Navigation and Actions */}
+          <div className="fixed bottom-0 left-0 right-0 bg-background border-t dark:border-slate-800 p-6 z-50">
+            {/* Mobile Layout */}
+            <div className="sm:hidden space-y-3">
+              {/* Navigation Buttons */}
+              <div className="flex gap-3">
+                <Button 
+                  variant="outline" 
+                  onClick={handlePreviousFeedback}
+                  disabled={currentFeedbackIndex === 0}
+                  className="flex-1"
+                >
+                  <ChevronLeft className="h-4 w-4 mr-2" />
+                  Previous
+                </Button>
+                <Button 
+                  variant="outline" 
+                  onClick={handleNextFeedback}
+                  disabled={currentFeedbackIndex === currentPageFeedbacks.length - 1}
+                  className="flex-1"
+                >
+                  Next
+                  <ChevronRight className="h-4 w-4 ml-2" />
+                </Button>
+              </div>
+              
+              {/* Action Buttons */}
+              <div className="space-y-3">
+                <Button 
+                  onClick={() => {
+                    setIsViewDialogOpen(false)
+                    handleDeleteClick(selectedFeedback)
+                  }}
+                  className="w-full bg-red-100 dark:bg-red-800 border border-red-300 dark:border-red-600 text-red-700 dark:text-red-200 hover:bg-red-200 dark:hover:bg-red-700"
+                >
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Delete Feedback
+                </Button>
+                <Button 
+                  variant="outline" 
+                  onClick={() => setIsViewDialogOpen(false)}
+                  className="w-full bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-950/20 dark:to-slate-900/20 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:from-slate-100 hover:to-slate-200 dark:hover:from-slate-900/30 dark:hover:to-slate-800/30"
+                >
+                  Close
+                </Button>
               </div>
             </div>
-          )}
+
+            {/* Desktop Layout */}
+            <div className="hidden sm:flex justify-between items-center gap-3">
+              {/* Navigation Buttons */}
+              <div className="flex gap-2">
+                <Button 
+                  variant="outline" 
+                  onClick={handlePreviousFeedback}
+                  disabled={currentFeedbackIndex === 0}
+                >
+                  <ChevronLeft className="h-4 w-4 mr-2" />
+                  Previous
+                </Button>
+                <Button 
+                  variant="outline" 
+                  onClick={handleNextFeedback}
+                  disabled={currentFeedbackIndex === currentPageFeedbacks.length - 1}
+                >
+                  Next
+                  <ChevronRight className="h-4 w-4 ml-2" />
+                </Button>
+                <span className="text-sm text-muted-foreground ml-2">
+                  {currentFeedbackIndex + 1} of {currentPageFeedbacks.length}
+                </span>
+              </div>
+              
+              {/* Action Buttons */}
+              <div className="flex gap-3">
+                <Button 
+                  onClick={() => {
+                    setIsViewDialogOpen(false)
+                    handleDeleteClick(selectedFeedback)
+                  }}
+                  className="bg-red-100 dark:bg-red-800 border border-red-300 dark:border-red-600 text-red-700 dark:text-red-200 hover:bg-red-200 dark:hover:bg-red-700"
+                >
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Delete Feedback
+                </Button>
+                <Button 
+                  variant="outline" 
+                  onClick={() => setIsViewDialogOpen(false)}
+                  className="bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-950/20 dark:to-slate-900/20 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:from-slate-100 hover:to-slate-200 dark:hover:from-slate-900/30 dark:hover:to-slate-800/30"
+                >
+                  Close
+                </Button>
+              </div>
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
 

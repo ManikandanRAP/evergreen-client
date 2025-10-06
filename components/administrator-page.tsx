@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { UserPlus, Users, Loader2, Settings, Eye, History } from "lucide-react"
+import { UserPlus, Users, Loader2, Settings, Eye, History, MessageSquare, Lightbulb } from "lucide-react"
 import CreateUserDialog from "@/components/create-user-dialog"
 import { useAuth } from "@/lib/auth-context"
 import { useRouter } from "next/navigation"
@@ -149,6 +149,56 @@ export default function AdministratorPage() {
           </Card>
         </div>
 
+        {/* Feedback Management Section */}
+        <div className="grid gap-6 md:grid-cols-1">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-lg md:text-xl">
+                <MessageSquare className="h-5 w-5" />
+                Feedback Management
+              </CardTitle>
+              <CardDescription className="text-sm text-muted-foreground">
+                Manage user feedback and feature suggestions: view submitted feedback, feature requests, and respond to user suggestions.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex flex-col md:flex-row gap-3 md:gap-2 flex-wrap">
+                {/* Feature Suggestion button */}
+                <Button
+                  onClick={() => router.push("/add-feature-suggestion")}
+                  className="evergreen-button md:h-10"
+                  disabled={isCreateUserDisabled}
+                >
+                  {isCreateUserDisabled ? (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  ) : (
+                    <Lightbulb className="mr-2 h-4 w-4" />
+                  )}
+                  Feature Suggestion
+                </Button>
+
+                {/* Feedbacks button */}
+                <Button
+                  onClick={() => router.push("/feedbacks")}
+                  className="evergreen-button md:h-10"
+                  disabled={isCreateUserDisabled}
+                  variant="secondary"
+                >
+                  {isCreateUserDisabled ? (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  ) : (
+                    <MessageSquare className="mr-2 h-4 w-4" />
+                  )}
+                  Feedbacks
+                </Button>
+              </div>
+
+              {isCreateUserDisabled && (
+                <p className="text-xs text-center text-muted-foreground mt-2">Waiting for authentication...</p>
+              )}
+            </CardContent>
+          </Card>
+        </div>
 
         {/* Create User Dialog (kept mounted) */}
         <CreateUserDialog open={isCreateUserOpen} onOpenChange={setIsCreateUserOpen} />

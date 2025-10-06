@@ -11,7 +11,8 @@ import { Textarea } from "@/components/ui/textarea"
 import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useAuth } from "@/lib/auth-context"
-import { Lightbulb, Send, X } from "lucide-react"
+import { useRouter } from "next/navigation"
+import { Lightbulb, Send, X, ArrowLeft } from "lucide-react"
 import { toast } from "sonner" // 1. Import toast from sonner
 
 const formSchema = z.object({
@@ -32,6 +33,7 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000"
 
 export default function AddFeatureSuggestion() {
   const { user, token } = useAuth()
+  const router = useRouter()
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   const form = useForm<FormData>({
@@ -107,11 +109,29 @@ export default function AddFeatureSuggestion() {
 
   return (
     <div className="space-y-8">
-      <div>
-        <h1 className="text-xl sm:text-3xl font-bold bg-gradient-to-r from-emerald-600 to-cyan-600 bg-clip-text text-transparent tracking-tight">
-          Feature Suggestions
-        </h1>
-        <p className="text-sm sm:text-base text-muted-foreground">Submit feature requests and feedback to help improve our platform.</p>
+      {/* Header with back button - Mobile: below title, Desktop: back button before title */}
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        {/* Desktop: back button before title, Mobile: title first */}
+        <div className="flex flex-col md:flex-row md:items-center gap-4">
+          {/* Back button - Desktop: show before title, Mobile: hide here */}
+          <Button variant="outline" onClick={() => router.back()} className="gap-2 w-fit hidden md:flex">
+            <ArrowLeft className="h-4 w-4" />
+            Back
+          </Button>
+          <div>
+            <h1 className="text-xl sm:text-3xl font-bold bg-gradient-to-r from-emerald-600 to-cyan-600 bg-clip-text text-transparent tracking-tight">
+              Feature Suggestions
+            </h1>
+            <p className="text-sm sm:text-base text-muted-foreground">Submit feature requests and feedback to help improve our platform.</p>
+          </div>
+        </div>
+        <div className="flex items-center justify-between md:justify-end gap-2">
+          {/* Back button - Mobile: show here, Desktop: hide */}
+          <Button variant="outline" onClick={() => router.back()} className="gap-2 w-fit md:hidden">
+            <ArrowLeft className="h-4 w-4" />
+            Back
+          </Button>
+        </div>
       </div>
 
       <Card className="max-w-2xl">

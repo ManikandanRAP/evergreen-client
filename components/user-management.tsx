@@ -36,7 +36,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { Check, ChevronsUpDown, Loader2, Pencil, Trash2, ArrowLeft, Eye, EyeOff, Search, ChevronLeft, ChevronRight, ArrowUpDown, ArrowUp, ArrowDown, Plus, Download, Users, UserCheck, UserX, MoreHorizontal, User as UserIcon, Building, Calendar, MoreVertical, Settings, UserPlus } from "lucide-react"
+import { Check, ChevronsUpDown, Loader2, Pencil, Trash2, ArrowLeft, Eye, EyeOff, Search, ChevronLeft, ChevronRight, ArrowUpDown, ArrowUp, ArrowDown, Plus, Download, Users, UserCheck, UserX, MoreHorizontal, User as UserIcon, Building, Calendar, MoreVertical, Settings, UserPlus, X } from "lucide-react"
 import clsx from "clsx"
 import { useToast } from "@/hooks/use-toast"
 import { useAuth } from "@/lib/auth-context"
@@ -625,6 +625,7 @@ export default function UserManagement({ onBack }: UserManagementProps) {
                 <div className="relative flex-1 md:w-64">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
                   <Input
+                    key={`search-${editing ? 'editing' : 'normal'}`}
                     placeholder="Search users..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
@@ -893,8 +894,8 @@ export default function UserManagement({ onBack }: UserManagementProps) {
 
       {/* Nested editor dialog */}
       <Dialog open={!!editing} onOpenChange={(v) => !v && setEditing(null)}>
-        <DialogContent className="sm:max-w-[700px] md:max-w-[800px]">
-          <DialogHeader>
+        <DialogContent className="sm:max-w-[700px] md:max-w-[800px] p-6 pr-8">
+          <DialogHeader className="text-left pr-8">
             <DialogTitle>Edit User</DialogTitle>
             <DialogDescription>Update the user fields of Name, Email, Password, and Mapped Vendor.</DialogDescription>
           </DialogHeader>
@@ -932,7 +933,7 @@ export default function UserManagement({ onBack }: UserManagementProps) {
 
             <div className="space-y-2">
               <Label htmlFor="role">User Type</Label>
-              <Input id="role" value={form.role} readOnly className="bg-muted/30" />
+              <Input id="role" value={formatRoleName(form.role)} readOnly className="bg-muted/30" />
             </div>
 
             <div className={form.password ? "grid grid-cols-1 md:grid-cols-2 gap-4" : "space-y-2"}>
@@ -987,24 +988,27 @@ export default function UserManagement({ onBack }: UserManagementProps) {
             </div>
 
             {isPartner && (
-              <div className="space-y-2">
-                <Label>Vendor Name as in QBO</Label>
-                <Popover open={vendorPopoverOpen} onOpenChange={setVendorPopoverOpen}>
-                  <PopoverTrigger asChild>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      role="combobox"
-                      className={clsx("w-full justify-between", !form.mapped_vendor_qbo_id && "text-muted-foreground")}
-                    >
-                      {form.mapped_vendor_qbo_id
-                        ? `${
-                            vendors.find((v) => v.vendor_qbo_id === form.mapped_vendor_qbo_id)?.vendor_name ?? "Unknown"
-                          } · ID ${form.mapped_vendor_qbo_id}`
-                        : "Select vendor…"}
-                      <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                    </Button>
-                  </PopoverTrigger>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Vendor Name as in QBO</Label>
+                  <Popover open={vendorPopoverOpen} onOpenChange={setVendorPopoverOpen}>
+                    <PopoverTrigger asChild>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        role="combobox"
+                        className={clsx("w-full justify-between pr-3", !form.mapped_vendor_qbo_id && "text-muted-foreground")}
+                      >
+                        <span className="truncate text-left flex-1 mr-3 text-sm">
+                          {form.mapped_vendor_qbo_id
+                            ? `${
+                                vendors.find((v) => v.vendor_qbo_id === form.mapped_vendor_qbo_id)?.vendor_name ?? "Unknown"
+                              } · ID ${form.mapped_vendor_qbo_id}`
+                            : "Select vendor…"}
+                        </span>
+                        <ChevronsUpDown className="h-4 w-4 shrink-0 opacity-50" />
+                      </Button>
+                    </PopoverTrigger>
                   <CustomPopoverContent className="w-[--radix-popover-trigger-width] p-0" side="bottom" align="start">
                     <Command>
                       <CommandInput placeholder="Search vendor..." />
@@ -1035,17 +1039,32 @@ export default function UserManagement({ onBack }: UserManagementProps) {
                     </Command>
                   </CustomPopoverContent>
                 </Popover>
+                </div>
               </div>
             )}
           </div>
-          <div className="flex justify-end gap-2 pt-2">
-            <Button variant="outline" onClick={() => setEditing(null)} disabled={saving}>
-              Cancel
-            </Button>
-            <Button onClick={saveEdits} disabled={saving}>
-              {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Save
-            </Button>
+          <div className="space-y-3 pt-4">
+            {/* Mobile Layout */}
+            <div className="sm:hidden space-y-3">
+              <Button onClick={saveEdits} disabled={saving} className="w-full">
+                {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Update User
+              </Button>
+              <Button variant="outline" onClick={() => setEditing(null)} disabled={saving} className="w-full">
+                Cancel
+              </Button>
+            </div>
+            
+            {/* Desktop Layout */}
+            <div className="hidden sm:flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setEditing(null)} disabled={saving}>
+                Cancel
+              </Button>
+              <Button onClick={saveEdits} disabled={saving}>
+                {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Update User
+              </Button>
+            </div>
           </div>
         </DialogContent>
       </Dialog>
@@ -1079,126 +1098,97 @@ export default function UserManagement({ onBack }: UserManagementProps) {
 
       {/* User Profile Dialog */}
       <Dialog open={isProfileDialogOpen} onOpenChange={setIsProfileDialogOpen}>
-        <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="text-2xl font-bold">User Profile</DialogTitle>
-            <DialogDescription>Complete information and activity for this user</DialogDescription>
+        <DialogContent className="max-w-none w-full sm:w-[600px] h-screen sm:h-[80vh] mobile-fullscreen flex flex-col p-0 overflow-hidden dark:bg-black border-0 [&>button:not(.navigation-button)]:hidden" hideClose>
+          <DialogHeader className="flex flex-row items-center justify-between px-6 py-4 bg-background dark:bg-[#262626] border-b dark:border-slate-800">
+            {/* Mobile: Title left, Close right */}
+            <div className="flex sm:hidden w-full items-center justify-between">
+              <DialogTitle className="text-lg font-semibold text-left truncate flex-1 pr-4">
+                User Profile
+              </DialogTitle>
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => setIsProfileDialogOpen(false)}
+                className="p-2"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+
+            {/* Desktop: Navigation, Title, Actions in one row */}
+            <div className="hidden sm:flex flex-row items-center justify-between w-full">
+              <DialogTitle className="text-2xl font-bold">User Profile</DialogTitle>
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => setIsProfileDialogOpen(false)}
+                className="p-2"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
           </DialogHeader>
 
-          {viewingUser && (
-            <div className="space-y-6">
-              {/* User Header with Avatar and Basic Info */}
-              <div className={`flex items-start gap-6 p-6 rounded-lg border ${
-                viewingUser.role === 'admin' 
-                  ? "bg-gradient-to-r from-emerald-50 to-emerald-100 dark:from-emerald-950/20 dark:to-emerald-900/20 border-emerald-200 dark:border-emerald-800"
-                  : viewingUser.role === 'internal_full_access'
-                  ? "bg-gradient-to-r from-orange-50 to-orange-100 dark:from-orange-950/20 dark:to-orange-900/20 border-orange-200 dark:border-orange-800"
-                  : viewingUser.role === 'internal_show_access'
-                  ? "bg-gradient-to-r from-blue-50 to-blue-100 dark:from-blue-950/20 dark:to-blue-900/20 border-blue-200 dark:border-blue-800"
-                  : viewingUser.role === 'partner'
-                  ? "bg-gradient-to-r from-purple-50 to-purple-100 dark:from-purple-950/20 dark:to-purple-900/20 border-purple-200 dark:border-purple-800"
-                  : "bg-gradient-to-r from-slate-50 to-slate-100 dark:from-slate-950/20 dark:to-slate-900/20 border-slate-200 dark:border-slate-800"
-              }`}>
-                <div className="flex-shrink-0">
-                  <div className={`w-16 h-16 rounded-full flex items-center justify-center ${
-                    viewingUser.role === 'admin' 
-                      ? "bg-emerald-100 dark:bg-emerald-900/30"
-                      : viewingUser.role === 'internal_full_access'
-                      ? "bg-orange-100 dark:bg-orange-900/30"
-                      : viewingUser.role === 'internal_show_access'
-                      ? "bg-blue-100 dark:bg-blue-900/30"
-                      : viewingUser.role === 'partner'
-                      ? "bg-purple-100 dark:bg-purple-900/30"
-                      : "bg-slate-100 dark:bg-slate-900/30"
-                  }`}>
-                    <UserIcon className={`h-8 w-8 ${
-                      viewingUser.role === 'admin' 
-                        ? "text-emerald-600 dark:text-emerald-400"
-                        : viewingUser.role === 'internal_full_access'
-                        ? "text-orange-600 dark:text-orange-400"
-                        : viewingUser.role === 'internal_show_access'
-                        ? "text-blue-600 dark:text-blue-400"
-                        : viewingUser.role === 'partner'
-                        ? "text-purple-600 dark:text-purple-400"
-                        : "text-slate-600 dark:text-slate-400"
-                    }`} />
-                  </div>
-                </div>
-                <div className="flex-1 min-w-0">
-                  <h2 className="text-2xl font-bold text-foreground truncate">
-                    {viewingUser.name || "Unnamed User"}
-                  </h2>
-                  <p className="text-lg text-muted-foreground font-mono truncate">
-                    {viewingUser.email}
-                  </p>
-                  <div className="flex items-center gap-3 mt-3">
-                    <Badge 
-                      className={`text-xs border pointer-events-none uppercase font-semibold ${
-                        viewingUser.role === 'admin' 
-                          ? "bg-emerald-100 text-emerald-800 border-emerald-300 dark:bg-emerald-900/50 dark:text-emerald-300 dark:border-emerald-700"
-                          : viewingUser.role === 'internal_full_access'
-                          ? "bg-orange-100 text-orange-800 border-orange-300 dark:bg-orange-900/50 dark:text-orange-300 dark:border-orange-700"
-                          : viewingUser.role === 'internal_show_access'
-                          ? "bg-blue-100 text-blue-800 border-blue-300 dark:bg-blue-900/50 dark:text-blue-300 dark:border-blue-700"
-                          : viewingUser.role === 'partner'
-                          ? "bg-purple-100 text-purple-800 border-purple-300 dark:bg-purple-900/50 dark:text-purple-300 dark:border-purple-700"
-                          : "bg-gray-100 text-gray-800 border-gray-300 dark:bg-gray-900/50 dark:text-gray-300 dark:border-gray-700"
-                      }`}
-                    >
-                      {formatRoleName(viewingUser.role)}
-                    </Badge>
-                    {viewingUser.created_at && (
-                      <span className="text-sm text-muted-foreground">
-                        Member since {new Date(viewingUser.created_at).toLocaleDateString()}
-                      </span>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              {/* Information Grid */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* Account Details */}
-                <Card>
-                  <CardHeader className="pb-3">
-                    <CardTitle className="flex items-center gap-2 text-lg">
-                      <UserCheck className="h-5 w-5 text-emerald-600" />
-                      Account Details
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="space-y-3">
-                      <div className="flex justify-between items-center py-2 border-b border-muted/50">
-                        <span className="font-medium text-muted-foreground">User ID</span>
-                        <span className="font-mono text-sm bg-muted px-2 py-1 rounded">
-                          {viewingUser.id}
-                        </span>
-                      </div>
-                      <div className="flex justify-between items-center py-2 border-b border-muted/50">
-                        <span className="font-medium text-muted-foreground">Email Address</span>
-                        <span className="font-mono text-sm">{viewingUser.email}</span>
-                      </div>
-                      <div className="flex justify-between items-center py-2 border-b border-muted/50">
-                        <span className="font-medium text-muted-foreground">Full Name</span>
-                        <span className="text-sm">{viewingUser.name || "Not provided"}</span>
-                      </div>
-                      <div className="flex justify-between items-center py-2">
-                        <span className="font-medium text-muted-foreground">Account Created</span>
-                        <span className="text-sm">
-                          {viewingUser.created_at ? `${new Date(viewingUser.created_at).toLocaleDateString()}, ${new Date(viewingUser.created_at).toLocaleTimeString([], { hour12: false, hour: '2-digit', minute: '2-digit' })}` : "—"}
-                        </span>
-                      </div>
+          <div className="flex-1 overflow-y-auto">
+            {viewingUser && (
+              <div className="space-y-6 p-6">
+                {/* User Header with Basic Info */}
+                <div className={`p-6 rounded-lg border ${
+                  viewingUser.role === 'admin' 
+                    ? "bg-gradient-to-r from-emerald-50 to-emerald-100 dark:from-emerald-950/20 dark:to-emerald-900/20 border-emerald-200 dark:border-emerald-800"
+                    : viewingUser.role === 'internal_full_access'
+                    ? "bg-gradient-to-r from-orange-50 to-orange-100 dark:from-orange-950/20 dark:to-orange-900/20 border-orange-200 dark:border-orange-800"
+                    : viewingUser.role === 'internal_show_access'
+                    ? "bg-gradient-to-r from-blue-50 to-blue-100 dark:from-blue-950/20 dark:to-blue-900/20 border-blue-200 dark:border-blue-800"
+                    : viewingUser.role === 'partner'
+                    ? "bg-gradient-to-r from-purple-50 to-purple-100 dark:from-purple-950/20 dark:to-purple-900/20 border-purple-200 dark:border-purple-800"
+                    : "bg-gradient-to-r from-slate-50 to-slate-100 dark:from-slate-950/20 dark:to-slate-900/20 border-slate-200 dark:border-slate-800"
+                }`}>
+                  <div className="space-y-4">
+                    <div>
+                      <h2 className="text-2xl font-bold text-foreground">
+                        {viewingUser.name || "Unnamed User"}
+                      </h2>
+                      <p className="text-lg text-muted-foreground font-mono">
+                        {viewingUser.email}
+                      </p>
                     </div>
-                  </CardContent>
-                </Card>
+                    
+                    <div className="space-y-2">
+                      <div className="flex items-center">
+                        <Badge 
+                          className={`text-xs border pointer-events-none uppercase font-semibold ${
+                            viewingUser.role === 'admin' 
+                              ? "bg-emerald-100 text-emerald-800 border-emerald-300 dark:bg-emerald-900/50 dark:text-emerald-300 dark:border-emerald-700"
+                              : viewingUser.role === 'internal_full_access'
+                              ? "bg-orange-100 text-orange-800 border-orange-300 dark:bg-orange-900/50 dark:text-orange-300 dark:border-orange-700"
+                              : viewingUser.role === 'internal_show_access'
+                              ? "bg-blue-100 text-blue-800 border-blue-300 dark:bg-blue-900/50 dark:text-blue-300 dark:border-blue-700"
+                              : viewingUser.role === 'partner'
+                              ? "bg-purple-100 text-purple-800 border-purple-300 dark:bg-purple-900/50 dark:text-purple-300 dark:border-purple-700"
+                              : "bg-gray-100 text-gray-800 border-gray-300 dark:bg-gray-900/50 dark:text-gray-300 dark:border-gray-700"
+                          }`}
+                        >
+                          {formatRoleName(viewingUser.role)}
+                        </Badge>
+                      </div>
+                      {viewingUser.created_at && (
+                        <div className="text-sm text-muted-foreground">
+                          Member since {new Date(viewingUser.created_at).toLocaleDateString()}, {new Date(viewingUser.created_at).toLocaleTimeString([], { hour12: false, hour: '2-digit', minute: '2-digit' })}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
 
                 {/* Vendor Information */}
                 <Card>
                   <CardHeader className="pb-3">
-                  <CardTitle className="flex items-center gap-2 text-lg">
-                    <Building className="h-5 w-5 text-emerald-600" />
-                    Vendor Mapping
-                  </CardTitle>
+                    <CardTitle className="flex items-center gap-2 text-lg">
+                      <Building className="h-5 w-5 text-emerald-600" />
+                      Vendor Mapping
+                    </CardTitle>
                   </CardHeader>
                   <CardContent>
                     {viewingUser.mapped_vendor_qbo_id ? (
@@ -1225,7 +1215,7 @@ export default function UserManagement({ onBack }: UserManagementProps) {
                               Admin users have system-wide access and don't require vendor mapping
                             </p>
                           </>
-                        ) : viewingUser.role === 'internal' ? (
+                        ) : (viewingUser.role === 'internal_full_access' || viewingUser.role === 'internal_show_access') ? (
                           <>
                             <p className="text-muted-foreground font-medium">Internal users cannot be assigned to vendors</p>
                             <p className="text-sm text-muted-foreground mt-1">
@@ -1245,50 +1235,87 @@ export default function UserManagement({ onBack }: UserManagementProps) {
                   </CardContent>
                 </Card>
               </div>
+            )}
+          </div>
 
-              {/* Quick Actions */}
-              <Card>
-                <CardHeader className="pb-3">
-                  <CardTitle className="flex items-center gap-2 text-lg">
-                    <Settings className="h-5 w-5 text-emerald-600" />
-                    Quick Actions
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex flex-wrap gap-3">
-                    <Button 
-                      onClick={() => { setIsProfileDialogOpen(false); openEditor(viewingUser); }}
-                      className={`flex items-center gap-2 ${
-                        viewingUser.role === 'admin' 
-                          ? "bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-950/20 dark:to-emerald-900/20 border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300 hover:from-emerald-100 hover:to-emerald-200 dark:hover:from-emerald-900/30 dark:hover:to-emerald-800/30"
-                          : viewingUser.role === 'internal_full_access'
-                          ? "bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-950/20 dark:to-orange-900/20 border-orange-200 dark:border-orange-800 text-orange-700 dark:text-orange-300 hover:from-orange-100 hover:to-orange-200 dark:hover:from-orange-900/30 dark:hover:to-orange-800/30"
-                          : viewingUser.role === 'internal_show_access'
-                          ? "bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950/20 dark:to-blue-900/20 border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-300 hover:from-blue-100 hover:to-blue-200 dark:hover:from-blue-900/30 dark:hover:to-blue-800/30"
-                          : viewingUser.role === 'partner'
-                          ? "bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-950/20 dark:to-purple-900/20 border-purple-200 dark:border-purple-800 text-purple-700 dark:text-purple-300 hover:from-purple-100 hover:to-purple-200 dark:hover:from-purple-900/30 dark:hover:to-purple-800/30"
-                          : "bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-950/20 dark:to-slate-900/20 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:from-slate-100 hover:to-slate-200 dark:hover:from-slate-900/30 dark:hover:to-slate-800/30"
-                      }`}
-                    >
-                      <Pencil className="h-4 w-4" />
-                      Edit User Details
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Actions */}
-              <div className="flex justify-end gap-3 pt-4 border-t">
-                <Button 
-                  variant="outline" 
-                  onClick={() => setIsProfileDialogOpen(false)}
-                  className="bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-950/20 dark:to-slate-900/20 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:from-slate-100 hover:to-slate-200 dark:hover:from-slate-900/30 dark:hover:to-slate-800/30"
-                >
-                  Close
-                </Button>
-              </div>
+          {/* Sticky Footer - Mobile: 3 lines full width, Desktop: right side */}
+          <div className="sticky bottom-0 bg-background border-t dark:border-slate-800 p-6">
+            {/* Mobile Layout */}
+            <div className="sm:hidden space-y-3">
+              <Button 
+                onClick={() => { setIsProfileDialogOpen(false); openEditor(viewingUser); }}
+                className={`w-full flex items-center gap-2 ${
+                  viewingUser?.role === 'admin' 
+                    ? "bg-emerald-500 hover:bg-emerald-600 text-white border-0"
+                    : viewingUser?.role === 'internal_full_access'
+                    ? "bg-orange-500 hover:bg-orange-600 text-white border-0"
+                    : viewingUser?.role === 'internal_show_access'
+                    ? "bg-blue-500 hover:bg-blue-600 text-white border-0"
+                    : viewingUser?.role === 'partner'
+                    ? "bg-purple-500 hover:bg-purple-600 text-white border-0"
+                    : "bg-slate-500 hover:bg-slate-600 text-white border-0"
+                }`}
+              >
+                <Pencil className="h-4 w-4" />
+                Edit User Details
+              </Button>
+              <Button 
+                onClick={() => {
+                  setIsProfileDialogOpen(false)
+                  requestDelete(viewingUser)
+                }}
+                className="w-full bg-red-100 dark:bg-red-800 border border-red-300 dark:border-red-600 text-red-700 dark:text-red-200 hover:bg-red-200 dark:hover:bg-red-700"
+              >
+                <Trash2 className="h-4 w-4 mr-2" />
+                Delete User
+              </Button>
+              <Button 
+                variant="outline" 
+                onClick={() => setIsProfileDialogOpen(false)}
+                className="w-full bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-950/20 dark:to-slate-900/20 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:from-slate-100 hover:to-slate-200 dark:hover:from-slate-900/30 dark:hover:to-slate-800/30"
+              >
+                Close
+              </Button>
             </div>
-          )}
+
+            {/* Desktop Layout */}
+            <div className="hidden sm:flex justify-end gap-3">
+              <Button 
+                onClick={() => { setIsProfileDialogOpen(false); openEditor(viewingUser); }}
+                className={`flex items-center gap-2 ${
+                  viewingUser?.role === 'admin' 
+                    ? "bg-emerald-500 hover:bg-emerald-600 text-white border-0"
+                    : viewingUser?.role === 'internal_full_access'
+                    ? "bg-orange-500 hover:bg-orange-600 text-white border-0"
+                    : viewingUser?.role === 'internal_show_access'
+                    ? "bg-blue-500 hover:bg-blue-600 text-white border-0"
+                    : viewingUser?.role === 'partner'
+                    ? "bg-purple-500 hover:bg-purple-600 text-white border-0"
+                    : "bg-slate-500 hover:bg-slate-600 text-white border-0"
+                }`}
+              >
+                <Pencil className="h-4 w-4" />
+                Edit User Details
+              </Button>
+              <Button 
+                onClick={() => {
+                  setIsProfileDialogOpen(false)
+                  requestDelete(viewingUser)
+                }}
+                className="bg-red-100 dark:bg-red-800 border border-red-300 dark:border-red-600 text-red-700 dark:text-red-200 hover:bg-red-200 dark:hover:bg-red-700"
+              >
+                <Trash2 className="h-4 w-4 mr-2" />
+                Delete User
+              </Button>
+              <Button 
+                variant="outline" 
+                onClick={() => setIsProfileDialogOpen(false)}
+                className="bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-950/20 dark:to-slate-900/20 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:from-slate-100 hover:to-slate-200 dark:hover:from-slate-900/30 dark:hover:to-slate-800/30"
+              >
+                Close
+              </Button>
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
     </div>

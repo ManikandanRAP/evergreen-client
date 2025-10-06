@@ -307,7 +307,7 @@ export default function CreateUserDialog({ open, onOpenChange, onUserCreated }: 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[700px] md:max-w-[800px]">
-        <DialogHeader>
+        <DialogHeader className="text-left pr-8">
           <DialogTitle>Create New User</DialogTitle>
           <DialogDescription>Add new Admin, Internal, or Partner users to the Myco System.</DialogDescription>
         </DialogHeader>
@@ -466,14 +466,28 @@ export default function CreateUserDialog({ open, onOpenChange, onUserCreated }: 
             </div>
           )}
 
-          <div className="flex justify-end space-x-2 pt-4">
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              Cancel
-            </Button>
-            <Button type="submit" disabled={isLoading}>
-              {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Create User
-            </Button>
+          <div className="space-y-3 pt-4">
+            {/* Mobile Layout */}
+            <div className="sm:hidden space-y-3">
+              <Button type="submit" disabled={isLoading} className="w-full">
+                {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Create User
+              </Button>
+              <Button type="button" variant="outline" onClick={() => onOpenChange(false)} className="w-full">
+                Cancel
+              </Button>
+            </div>
+            
+            {/* Desktop Layout */}
+            <div className="hidden sm:flex justify-end space-x-2">
+              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+                Cancel
+              </Button>
+              <Button type="submit" disabled={isLoading}>
+                {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Create User
+              </Button>
+            </div>
           </div>
         </form>
       </DialogContent>

@@ -1018,10 +1018,10 @@ export default function RevenueLedger() {
                 Filters
               </h2>
               <Button
-                variant="ghost"
+                variant="outline"
                 size="sm"
                 onClick={() => setIsSlideOutOpen(false)}
-                className="h-8 w-8 p-0"
+                className="p-2"
               >
                 <X className="h-4 w-4" />
               </Button>
@@ -1069,6 +1069,17 @@ export default function RevenueLedger() {
                 </Button>
                 <Button onClick={() => setIsSlideOutOpen(false)} className="flex-1">
                   Apply Filters
+                </Button>
+              </div>
+              
+              {/* Close Button */}
+              <div className="mt-4">
+                <Button 
+                  variant="outline" 
+                  onClick={() => setIsSlideOutOpen(false)} 
+                  className="w-full"
+                >
+                  Close
                 </Button>
               </div>
             </div>
