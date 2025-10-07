@@ -482,7 +482,7 @@ export default function RevenueLedger() {
 
           {/* Mobile Stats Cards - Option 3 Layout */}
           <div className="space-y-2">
-            <div className="bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-950/20 dark:to-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-lg p-2">
+            <div className="bg-gradient-to-br from-emerald-50 to-emerald-100 dark:bg-black dark:from-emerald-950/20 dark:to-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-lg p-2">
               <div className="flex items-center justify-between">
                 <div>
                   <div className="text-xs font-medium text-emerald-700">Completed Partner Payments</div>
@@ -492,7 +492,7 @@ export default function RevenueLedger() {
               </div>
             </div>
             
-            <div className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950/20 dark:to-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-2">
+            <div className="bg-gradient-to-br from-blue-50 to-blue-100 dark:bg-black dark:from-blue-950/20 dark:to-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-2">
               <div className="flex items-center justify-between">
                 <div>
                   <div className="text-xs font-medium text-blue-700">Partner Payments for Next Payout</div>
@@ -502,7 +502,7 @@ export default function RevenueLedger() {
               </div>
             </div>
             
-            <div className="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-950/20 dark:to-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-2">
+            <div className="bg-gradient-to-br from-green-50 to-green-100 dark:bg-black dark:from-green-950/20 dark:to-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-2">
               <div className="flex items-center justify-between">
                 <div>
                   <div className="text-xs font-medium text-green-700">Pending Invoices from Customers</div>
