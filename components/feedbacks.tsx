@@ -626,7 +626,7 @@ export default function Feedbacks() {
 
       {/* View Feedback Dialog */}
       <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
-        <DialogContent className="max-w-none w-full sm:w-[90%] h-screen sm:h-[95vh] mobile-fullscreen flex flex-col p-0 overflow-hidden dark:bg-black border-0 [&>button:not(.navigation-button)]:hidden" hideClose>
+        <DialogContent className="max-w-none w-full sm:w-[800px] h-screen sm:h-[80vh] mobile-fullscreen flex flex-col p-0 overflow-hidden dark:bg-black border-0 [&>button:not(.navigation-button)]:hidden" hideClose>
           <DialogHeader className="flex flex-row items-center justify-between px-6 py-4 bg-background dark:bg-[#262626] border-b dark:border-slate-800">
             {/* Mobile: Title left, Close right */}
             <div className="flex sm:hidden w-full items-center justify-between">
@@ -770,7 +770,7 @@ export default function Feedbacks() {
             {/* Desktop Layout */}
             <div className="hidden sm:flex justify-between items-center gap-3">
               {/* Navigation Buttons */}
-              <div className="flex gap-2">
+              <div className="flex gap-2 items-center">
                 <Button 
                   variant="outline" 
                   onClick={handlePreviousFeedback}
@@ -787,9 +787,9 @@ export default function Feedbacks() {
                   Next
                   <ChevronRight className="h-4 w-4 ml-2" />
                 </Button>
-                <span className="text-sm text-muted-foreground ml-2">
-                  {currentFeedbackIndex + 1} of {currentPageFeedbacks.length}
-                </span>
+                <Badge variant="outline" className="text-xs font-normal">
+                  {currentFeedbackIndex + 1} of {currentPageFeedbacks.length} feedbacks
+                </Badge>
               </div>
               
               {/* Action Buttons */}
