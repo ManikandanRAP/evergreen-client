@@ -493,30 +493,30 @@ export default function ShowViewDialog({
 
                   {/* Mobile List View */}
                   <div className="sm:hidden space-y-2">
-                    <div className="flex justify-between items-center p-2 border-b">
+                    <div className="flex justify-between items-center p-2 border-b border-border dark:border-slate-700">
                       <span className="text-sm font-medium text-muted-foreground">Show Type</span>
                       <span className="text-sm">{show.show_type || "N/A"}</span>
                     </div>
-                    <div className="flex justify-between items-center p-2 border-b">
+                    <div className="flex justify-between items-center p-2 border-b border-border dark:border-slate-700">
                       <span className="text-sm font-medium text-muted-foreground">Format</span>
                       <span className="text-sm">{show.media_type ? show.media_type.charAt(0).toUpperCase() + show.media_type.slice(1) : "N/A"}</span>
                     </div>
-                    <div className="flex justify-between items-center p-2 border-b">
+                    <div className="flex justify-between items-center p-2 border-b border-border dark:border-slate-700">
                       <span className="text-sm font-medium text-muted-foreground">Relationship</span>
                       <span className="text-sm">{show.relationship_level ? show.relationship_level.charAt(0).toUpperCase() + show.relationship_level.slice(1) : "N/A"}</span>
                     </div>
-                    <div className="flex justify-between items-center p-2 border-b">
+                    <div className="flex justify-between items-center p-2 border-b border-border dark:border-slate-700">
                       <span className="text-sm font-medium text-muted-foreground">Ranking Category</span>
                       <span className="text-sm">{(() => {
                         const rankingInfo = getRankingInfo(show.ranking_category);
                         return rankingInfo.hasRanking ? rankingInfo.displayText : "N/A";
                       })()}</span>
                     </div>
-                    <div className="flex justify-between items-center p-2 border-b">
+                    <div className="flex justify-between items-center p-2 border-b border-border dark:border-slate-700">
                       <span className="text-sm font-medium text-muted-foreground">Created Date</span>
                       <span className="text-sm">{show.start_date ? new Date(show.start_date).toLocaleDateString() : "N/A"}</span>
                     </div>
-                    <div className="flex justify-between items-center p-2 border-b">
+                    <div className="flex justify-between items-center p-2 border-b border-border dark:border-slate-700">
                       <span className="text-sm font-medium text-muted-foreground">Age</span>
                       <span className="text-sm">{show.start_date ? `${Math.floor((new Date().getTime() - new Date(show.start_date).getTime()) / (1000 * 60 * 60 * 24 * 30))} months` : "N/A"}</span>
                     </div>
@@ -527,7 +527,7 @@ export default function ShowViewDialog({
                   </div>
 
                   {/* Mobile Separator */}
-                  <div className="sm:hidden border-t my-3"></div>
+                  <div className="sm:hidden border-t border-border dark:border-slate-700 my-3"></div>
 
                   <div className="col-span-3">
                     <label className="text-xs font-medium text-muted-foreground">
@@ -620,11 +620,11 @@ export default function ShowViewDialog({
 
                   {/* Mobile List View */}
                   <div className="sm:hidden space-y-2 mb-6">
-                    <div className="flex justify-between items-center p-2 border-b">
+                    <div className="flex justify-between items-center p-2 border-b border-border dark:border-slate-700">
                       <span className="text-sm font-medium text-muted-foreground">EVG Ownership %</span>
                       <span className="text-sm">{show.evergreen_ownership_pct ? `${show.evergreen_ownership_pct}%` : "N/A"}</span>
                     </div>
-                    <div className="flex justify-between items-center p-2 border-b">
+                    <div className="flex justify-between items-center p-2 border-b border-border dark:border-slate-700">
                       <span className="text-sm font-medium text-muted-foreground">Span CPM</span>
                       <span className="text-sm">{show.span_cpm_usd ? `$${show.span_cpm_usd}` : "N/A"}</span>
                     </div>
@@ -798,15 +798,15 @@ export default function ShowViewDialog({
 
                   {/* Mobile List View */}
                   <div className="sm:hidden space-y-2">
-                    <div className="flex justify-between items-center p-2 border-b">
+                    <div className="flex justify-between items-center p-2 border-b border-border dark:border-slate-700">
                       <span className="text-sm font-medium text-muted-foreground">Genre</span>
                       <span className="text-sm">{show.genre_name || "N/A"}</span>
                     </div>
-                    <div className="flex justify-between items-center p-2 border-b">
+                    <div className="flex justify-between items-center p-2 border-b border-border dark:border-slate-700">
                       <span className="text-sm font-medium text-muted-foreground">Cadence</span>
                       <span className="text-sm">{show.cadence || "N/A"}</span>
                     </div>
-                    <div className="flex justify-between items-center p-2 border-b">
+                    <div className="flex justify-between items-center p-2 border-b border-border dark:border-slate-700">
                       <span className="text-sm font-medium text-muted-foreground">Ad Slots</span>
                       <span className="text-sm">{show.ad_slots || "N/A"}</span>
                     </div>
@@ -835,19 +835,19 @@ export default function ShowViewDialog({
 
                   {/* Mobile List View */}
                   <div className="sm:hidden space-y-2">
-                    <div className="flex justify-between items-center p-2 border-b">
+                    <div className="flex justify-between items-center p-2 border-b border-border dark:border-slate-700">
                       <span className="text-sm font-medium text-muted-foreground">Age</span>
                       <span className="text-sm">{show.age_demographic || "N/A"}</span>
                     </div>
-                    <div className="flex justify-between items-center p-2 border-b">
+                    <div className="flex justify-between items-center p-2 border-b border-border dark:border-slate-700">
                       <span className="text-sm font-medium text-muted-foreground">Gender (M/F)</span>
                       <span className="text-sm">{show.gender || "N/A"}</span>
                     </div>
-                    <div className="flex justify-between items-center p-2 border-b">
+                    <div className="flex justify-between items-center p-2 border-b border-border dark:border-slate-700">
                       <span className="text-sm font-medium text-muted-foreground">Region</span>
                       <span className="text-sm">{show.region || "N/A"}</span>
                     </div>
-                    <div className="flex justify-between items-center p-2 border-b">
+                    <div className="flex justify-between items-center p-2 border-b border-border dark:border-slate-700">
                       <span className="text-sm font-medium text-muted-foreground">Primary Education</span>
                       <span className="text-sm">{show.primary_education || "N/A"}</span>
                     </div>

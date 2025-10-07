@@ -76,6 +76,12 @@ export default function DashboardNav({ onSidebarToggle }: DashboardNavProps) {
     }
   }
 
+  // Helper function to get first name from full name
+  const getFirstName = (fullName: string | null | undefined) => {
+    if (!fullName) return 'User'
+    return fullName.split(' ')[0]
+  }
+
   // Ensure component is mounted before rendering theme-dependent content
   useEffect(() => {
     setMounted(true)
@@ -237,7 +243,7 @@ export default function DashboardNav({ onSidebarToggle }: DashboardNavProps) {
               onClick={() => setIsUserProfileOpen(true)}
             >
               <div className="text-sm min-w-0 flex-1">
-                <p className="font-medium truncate">{user?.name}</p>
+                <p className="font-medium truncate">{getFirstName(user?.name)}</p>
                 <p className="text-muted-foreground text-xs">{formatRoleName(user?.role)}</p>
               </div>
             </Button>
@@ -261,9 +267,9 @@ export default function DashboardNav({ onSidebarToggle }: DashboardNavProps) {
                   : "bg-gradient-to-r from-slate-500 to-slate-600 hover:from-slate-600 hover:to-slate-700"
               }`}
               onClick={() => setIsUserProfileOpen(true)}
-              title={`${user?.name} - ${formatRoleName(user?.role)}`}
+              title={`${getFirstName(user?.name)} - ${formatRoleName(user?.role)}`}
             >
-              <span className="text-white font-bold text-xs">{user?.name?.charAt(0)}</span>
+              <span className="text-white font-bold text-xs">{getFirstName(user?.name)?.charAt(0)}</span>
             </Button>
             <ThemeToggle />
           </div>
