@@ -723,8 +723,8 @@ export default function Feedbacks() {
           <div className="fixed bottom-0 left-0 right-0 bg-background border-t dark:border-slate-800 p-6 z-50">
             {/* Mobile Layout */}
             <div className="sm:hidden space-y-3">
-              {/* Navigation Buttons */}
-              <div className="flex gap-3">
+              {/* Navigation Buttons with Count Pill */}
+              <div className="flex gap-2 items-center">
                 <Button 
                   variant="outline" 
                   onClick={handlePreviousFeedback}
@@ -734,6 +734,10 @@ export default function Feedbacks() {
                   <ChevronLeft className="h-4 w-4 mr-2" />
                   Previous
                 </Button>
+                <div className="px-2 flex flex-col items-center justify-center min-w-[60px] gap-0 h-9 border border-input bg-background rounded-md">
+                  <span className="text-sm font-bold leading-none">{currentFeedbackIndex + 1}</span>
+                  <span className="text-xs text-muted-foreground leading-none">of {currentPageFeedbacks.length}</span>
+                </div>
                 <Button 
                   variant="outline" 
                   onClick={handleNextFeedback}
