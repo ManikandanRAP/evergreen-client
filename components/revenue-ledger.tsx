@@ -480,40 +480,37 @@ export default function RevenueLedger() {
             </Button>
           </div>
 
-          {/* Mobile Stats Cards - Above pills */}
-          <div className="space-y-3">
-            <Card className="evergreen-card bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-950/20 dark:to-emerald-900/20 border-emerald-200 dark:border-emerald-800">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 px-3 py-3">
-                <CardTitle className="text-xs font-medium text-emerald-700 dark:text-emerald-300 leading-tight">Completed Partner Payments</CardTitle>
-                <DollarSign className="h-3 w-3 text-emerald-600 flex-shrink-0 ml-2" />
-              </CardHeader>
-              <CardContent className="px-3 pb-3 pt-0">
-                <div className="text-lg font-bold text-emerald-600">{formatCurrency(filteredStats.total_effective_billed_paid)}</div>
-                <p className="text-xs text-emerald-600/70 dark:text-emerald-400/70">Billed and Paid</p>
-              </CardContent>
-            </Card>
-
-            <Card className="evergreen-card bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950/20 dark:to-blue-900/20 border-blue-200 dark:border-blue-800">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 px-3 py-3">
-                <CardTitle className="text-xs font-medium text-blue-700 dark:text-blue-300 leading-tight">Partner Payments to be included Next Payout</CardTitle>
-                <TrendingUp className="h-3 w-3 text-blue-600 flex-shrink-0 ml-2" />
-              </CardHeader>
-              <CardContent className="px-3 pb-3 pt-0">
-                <div className="text-lg font-bold text-blue-600">{formatCurrency(filteredStats.total_billed_outstanding)}</div>
-                <p className="text-xs text-blue-600/70 dark:text-blue-400/70">Revenue Received and awaiting Partner Payment</p>
-              </CardContent>
-            </Card>
-
-            <Card className="evergreen-card bg-gradient-to-br from-green-50 to-green-100 dark:from-green-950/20 dark:to-green-900/20 border-green-200 dark:border-green-800">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 px-3 py-3">
-                <CardTitle className="text-xs font-medium text-green-700 dark:text-green-300 leading-tight">Pending Invoices from Customers</CardTitle>
-                <CreditCard className="h-3 w-3 text-green-600 flex-shrink-0 ml-2" />
-              </CardHeader>
-              <CardContent className="px-3 pb-3 pt-0">
-                <div className="text-lg font-bold text-green-600">{formatCurrency(filteredStats.total_comp_waiting)}</div>
-                <p className="text-xs text-green-600/70 dark:text-green-400/70">Partner share awaiting for Invoice Payment from Customer</p>
-              </CardContent>
-            </Card>
+          {/* Mobile Stats Cards - Option 3 Layout */}
+          <div className="space-y-2">
+            <div className="bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-950/20 dark:to-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-lg p-3">
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="text-sm font-medium text-emerald-700">Completed Partner Payments</div>
+                  <div className="text-lg font-bold text-emerald-600">{formatCurrency(filteredStats.total_effective_billed_paid)}</div>
+                </div>
+                <DollarSign className="h-4 w-4 text-emerald-600" />
+              </div>
+            </div>
+            
+            <div className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950/20 dark:to-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="text-sm font-medium text-blue-700">Partner Payments for Next Payout</div>
+                  <div className="text-lg font-bold text-blue-600">{formatCurrency(filteredStats.total_billed_outstanding)}</div>
+                </div>
+                <TrendingUp className="h-4 w-4 text-blue-600" />
+              </div>
+            </div>
+            
+            <div className="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-950/20 dark:to-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-3">
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="text-sm font-medium text-green-700">Pending Invoices from Customers</div>
+                  <div className="text-lg font-bold text-green-600">{formatCurrency(filteredStats.total_comp_waiting)}</div>
+                </div>
+                <CreditCard className="h-4 w-4 text-green-600" />
+              </div>
+            </div>
           </div>
 
           {/* Stats Pills - Full width on mobile */}
@@ -648,7 +645,10 @@ export default function RevenueLedger() {
         <CardHeader className="flex-row items-start justify-between space-y-0">
           <div>
             <CardTitle className="text-lg sm:text-xl">Show Revenue</CardTitle>
-            <CardDescription className="text-sm sm:text-base">Transactions between Evergreen and Customers (Starting July 1, 2025)</CardDescription>
+            <CardDescription className="text-sm sm:text-base">
+              Transactions between Evergreen and Customers
+              <span className="block md:inline"> (Starting July 1, 2025)</span>
+            </CardDescription>
           </div>
           {/* Desktop Pagination */}
           <div className="hidden md:block">
