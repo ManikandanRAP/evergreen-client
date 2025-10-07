@@ -293,9 +293,21 @@ export default function VendorSplitManagement({ onBack, refreshSignal = 0 }: Ven
 
   // NEW: Cancel for first section (reset the inline add form)
   const handleCancelExistingSplit = () => {
-    setNewSplit({ adPercent: "", programmaticPercent: "", effectiveDate: "" })
-    setErrors({})
-    setShowUpdateForm(false)
+    setIsClosingUpdateForm(true)
+    setTimeout(() => {
+      setNewSplit({ adPercent: "", programmaticPercent: "", effectiveDate: "" })
+      setErrors({})
+      setShowUpdateForm(false)
+      setIsClosingUpdateForm(false)
+      // If both sections are now closed, close the container
+      if (!showCurrentSplits) {
+        setIsClosingContainer(true)
+        setTimeout(() => {
+          setShowCurrentSplits(false)
+          setIsClosingContainer(false)
+        }, 300)
+      }
+    }, 300)
   }
 
   const handleSaveSplit = async (e: React.FormEvent) => {
