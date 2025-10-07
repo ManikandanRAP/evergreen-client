@@ -450,34 +450,34 @@ export default function HomePage() {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-3">
               <Button 
                 variant="outline" 
-                className="h-16 sm:h-20 flex flex-col gap-1 sm:gap-2 bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-950/20 dark:to-emerald-900/20 border-emerald-200 dark:border-emerald-800 hover:from-emerald-100 hover:to-emerald-200 dark:hover:from-emerald-900/30 dark:hover:to-emerald-800/30"
+                className="h-12 sm:h-16 flex flex-col gap-1 sm:gap-2 bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-950/20 dark:to-emerald-900/20 border-emerald-200 dark:border-emerald-800 hover:from-emerald-100 hover:to-emerald-200 dark:hover:from-emerald-900/30 dark:hover:to-emerald-800/30"
                 onClick={() => handleQuickAction('add-show')}
               >
-                <Plus className="h-4 w-4 sm:h-6 sm:w-6 text-emerald-600" />
+                <Plus className="h-3 w-3 sm:h-5 sm:w-5 text-emerald-600" />
                 <span className="text-xs sm:text-sm text-emerald-700 dark:text-emerald-300">Add Show</span>
               </Button>
               <Button 
                 variant="outline" 
-                className="h-16 sm:h-20 flex flex-col gap-1 sm:gap-2 bg-gradient-to-br from-green-50 to-green-100 dark:from-green-950/20 dark:to-green-900/20 border-green-200 dark:border-green-800 hover:from-green-100 hover:to-green-200 dark:hover:from-green-900/30 dark:hover:to-green-800/30"
+                className="h-12 sm:h-16 flex flex-col gap-1 sm:gap-2 bg-gradient-to-br from-green-50 to-green-100 dark:from-green-950/20 dark:to-green-900/20 border-green-200 dark:border-green-800 hover:from-green-100 hover:to-green-200 dark:hover:from-green-900/30 dark:hover:to-green-800/30"
                 onClick={() => handleQuickAction('import-shows')}
               >
-                <Upload className="h-4 w-4 sm:h-6 sm:w-6 text-green-600" />
+                <Upload className="h-3 w-3 sm:h-5 sm:w-5 text-green-600" />
                 <span className="text-xs sm:text-sm text-green-700 dark:text-green-300">Import Shows</span>
               </Button>
               <Button 
                 variant="outline" 
-                className="h-16 sm:h-20 flex flex-col gap-1 sm:gap-2 bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-950/20 dark:to-purple-900/20 border-purple-200 dark:border-purple-800 hover:from-purple-100 hover:to-purple-200 dark:hover:from-purple-900/30 dark:hover:to-purple-800/30"
+                className="h-12 sm:h-16 flex flex-col gap-1 sm:gap-2 bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-950/20 dark:to-purple-900/20 border-purple-200 dark:border-purple-800 hover:from-purple-100 hover:to-purple-200 dark:hover:from-purple-900/30 dark:hover:to-purple-800/30"
                 onClick={() => handleQuickAction('split-history')}
               >
-                <History className="h-4 w-4 sm:h-6 sm:w-6 text-purple-600" />
+                <History className="h-3 w-3 sm:h-5 sm:w-5 text-purple-600" />
                 <span className="text-xs sm:text-sm text-purple-700 dark:text-purple-300">Split History</span>
               </Button>
               <Button 
                 variant="outline" 
-                className="h-16 sm:h-20 flex flex-col gap-1 sm:gap-2 bg-gradient-to-br from-indigo-50 to-indigo-100 dark:from-indigo-950/20 dark:to-indigo-900/20 border-indigo-200 dark:border-indigo-800 hover:from-indigo-100 hover:to-indigo-200 dark:hover:from-indigo-900/30 dark:hover:to-indigo-800/30"
+                className="h-12 sm:h-16 flex flex-col gap-1 sm:gap-2 bg-gradient-to-br from-indigo-50 to-indigo-100 dark:from-indigo-950/20 dark:to-indigo-900/20 border-indigo-200 dark:border-indigo-800 hover:from-indigo-100 hover:to-indigo-200 dark:hover:from-indigo-900/30 dark:hover:to-indigo-800/30"
                 onClick={() => handleQuickAction('user-management')}
               >
-                <Settings className="h-4 w-4 sm:h-6 sm:w-6 text-indigo-600" />
+                <Settings className="h-3 w-3 sm:h-5 sm:w-5 text-indigo-600" />
                 <span className="text-xs sm:text-sm text-indigo-700 dark:text-indigo-300">User Management</span>
               </Button>
             </div>
