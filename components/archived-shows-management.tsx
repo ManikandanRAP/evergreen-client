@@ -60,6 +60,7 @@ import {
 import { Checkbox } from "@/components/ui/checkbox"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import AnimatedSwitcher from "@/components/animated-switcher"
+import AnimatedContentWrapper from "@/components/animated-content-wrapper"
 
 // Mobile Toolbar Components
 const MobileTopToolbar = ({ 
@@ -779,7 +780,6 @@ export default function ArchivedShowsManagement() {
 
       {/* Shows Display */}
       <div className="-mt-2">
-      {viewMode === "cards" ? (
         <Card>
           <CardContent className="p-6">
             {/* TOP TOOLBAR: Mobile Layout */}
@@ -865,18 +865,22 @@ export default function ArchivedShowsManagement() {
               </div>
             )}
             
-            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 gap-6">
+            {/* Animated Content Area */}
+            <AnimatedContentWrapper 
+              viewMode={viewMode}
+              cardsView={
+                <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 gap-6 p-0.5">
               {paginatedShows.map((show) => (
             <Card
               key={show.id}
               className={`transition-all duration-200 group flex flex-col h-full ${
                 selectedShows.has(show.id)
-                  ? "ring-2 ring-emerald-500 bg-emerald-50/50 dark:bg-emerald-950/20"
+                      ? "shadow-[0_0_0_2px_rgb(16_185_129)] bg-emerald-50/50 dark:bg-emerald-950/20"
                   : ""
               }`}
             >
-              <CardHeader className="flex-shrink-0">
-                <div className="space-y-3">
+                  <CardHeader className="flex-shrink-0 p-4">
+                    <div className="space-y-2">
                   <div className="flex items-start gap-3">
                     <Checkbox
                       checked={selectedShows.has(show.id)}
@@ -909,29 +913,31 @@ export default function ArchivedShowsManagement() {
                       ) : null;
                     })()}
                   </div>
+                      
+                      {/* Split pills - second line */}
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <div className="relative flex items-center bg-gradient-to-r from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 border border-blue-200 dark:border-blue-700 rounded-full overflow-hidden w-32">
+                          <span className="text-xs font-bold text-blue-600 dark:text-blue-400 px-2 py-1">Standard</span>
+                          <div className="absolute top-0 bottom-0 bg-gradient-to-r from-blue-600 to-blue-700 dark:from-blue-500 dark:to-blue-600 rounded-full flex items-center px-2 right-0">
+                            <span className="text-xs font-bold text-white">{formatPercentage(getStandardSplit(show))}</span>
+                          </div>
+                        </div>
+                        <div className="relative flex items-center bg-gradient-to-r from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/20 border border-purple-200 dark:border-purple-700 rounded-full overflow-hidden w-36">
+                          <span className="text-xs font-bold text-purple-600 dark:text-purple-400 px-2 py-1">Programmatic</span>
+                          <div className="absolute top-0 bottom-0 bg-gradient-to-r from-purple-600 to-purple-700 dark:from-purple-500 dark:to-purple-600 rounded-full flex items-center px-2 right-0">
+                            <span className="text-xs font-bold text-white">{formatPercentage(getProgrammaticSplit(show))}</span>
+                          </div>
+                        </div>
+                      </div>
                 </div>
-              </CardHeader>
+                  </CardHeader>
 
-              <CardContent className="w-full flex flex-col justify-between space-y-4">
-                <div className="space-y-4">
-                  {/* Standard & Programmatic split rows */}
-                  <div className="space-y-2">
-                    <div className="flex justify-between items-center text-sm">
-                      <span className="text-muted-foreground">Standard Split</span>
-                      <span className="font-medium">
-                        {formatPercentage(getStandardSplit(show))}
-                      </span>
+                  <CardContent className="w-full flex flex-col justify-between pt-0 pb-2">
+                    <div>
+                      {/* Content area - can be used for additional info if needed */}
                     </div>
-                    <div className="flex justify-between items-center text-sm">
-                      <span className="text-muted-foreground">Programmatic Split</span>
-                      <span className="font-medium">
-                        {formatPercentage(getProgrammaticSplit(show))}
-                      </span>
-                    </div>
-                  </div>
-                </div>
 
-                <div className="flex justify-center gap-2 pt-4 border-t border-border/50">
+                    <div className="flex justify-center gap-2 pt-2 pb-1 border-t border-border/50">
                   <Button
                     variant="outline"
                     size="sm"
@@ -972,176 +978,8 @@ export default function ArchivedShowsManagement() {
             </Card>
               ))}
             </div>
-            
-            {/* BOTTOM TOOLBAR: Mobile Layout */}
-            {filteredShows.length > 0 && (
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between pt-4 rounded-lg mt-2">
-                <MobileBottomToolbar
-                  selectedShows={selectedShows}
-                  filteredShows={filteredShows}
-                  handleSelectAll={handleSelectAll}
-                  handleBulkUnarchive={handleBulkUnarchive}
-                  handleBulkDelete={handleBulkDelete}
-                  isBulkUnarchiving={isBulkUnarchiving}
-                  isBulkDeleting={isBulkDeleting}
-                  user={user}
-                  page={page}
-                  totalPages={totalPages}
-                  gotoPrev={gotoPrev}
-                  gotoNext={gotoNext}
-                />
-
-                {/* Desktop Layout */}
-                <div className="hidden md:flex items-center gap-3">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handleSelectAll}
-                    className="flex items-center gap-2 hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50 border-border hover:border-border"
-                  >
-                    <Check className="h-4 w-4" />
-                    {selectedShows.size === filteredShows.length ? "Deselect All" : "Select All"}
-                  </Button>
-                  <Badge variant="outline" className="text-xs font-normal">
-                    {selectedShows.size} of {filteredShows.length} selected
-                  </Badge>
-                  {selectedShows.size > 0 && (
-                    <>
-                      {user?.role === "admin" && (
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
-                          onClick={handleBulkUnarchive}
-                          disabled={isBulkUnarchiving}
-                          className="text-green-600 hover:text-green-700 hover:bg-green-50 dark:hover:bg-green-900/20 border-green-200 hover:border-green-300 dark:border-green-800 dark:hover:border-green-700"
-                        >
-                          <RotateCcw className="h-4 w-4 mr-2" />
-                          {isBulkUnarchiving ? "Unarchiving..." : "Unarchive Selected"}
-                        </Button>
-                      )}
-                      {user?.role === "admin" && (
-                        <Button 
-                          size="sm" 
-                          onClick={handleBulkDelete}
-                          disabled={isBulkDeleting}
-                          className="bg-red-100 dark:bg-red-800 border border-red-300 dark:border-red-600 text-red-700 dark:text-red-200 hover:bg-red-200 dark:hover:bg-red-700"
-                        >
-                          <Trash2 className="h-4 w-4 mr-2" />
-                          {isBulkDeleting ? "Deleting..." : "Delete Selected"}
-                        </Button>
-                      )}
-                    </>
-                  )}
-                </div>
-
-                <div className="hidden md:flex items-center gap-3">
-                  <div className="text-xs text-muted-foreground hidden sm:block">
-                    <span className="font-medium">{pageRangeStart}</span>–<span className="font-medium">{pageRangeEnd}</span> of{" "}
-                    <span className="font-medium">{filteredShows.length}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Button variant="outline" size="sm" onClick={gotoPrev} disabled={page === 1}>
-                      <ChevronLeft className="h-4 w-4" />
-                      Prev
-                    </Button>
-                    <span className="text-xs text-muted-foreground">
-                      Page {page} of {totalPages}
-                    </span>
-                    <Button variant="outline" size="sm" onClick={gotoNext} disabled={page === totalPages}>
-                      Next
-                      <ChevronRight className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      ) : (
-        <Card>
-          <CardContent className="p-6">
-            {/* TOP TOOLBAR: Mobile Layout */}
-            {filteredShows.length > 0 && (
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between pb-4 rounded-lg mb-2">
-                <MobileTopToolbar
-                  selectedShows={selectedShows}
-                  filteredShows={filteredShows}
-                  handleSelectAll={handleSelectAll}
-                  handleBulkUnarchive={handleBulkUnarchive}
-                  handleBulkDelete={handleBulkDelete}
-                  isBulkUnarchiving={isBulkUnarchiving}
-                  isBulkDeleting={isBulkDeleting}
-                  user={user}
-                  page={page}
-                  totalPages={totalPages}
-                  gotoPrev={gotoPrev}
-                  gotoNext={gotoNext}
-                />
-
-                {/* Desktop Layout */}
-                <div className="hidden md:flex items-center gap-3">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handleSelectAll}
-                    className="flex items-center gap-2 hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50 border-border hover:border-border"
-                  >
-                    <Check className="h-4 w-4" />
-                    {selectedShows.size === filteredShows.length ? "Deselect All" : "Select All"}
-                  </Button>
-                  <Badge variant="outline" className="text-xs font-normal">
-                    {selectedShows.size} of {filteredShows.length} selected
-                  </Badge>
-                  {selectedShows.size > 0 && (
-                    <>
-                      {user?.role === "admin" && (
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
-                          onClick={handleBulkUnarchive}
-                          disabled={isBulkUnarchiving}
-                          className="text-green-600 hover:text-green-700 hover:bg-green-50 dark:hover:bg-green-900/20 border-green-200 hover:border-green-300 dark:border-green-800 dark:hover:border-green-700"
-                        >
-                          <RotateCcw className="h-4 w-4 mr-2" />
-                          {isBulkUnarchiving ? "Unarchiving..." : "Unarchive Selected"}
-                        </Button>
-                      )}
-                      {user?.role === "admin" && (
-                        <Button 
-                          size="sm" 
-                          onClick={handleBulkDelete}
-                          disabled={isBulkDeleting}
-                          className="bg-red-100 dark:bg-red-800 border border-red-300 dark:border-red-600 text-red-700 dark:text-red-200 hover:bg-red-200 dark:hover:bg-red-700"
-                        >
-                          <Trash2 className="h-4 w-4 mr-2" />
-                          {isBulkDeleting ? "Deleting..." : "Delete Selected"}
-                        </Button>
-                      )}
-                    </>
-                  )}
-                </div>
-
-                <div className="hidden md:flex items-center gap-3">
-                  <div className="text-xs text-muted-foreground hidden sm:block">
-                    <span className="font-medium">{pageRangeStart}</span>–<span className="font-medium">{pageRangeEnd}</span> of{" "}
-                    <span className="font-medium">{filteredShows.length}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Button variant="outline" size="sm" onClick={gotoPrev} disabled={page === 1}>
-                      <ChevronLeft className="h-4 w-4" />
-                      Prev
-                    </Button>
-                    <span className="text-xs text-muted-foreground">
-                      Page {page} of {totalPages}
-                    </span>
-                    <Button variant="outline" size="sm" onClick={gotoNext} disabled={page === totalPages}>
-                      Next
-                      <ChevronRight className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            )}
+              }
+              listView={
             <div className="rounded-md border overflow-x-auto">
               <table className="w-full text-sm min-w-[800px]">
                 <thead className="border-b">
@@ -1290,6 +1128,8 @@ export default function ArchivedShowsManagement() {
                 </tbody>
               </table>
             </div>
+              }
+            />
             
             {/* BOTTOM TOOLBAR: Mobile Layout */}
             {filteredShows.length > 0 && (
@@ -1375,7 +1215,6 @@ export default function ArchivedShowsManagement() {
             )}
           </CardContent>
         </Card>
-      )}
       </div>
 
       {filteredShows.length === 0 && (

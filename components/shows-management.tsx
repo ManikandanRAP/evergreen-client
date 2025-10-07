@@ -21,6 +21,7 @@ import { Badge } from "@/components/ui/badge"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { getRankingInfo } from "@/lib/ranking-utils"
 import AnimatedSwitcher from "@/components/animated-switcher"
+import AnimatedContentWrapper from "@/components/animated-content-wrapper"
 import {
   Plus,
   Filter,
@@ -334,7 +335,7 @@ export default function ShowsManagement() {
       } else if (result.successful > 0) {
         toast.warning(`Archived ${result.successful} shows, ${result.failed} failed`)
       } else {
-        toast.error(`Failed to archive any shows. ${result.errors?.join(', ') || 'Unknown error'}`)
+        toast.error(`Failed to archive any shows. ${result.message || 'Unknown error'}`)
       }
 
       // Refresh the shows list
@@ -367,7 +368,7 @@ export default function ShowsManagement() {
       } else if (result.successful > 0) {
         toast.warning(`Deleted ${result.successful} shows, ${result.failed} failed`)
       } else {
-        toast.error(`Failed to delete any shows. ${result.errors.join(', ')}`)
+        toast.error(`Failed to delete any shows. ${result.message || 'Unknown error'}`)
       }
 
       // Refresh the shows list
@@ -1557,7 +1558,6 @@ export default function ShowsManagement() {
 
       {/* Shows Display */}
       <div className="-mt-2">
-      {viewMode === "cards" ? (
         <Card>
           <CardContent className="p-6">
             {/* TOP TOOLBAR: Selection (left) + Pagination (right) */}
@@ -1574,7 +1574,7 @@ export default function ShowsManagement() {
                 onBulkDelete={handleBulkDelete}
                 isBulkArchiving={isBulkArchiving}
                 isBulkDeleting={isBulkDeleting}
-                userRole={user?.role}
+                userRole={user?.role || undefined}
                 isTopToolbar={true}
                 pageRangeStart={pageRangeStart}
                 pageRangeEnd={pageRangeEnd}
@@ -1584,319 +1584,277 @@ export default function ShowsManagement() {
               />
             )}
             
-            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 gap-6">
-              {paginatedShows.map((show) => (
-            <Card
-              key={show.id}
-              className={`transition-all duration-200 group flex flex-col h-full ${
-                selectedShows.has(show.id)
-                  ? "ring-2 ring-emerald-500 bg-emerald-50/50 dark:bg-emerald-950/20"
-                  : ""
-              }`}
-            >
-              <CardHeader className="flex-shrink-0">
-                <div className="space-y-3">
-                  <div className="flex items-start gap-3">
-                    <Checkbox
-                      checked={selectedShows.has(show.id)}
-                      onCheckedChange={() => handleSelectShow(show.id)}
-                      className="mt-1"
-                    />
-                    <CardTitle className="text-lg group-hover:text-emerald-600 transition-colors w-full line-clamp-2 leading-tight">
-                      {show.title}
-                    </CardTitle>
-                  </div>
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <Badge className="text-xs border bg-purple-100 text-purple-800 border-purple-300 dark:bg-purple-900/50 dark:text-purple-300 dark:border-purple-700 capitalize pointer-events-none">
-                      {show.show_type || "N/A"}
-                    </Badge>
-                    <Badge
-                      className={`text-xs border pointer-events-none ${
-                        show.rate_card
-                          ? "bg-emerald-100 text-emerald-800 border-emerald-300 dark:bg-emerald-900/50 dark:text-emerald-300 dark:border-emerald-700"
-                          : "bg-red-100 text-red-800 border-red-300 dark:bg-red-900/50 dark:text-red-300 dark:border-red-700"
-                      }`}
-                    >
-                      {`Rate Card - ${show.rate_card ? "Yes" : "No"}`}
-                    </Badge>
-                    {(() => {
-                      const rankingInfo = getRankingInfo(show.ranking_category);
-                      return rankingInfo.hasRanking ? (
-                        <Badge variant="secondary" className={`text-xs border pointer-events-none ${rankingInfo.badgeClasses}`}>
-                          {rankingInfo.displayText}
-                        </Badge>
-                      ) : null;
-                    })()}
-                  </div>
-                </div>
-              </CardHeader>
-
-              <CardContent className="w-full flex flex-col justify-between space-y-4">
-                <div className="space-y-4">
-                  {/* Standard & Programmatic split rows */}
-                  <div className="space-y-2">
-                    <div className="flex justify-between items-center text-sm">
-                      <span className="text-muted-foreground">Standard Split</span>
-                      <span className="font-medium">
-                        {formatPercentage(getStandardSplit(show))}
-                      </span>
-                    </div>
-                    <div className="flex justify-between items-center text-sm">
-                      <span className="text-muted-foreground">Programmatic Split</span>
-                      <span className="font-medium">
-                        {formatPercentage(getProgrammaticSplit(show))}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="flex justify-center gap-2 pt-4 border-t border-border/50">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="h-8 px-3 hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50 border-border hover:border-border"
-                    onClick={() => handleViewShow(show)}
-                  >
-                    <Eye className="h-4 w-4 mr-1" />
-                    View
-                  </Button>
-                  {user?.role === "admin" && (
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="outline" size="sm" className="h-8 px-2 hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50 border-border hover:border-border">
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        {user?.role === "admin" && (
-                          <DropdownMenuItem onClick={() => handleEditShow(show)}>
-                            <Edit className="h-4 w-4 mr-2" />
-                            Edit
-                          </DropdownMenuItem>
-                        )}
-                        {user?.role === "admin" && (
-                          <DropdownMenuItem onClick={() => handleArchiveShow(show)} className="text-orange-600 focus:text-orange-700">
-                            <Archive className="h-4 w-4 mr-2" />
-                            Archive
-                          </DropdownMenuItem>
-                        )}
-                        {user?.role === "admin" && (
-                          <DropdownMenuItem
-                            className="text-red-600 focus:text-red-700"
-                            onClick={() => handleDeleteShow(show)}
-                          >
-                            <Trash2 className="h-4 w-4 mr-2" />
-                            Delete
-                          </DropdownMenuItem>
-                        )}
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-              ))}
-            </div>
-            
-            {/* BOTTOM TOOLBAR: Selection (left) + Pagination (right) */}
-            {filteredShows.length > 0 && (
-              <ShowsBottomToolbar
-                selectedShows={selectedShows}
-                filteredShows={filteredShows}
-                page={page}
-                totalPages={totalPages}
-                onGotoPrev={gotoPrev}
-                onGotoNext={gotoNext}
-                onSelectAll={handleSelectAll}
-                onBulkArchive={handleBulkArchive}
-                onBulkDelete={handleBulkDelete}
-                isBulkArchiving={isBulkArchiving}
-                isBulkDeleting={isBulkDeleting}
-                userRole={user?.role}
-                isTopToolbar={false}
-                pageRangeStart={pageRangeStart}
-                pageRangeEnd={pageRangeEnd}
-                gotoInput={gotoInput}
-                setGotoInput={setGotoInput}
-                handleGoto={handleGoto}
-              />
-            )}
-          </CardContent>
-        </Card>
-      ) : (
-        <Card>
-          <CardContent className="p-6">
-            {/* TOP TOOLBAR: Selection (left) + Pagination (right) */}
-            {filteredShows.length > 0 && (
-              <ShowsToolbar
-                selectedShows={selectedShows}
-                filteredShows={filteredShows}
-                page={page}
-                totalPages={totalPages}
-                onGotoPrev={gotoPrev}
-                onGotoNext={gotoNext}
-                onSelectAll={handleSelectAll}
-                onBulkArchive={handleBulkArchive}
-                onBulkDelete={handleBulkDelete}
-                isBulkArchiving={isBulkArchiving}
-                isBulkDeleting={isBulkDeleting}
-                userRole={user?.role}
-                isTopToolbar={true}
-                pageRangeStart={pageRangeStart}
-                pageRangeEnd={pageRangeEnd}
-                gotoInput={gotoInput}
-                setGotoInput={setGotoInput}
-                handleGoto={handleGoto}
-              />
-            )}
-            <div className="rounded-md border overflow-x-auto">
-              <table className="w-full text-sm min-w-[800px]">
-                <thead className="border-b">
-                  <tr className="text-left text-sm">
-                    <th className="px-2 py-4 w-8 border-r bg-muted/50 text-center whitespace-nowrap">
-                      <Checkbox
-                        checked={selectedShows.size === filteredShows.length && filteredShows.length > 0}
-                        onCheckedChange={handleSelectAll}
-                      />
-                    </th>
-                    <th 
-                      className="pl-6 pr-6 py-4 font-semibold border-r cursor-pointer hover:bg-accent/50 transition-colors bg-muted/50 w-80 whitespace-nowrap"
-                      onClick={() => handleSort('name')}
-                    >
-                      <div className="flex items-center gap-2">
-                        Show Name
-                        {getSortIcon('name')}
-                      </div>
-                    </th>
-                    <th 
-                      className="pl-6 pr-6 py-4 font-semibold border-r cursor-pointer hover:bg-accent/50 transition-colors bg-muted/50 w-24 whitespace-nowrap"
-                      onClick={() => handleSort('show_type')}
-                    >
-                      <div className="flex items-center gap-2">
-                        Type
-                        {getSortIcon('show_type')}
-                      </div>
-                    </th>
-                    <th 
-                      className="pl-6 pr-6 py-4 font-semibold border-r cursor-pointer hover:bg-accent/50 transition-colors bg-muted/50 w-32 whitespace-nowrap"
-                      onClick={() => handleSort('ranking_category')}
-                    >
-                      <div className="flex items-center gap-2">
-                        Ranking
-                        {getSortIcon('ranking_category')}
-                      </div>
-                    </th>
-                    <th 
-                      className="pl-6 pr-6 py-4 font-semibold border-r cursor-pointer hover:bg-accent/50 transition-colors bg-muted/50 w-20 whitespace-nowrap"
-                      onClick={() => handleSort('isRateCard')}
-                    >
-                      <div className="flex items-center gap-2">
-                        Rate Card
-                        {getSortIcon('isRateCard')}
-                      </div>
-                    </th>
-                    <th 
-                      className="pl-6 pr-6 py-4 font-semibold border-r cursor-pointer hover:bg-accent/50 transition-colors bg-muted/50 w-32 whitespace-nowrap"
-                      onClick={() => handleSort('standardSplit')}
-                    >
-                      <div className="flex items-center gap-2">
-                        Standard
-                        {getSortIcon('standardSplit')}
-                      </div>
-                    </th>
-                    <th 
-                      className="pl-6 pr-6 py-4 font-semibold border-r cursor-pointer hover:bg-accent/50 transition-colors bg-muted/50 w-36 whitespace-nowrap"
-                      onClick={() => handleSort('programmaticSplit')}
-                    >
-                      <div className="flex items-center gap-2">
-                        Programmatic
-                        {getSortIcon('programmaticSplit')}
-                      </div>
-                    </th>
-                    <th className="pl-6 pr-6 py-4 font-semibold bg-muted/50 w-24 whitespace-nowrap">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
+            {/* Animated Content Area */}
+            <AnimatedContentWrapper 
+              viewMode={viewMode}
+              cardsView={
+                <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 gap-6 p-0.5">
                   {paginatedShows.map((show) => (
-                    <tr
-                      key={show.id}
-                      className={`border-b hover:bg-accent/50 transition-colors ${
-                        selectedShows.has(show.id)
-                          ? "bg-emerald-50/50 dark:bg-emerald-950/20"
-                          : ""
-                      }`}
-                    >
-                      <td className="px-2 py-2 border-r w-8 text-center whitespace-nowrap">
+                <Card
+                  key={show.id}
+                  className={`transition-all duration-200 group flex flex-col h-full ${
+                    selectedShows.has(show.id)
+                      ? "shadow-[0_0_0_2px_rgb(16_185_129)] bg-emerald-50/50 dark:bg-emerald-950/20"
+                      : ""
+                  }`}
+                >
+                  <CardHeader className="flex-shrink-0 p-4">
+                    <div className="space-y-2">
+                      <div className="flex items-start gap-3">
                         <Checkbox
                           checked={selectedShows.has(show.id)}
                           onCheckedChange={() => handleSelectShow(show.id)}
+                          className="mt-1"
                         />
-                      </td>
-                      <td className="pl-6 pr-6 py-2 font-medium border-r cursor-pointer hover:bg-accent/30 transition-colors whitespace-nowrap" onClick={() => handleViewShow(show)}>
-                        <span className="hover:underline">
+                        <CardTitle className="text-lg group-hover:text-emerald-600 transition-colors w-full line-clamp-2 leading-tight">
                           {show.title}
-                        </span>
-                      </td>
-                      <td className="pl-6 pr-6 py-2 capitalize border-r whitespace-nowrap">{show.show_type || "N/A"}</td>
-        <td className="pl-6 pr-6 py-2 border-r whitespace-nowrap">
-          {(() => {
-            const rankingInfo = getRankingInfo(show.ranking_category);
-            return rankingInfo.hasRanking ? (
-              <Badge variant="secondary" className={rankingInfo.badgeClasses}>
-                {rankingInfo.displayText}
-              </Badge>
-            ) : (
-              <span className="text-muted-foreground">N/A</span>
-            );
-          })()}
-        </td>
-                      <td className="pl-6 pr-6 py-2 border-r whitespace-nowrap">{getYesNoBadge(!!show.rate_card)}</td>
-                      <td className="pl-6 pr-6 py-2 border-r whitespace-nowrap">{formatPercentage(getStandardSplit(show))}</td>
-                      <td className="pl-6 pr-6 py-2 border-r whitespace-nowrap">{formatPercentage(getProgrammaticSplit(show))}</td>
-                      <td className="pl-6 pr-6 py-2 whitespace-nowrap">
-                        <div className="flex items-center gap-1">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="h-7 px-2 bg-transparent"
-                            onClick={() => handleViewShow(show)}
-                          >
-                            <Eye className="h-3 w-3 mr-1" />
-                            View
-                          </Button>
-                          {user?.role === "admin" && (
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <Button variant="outline" size="sm" className="h-7 px-2 bg-transparent">
-                                  <MoreHorizontal className="h-4 w-4" />
-                                </Button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end">
-                                <DropdownMenuItem onClick={() => handleEditShow(show)}>
-                                  <Edit className="h-4 w-4 mr-2" />
-                                  Edit
-                                </DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => handleArchiveShow(show)} className="text-orange-600 focus:text-orange-700">
-                                  <Archive className="h-4 w-4 mr-2" />
-                                  Archive
-                                </DropdownMenuItem>
-                                <DropdownMenuItem
-                                  className="text-red-600 focus:text-red-700"
-                                  onClick={() => handleDeleteShow(show)}
-                                >
-                                  <Trash2 className="h-4 w-4 mr-2" />
-                                  Delete
-                                </DropdownMenuItem>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
-                          )}
+                        </CardTitle>
+                      </div>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <Badge className="text-xs border bg-purple-100 text-purple-800 border-purple-300 dark:bg-purple-900/50 dark:text-purple-300 dark:border-purple-700 capitalize pointer-events-none">
+                          {show.show_type || "N/A"}
+                        </Badge>
+                        <Badge
+                          className={`text-xs border pointer-events-none ${
+                            show.rate_card
+                              ? "bg-emerald-100 text-emerald-800 border-emerald-300 dark:bg-emerald-900/50 dark:text-emerald-300 dark:border-emerald-700"
+                              : "bg-red-100 text-red-800 border-red-300 dark:bg-red-900/50 dark:text-red-300 dark:border-red-700"
+                          }`}
+                        >
+                          {`Rate Card - ${show.rate_card ? "Yes" : "No"}`}
+                        </Badge>
+                        {(() => {
+                          const rankingInfo = getRankingInfo(show.ranking_category);
+                          return rankingInfo.hasRanking ? (
+                            <Badge variant="secondary" className={`text-xs border pointer-events-none ${rankingInfo.badgeClasses}`}>
+                              {rankingInfo.displayText}
+                            </Badge>
+                          ) : null;
+                        })()}
+                      </div>
+                      
+                      {/* Split pills - second line */}
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <div className="relative flex items-center bg-gradient-to-r from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 border border-blue-200 dark:border-blue-700 rounded-full overflow-hidden w-32">
+                          <span className="text-xs font-bold text-blue-600 dark:text-blue-400 px-2 py-1">Standard</span>
+                          <div className="absolute top-0 bottom-0 bg-gradient-to-r from-blue-600 to-blue-700 dark:from-blue-500 dark:to-blue-600 rounded-full flex items-center px-2 right-0">
+                            <span className="text-xs font-bold text-white">{formatPercentage(getStandardSplit(show))}</span>
+                          </div>
                         </div>
-                      </td>
-                    </tr>
+                        <div className="relative flex items-center bg-gradient-to-r from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/20 border border-purple-200 dark:border-purple-700 rounded-full overflow-hidden w-36">
+                          <span className="text-xs font-bold text-purple-600 dark:text-purple-400 px-2 py-1">Programmatic</span>
+                          <div className="absolute top-0 bottom-0 bg-gradient-to-r from-purple-600 to-purple-700 dark:from-purple-500 dark:to-purple-600 rounded-full flex items-center px-2 right-0">
+                            <span className="text-xs font-bold text-white">{formatPercentage(getProgrammaticSplit(show))}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </CardHeader>
+
+                  <CardContent className="w-full flex flex-col justify-between pt-0 pb-2">
+                    <div>
+                      {/* Content area - can be used for additional info if needed */}
+                    </div>
+
+                    <div className="flex justify-center gap-2 pt-2 pb-1 border-t border-border/50">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-8 px-3 hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50 border-border hover:border-border"
+                        onClick={() => handleViewShow(show)}
+                      >
+                        <Eye className="h-4 w-4 mr-1" />
+                        View
+                      </Button>
+                      {user?.role === "admin" && (
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="outline" size="sm" className="h-8 px-2 hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50 border-border hover:border-border">
+                              <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            {user?.role === "admin" && (
+                              <DropdownMenuItem onClick={() => handleEditShow(show)}>
+                                <Edit className="h-4 w-4 mr-2" />
+                                Edit
+                              </DropdownMenuItem>
+                            )}
+                            {user?.role === "admin" && (
+                              <DropdownMenuItem onClick={() => handleArchiveShow(show)} className="text-orange-600 focus:text-orange-700">
+                                <Archive className="h-4 w-4 mr-2" />
+                                Archive
+                              </DropdownMenuItem>
+                            )}
+                            {user?.role === "admin" && (
+                              <DropdownMenuItem
+                                className="text-red-600 focus:text-red-700"
+                                onClick={() => handleDeleteShow(show)}
+                              >
+                                <Trash2 className="h-4 w-4 mr-2" />
+                                Delete
+                              </DropdownMenuItem>
+                            )}
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
                   ))}
-                </tbody>
-              </table>
-            </div>
+                </div>
+              }
+              listView={
+                <div className="rounded-md border overflow-x-auto">
+                  <table className="w-full text-sm min-w-[800px]">
+                    <thead className="border-b">
+                      <tr className="text-left text-sm">
+                        <th className="px-2 py-4 w-8 border-r bg-muted/50 text-center whitespace-nowrap">
+                          <Checkbox
+                            checked={selectedShows.size === filteredShows.length && filteredShows.length > 0}
+                            onCheckedChange={handleSelectAll}
+                          />
+                        </th>
+                        <th 
+                          className="pl-6 pr-6 py-4 font-semibold border-r cursor-pointer hover:bg-accent/50 transition-colors bg-muted/50 w-80 whitespace-nowrap"
+                          onClick={() => handleSort('name')}
+                        >
+                          <div className="flex items-center gap-2">
+                            Show Name
+                            {getSortIcon('name')}
+                          </div>
+                        </th>
+                        <th 
+                          className="pl-6 pr-6 py-4 font-semibold border-r cursor-pointer hover:bg-accent/50 transition-colors bg-muted/50 w-24 whitespace-nowrap"
+                          onClick={() => handleSort('show_type')}
+                        >
+                          <div className="flex items-center gap-2">
+                            Type
+                            {getSortIcon('show_type')}
+                          </div>
+                        </th>
+                        <th 
+                          className="pl-6 pr-6 py-4 font-semibold border-r cursor-pointer hover:bg-accent/50 transition-colors bg-muted/50 w-32 whitespace-nowrap"
+                          onClick={() => handleSort('ranking_category')}
+                        >
+                          <div className="flex items-center gap-2">
+                            Ranking
+                            {getSortIcon('ranking_category')}
+                          </div>
+                        </th>
+                        <th 
+                          className="pl-6 pr-6 py-4 font-semibold border-r cursor-pointer hover:bg-accent/50 transition-colors bg-muted/50 w-20 whitespace-nowrap"
+                          onClick={() => handleSort('isRateCard')}
+                        >
+                          <div className="flex items-center gap-2">
+                            Rate Card
+                            {getSortIcon('isRateCard')}
+                          </div>
+                        </th>
+                        <th 
+                          className="pl-6 pr-6 py-4 font-semibold border-r cursor-pointer hover:bg-accent/50 transition-colors bg-muted/50 w-32 whitespace-nowrap"
+                          onClick={() => handleSort('standardSplit')}
+                        >
+                          <div className="flex items-center gap-2">
+                            Standard
+                            {getSortIcon('standardSplit')}
+                          </div>
+                        </th>
+                        <th 
+                          className="pl-6 pr-6 py-4 font-semibold border-r cursor-pointer hover:bg-accent/50 transition-colors bg-muted/50 w-36 whitespace-nowrap"
+                          onClick={() => handleSort('programmaticSplit')}
+                        >
+                          <div className="flex items-center gap-2">
+                            Programmatic
+                            {getSortIcon('programmaticSplit')}
+                          </div>
+                        </th>
+                        <th className="pl-6 pr-6 py-4 font-semibold bg-muted/50 w-24 whitespace-nowrap">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {paginatedShows.map((show) => (
+                        <tr
+                          key={show.id}
+                          className={`border-b hover:bg-accent/50 transition-colors ${
+                            selectedShows.has(show.id)
+                              ? "bg-emerald-50/50 dark:bg-emerald-950/20"
+                              : ""
+                          }`}
+                        >
+                          <td className="px-2 py-2 border-r w-8 text-center whitespace-nowrap">
+                            <Checkbox
+                              checked={selectedShows.has(show.id)}
+                              onCheckedChange={() => handleSelectShow(show.id)}
+                            />
+                          </td>
+                          <td className="pl-6 pr-6 py-2 font-medium border-r cursor-pointer hover:bg-accent/30 transition-colors whitespace-nowrap" onClick={() => handleViewShow(show)}>
+                            <span className="hover:underline">
+                              {show.title}
+                            </span>
+                          </td>
+                          <td className="pl-6 pr-6 py-2 capitalize border-r whitespace-nowrap">{show.show_type || "N/A"}</td>
+            <td className="pl-6 pr-6 py-2 border-r whitespace-nowrap">
+              {(() => {
+                const rankingInfo = getRankingInfo(show.ranking_category);
+                return rankingInfo.hasRanking ? (
+                  <Badge variant="secondary" className={rankingInfo.badgeClasses}>
+                    {rankingInfo.displayText}
+                  </Badge>
+                ) : (
+                  <span className="text-muted-foreground">N/A</span>
+                );
+              })()}
+            </td>
+                          <td className="pl-6 pr-6 py-2 border-r whitespace-nowrap">{getYesNoBadge(!!show.rate_card)}</td>
+                          <td className="pl-6 pr-6 py-2 border-r whitespace-nowrap">{formatPercentage(getStandardSplit(show))}</td>
+                          <td className="pl-6 pr-6 py-2 border-r whitespace-nowrap">{formatPercentage(getProgrammaticSplit(show))}</td>
+                          <td className="pl-6 pr-6 py-2 whitespace-nowrap">
+                            <div className="flex items-center gap-1">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="h-7 px-2 bg-transparent"
+                                onClick={() => handleViewShow(show)}
+                              >
+                                <Eye className="h-3 w-3 mr-1" />
+                                View
+                              </Button>
+                              {user?.role === "admin" && (
+                                <DropdownMenu>
+                                  <DropdownMenuTrigger asChild>
+                                    <Button variant="outline" size="sm" className="h-7 px-2 bg-transparent">
+                                      <MoreHorizontal className="h-4 w-4" />
+                                    </Button>
+                                  </DropdownMenuTrigger>
+                                  <DropdownMenuContent align="end">
+                                    <DropdownMenuItem onClick={() => handleEditShow(show)}>
+                                      <Edit className="h-4 w-4 mr-2" />
+                                      Edit
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem onClick={() => handleArchiveShow(show)} className="text-orange-600 focus:text-orange-700">
+                                      <Archive className="h-4 w-4 mr-2" />
+                                      Archive
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem
+                                      className="text-red-600 focus:text-red-700"
+                                      onClick={() => handleDeleteShow(show)}
+                                    >
+                                      <Trash2 className="h-4 w-4 mr-2" />
+                                      Delete
+                                    </DropdownMenuItem>
+                                  </DropdownMenuContent>
+                                </DropdownMenu>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              }
+            />
             
             {/* BOTTOM TOOLBAR: Selection (left) + Pagination (right) */}
             {filteredShows.length > 0 && (
@@ -1912,7 +1870,7 @@ export default function ShowsManagement() {
                 onBulkDelete={handleBulkDelete}
                 isBulkArchiving={isBulkArchiving}
                 isBulkDeleting={isBulkDeleting}
-                userRole={user?.role}
+                userRole={user?.role || undefined}
                 isTopToolbar={false}
                 pageRangeStart={pageRangeStart}
                 pageRangeEnd={pageRangeEnd}
@@ -1923,7 +1881,6 @@ export default function ShowsManagement() {
             )}
           </CardContent>
         </Card>
-      )}
       </div>
 
       {filteredShows.length === 0 && (
