@@ -253,46 +253,48 @@ export default function HomePage() {
       </div>
 
       {/* Mobile Stats - Hidden on Desktop */}
-      <div className="grid grid-cols-2 gap-2 md:hidden">
-        <Card className="evergreen-card bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-950/20 dark:to-emerald-900/20 border-emerald-200 dark:border-emerald-800">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-0 px-2 py-2">
-            <CardTitle className="text-xs font-medium text-emerald-700 dark:text-emerald-300">Total Shows</CardTitle>
-            <Radio className="h-3 w-3 text-emerald-600" />
-          </CardHeader>
-          <CardContent className="px-2 pb-2 pt-0">
-            <div className="text-base font-bold text-emerald-600">{shows.length}</div>
-          </CardContent>
-        </Card>
+      <div className="md:hidden">
+        <div className="grid grid-cols-2 gap-2">
+          <div className="bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-950/20 dark:to-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-lg p-2">
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="text-xs font-medium text-emerald-700 dark:text-emerald-300">Total Shows</div>
+                <div className="text-base font-bold text-emerald-600">{shows.length}</div>
+              </div>
+              <Radio className="h-3 w-3 text-emerald-600" />
+            </div>
+          </div>
 
-        <Card className="evergreen-card bg-gradient-to-br from-cyan-50 to-cyan-100 dark:from-cyan-950/20 dark:to-cyan-900/20 border-cyan-200 dark:border-cyan-800">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-0 px-2 py-2">
-            <CardTitle className="text-xs font-medium text-cyan-700 dark:text-cyan-300">Total Net Revenue</CardTitle>
-            <DollarSign className="h-3 w-3 text-cyan-600" />
-          </CardHeader>
-          <CardContent className="px-2 pb-2 pt-0">
-            <div className="text-base font-bold text-cyan-600">{formatCurrency(summary.totalNetRevenue)}</div>
-          </CardContent>
-        </Card>
+          <div className="bg-gradient-to-br from-cyan-50 to-cyan-100 dark:from-cyan-950/20 dark:to-cyan-900/20 border border-cyan-200 dark:border-cyan-800 rounded-lg p-2">
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="text-xs font-medium text-cyan-700 dark:text-cyan-300">Total Net Revenue</div>
+                <div className="text-base font-bold text-cyan-600">{formatCurrency(summary.totalNetRevenue)}</div>
+              </div>
+              <DollarSign className="h-3 w-3 text-cyan-600" />
+            </div>
+          </div>
 
-        <Card className="evergreen-card bg-gradient-to-br from-green-50 to-green-100 dark:from-green-950/20 dark:to-green-900/20 border-green-200 dark:border-green-800">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-0 px-2 py-2">
-            <CardTitle className="text-xs font-medium text-green-700 dark:text-green-300">Total Evergreen Share</CardTitle>
-            <TrendingUp className="h-3 w-3 text-green-600" />
-          </CardHeader>
-          <CardContent className="px-2 pb-2 pt-0">
-            <div className="text-base font-bold text-green-600">{formatCurrency(summary.totalEvergreenShare)}</div>
-          </CardContent>
-        </Card>
+          <div className="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-950/20 dark:to-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-2">
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="text-xs font-medium text-green-700 dark:text-green-300">Total Evergreen Share</div>
+                <div className="text-base font-bold text-green-600">{formatCurrency(summary.totalEvergreenShare)}</div>
+              </div>
+              <TrendingUp className="h-3 w-3 text-green-600" />
+            </div>
+          </div>
 
-        <Card className="evergreen-card bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950/20 dark:to-blue-900/20 border-blue-200 dark:border-blue-800">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-0 px-2 py-2">
-            <CardTitle className="text-xs font-medium text-blue-700 dark:text-blue-300">Total Payments Made</CardTitle>
-            <CreditCard className="h-3 w-3 text-blue-600" />
-          </CardHeader>
-          <CardContent className="px-2 pb-2 pt-0">
-            <div className="text-base font-bold text-blue-600">{formatCurrency(summary.totalPaymentsMade)}</div>
-          </CardContent>
-        </Card>
+          <div className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950/20 dark:to-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-2">
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="text-xs font-medium text-blue-700 dark:text-blue-300">Total Payments Made</div>
+                <div className="text-base font-bold text-blue-600">{formatCurrency(summary.totalPaymentsMade)}</div>
+              </div>
+              <CreditCard className="h-3 w-3 text-blue-600" />
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Desktop Stats - Hidden on Mobile */}
