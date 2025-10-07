@@ -1062,18 +1062,14 @@ export default function RevenueLedger() {
               </div>
 
               {/* Action Buttons */}
-              <div className="flex gap-2 mt-6">
-                <Button variant="outline" onClick={handleClearFilters} className="flex-1">
-                  <RotateCcw className="mr-2 h-4 w-4" />
-                  Clear All
-                </Button>
-                <Button onClick={() => setIsSlideOutOpen(false)} className="flex-1">
+              <div className="space-y-2 mt-6">
+                <Button onClick={() => setIsSlideOutOpen(false)} className="w-full">
                   Apply Filters
                 </Button>
-              </div>
-              
-              {/* Close Button */}
-              <div className="mt-4">
+                <Button variant="outline" onClick={handleClearFilters} className="w-full">
+                  <RotateCcw className="mr-2 h-4 w-4" />
+                  Clear Filters
+                </Button>
                 <Button 
                   variant="outline" 
                   onClick={() => setIsSlideOutOpen(false)} 

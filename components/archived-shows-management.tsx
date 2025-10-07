@@ -916,16 +916,16 @@ export default function ArchivedShowsManagement() {
                       
                       {/* Split pills - second line */}
                       <div className="flex items-center gap-2 flex-wrap">
-                        <div className="relative flex items-center bg-gradient-to-r from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 border border-blue-200 dark:border-blue-700 rounded-full overflow-hidden w-32">
-                          <span className="text-xs font-bold text-blue-600 dark:text-blue-400 px-2 py-1">Standard</span>
-                          <div className="absolute top-0 bottom-0 bg-gradient-to-r from-blue-600 to-blue-700 dark:from-blue-500 dark:to-blue-600 rounded-full flex items-center px-2 right-0">
-                            <span className="text-xs font-bold text-white">{formatPercentage(getStandardSplit(show))}</span>
+                        <div className="relative flex items-center bg-blue-100 dark:bg-blue-900/50 border border-blue-300 dark:border-blue-700 rounded-full overflow-hidden w-32">
+                          <span className="text-xs font-bold text-blue-600 dark:text-blue-200 px-2 py-1">Standard</span>
+                          <div className="absolute top-0 bottom-0 bg-white dark:bg-black rounded-full flex items-center px-2 right-0">
+                            <span className="text-sm font-bold text-blue-600 dark:text-blue-200">{formatPercentage(getStandardSplit(show))}</span>
                           </div>
                         </div>
-                        <div className="relative flex items-center bg-gradient-to-r from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/20 border border-purple-200 dark:border-purple-700 rounded-full overflow-hidden w-36">
-                          <span className="text-xs font-bold text-purple-600 dark:text-purple-400 px-2 py-1">Programmatic</span>
-                          <div className="absolute top-0 bottom-0 bg-gradient-to-r from-purple-600 to-purple-700 dark:from-purple-500 dark:to-purple-600 rounded-full flex items-center px-2 right-0">
-                            <span className="text-xs font-bold text-white">{formatPercentage(getProgrammaticSplit(show))}</span>
+                        <div className="relative flex items-center bg-purple-100 dark:bg-purple-900/50 border border-purple-300 dark:border-purple-700 rounded-full overflow-hidden w-[10rem]">
+                          <span className="text-xs font-bold text-purple-600 dark:text-purple-200 px-2 py-1">Programmatic</span>
+                          <div className="absolute top-0 bottom-0 bg-white dark:bg-black rounded-full flex items-center px-2 right-0">
+                            <span className="text-sm font-bold text-purple-600 dark:text-purple-200">{formatPercentage(getProgrammaticSplit(show))}</span>
                           </div>
                         </div>
                       </div>
